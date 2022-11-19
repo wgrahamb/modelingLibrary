@@ -20,23 +20,22 @@ using namespace std;
 #define MISSILEMODEL_H
 
 /* Missile constants. */
-const double REFERENCE_AREA                     = 0.01824; // Meters^2.
-const double REFERENCE_DIAMETER                 = 0.1524; // Meters.
-const double THRUST_EXIT_AREA                   = 0.0125; // Meters^2.
-const double ROCKET_BURN_OUT_TIME               = 2.421; // Seconds.
-const double SEEKER_KF_G                        = 10.0; // Seeker Kalman filter gain. Per second.
-const double SEEKER_KF_ZETA                     = 0.9; // Seeker Kalman filter damping. Non dimensional.
-const double SEEKER_KF_WN                       = 60.0; // Seeker Kalman filter natural frequency. Radians per second.
-const double PROPORTIONAL_GUIDANCE_GAIN         = 2.75; // Guidance homing gain. Non dimensional.
-const double MAXIMUM_ACCELERATION               = 450.0; // Roughly 45 Gs. Meters per s^2.
-const double RATE_CONTROL_ZETA                  = 0.6; // Damping of constant rate control. Non dimensional.
-const double ROLL_CONTROL_WN                    = 20.0; // Natural frequency of roll closed loop complex pole. Radians per second.
-const double ROLL_CONTROL_ZETA                  = 0.9; // Damping of roll closed loop complex pole. Non dimensional.
-const double FIN_RATE_LIMIT_RADIANS             = 10.472; // Radians per second.
-const double ROLL_ANGLE_COMMAND                 = 0.0; // Radians.
-const double ALPHA_PRIME_MAX                    = 40.0; // Degrees.
-const double SEA_LEVEL_PRESSURE                 = 101325; // Pascals.
-const double LAUNCH_CENTER_OF_GRAVITY_FROM_NOSE = 1.5357; // Meters.
+const double REFERENCE_AREA             = 0.01824; // missile reference area in m^2
+const double REFERENCE_DIAMETER         = 0.1524; // missile reference length in meters
+const double THRUST_EXIT_AREA           = 0.0125; // nozzle exit area in m^2
+const double ROCKET_BURN_OUT_TIME       = 2.421; // motor shutoff in seconds
+const double SEEKER_KF_G                = 10.0; // seeker Kalman filter gain in 1/s
+const double SEEKER_KF_ZETA             = 0.9; // seeker Kalman filter damping
+const double SEEKER_KF_WN               = 60.0; // seeker Kalman filter natural frequency in rads/s
+const double PROPORTIONAL_GUIDANCE_GAIN = 2.75; // proportional navigation gain
+const double MAXIMUM_ACCELERATION       = 450.0; // maximum acceleration allowed in m/s^2
+const double ROLL_ANGLE_COMMAND         = 0.0; // commanded roll angle in radians or degrees
+const double ALPHA_PRIME_MAX            = 40.0; // maximum angle of attack allowed in radians
+const double SEA_LEVEL_PRESSURE         = 101325; // nominal pressure in pascals
+const double LAUNCH_XCG_FROM_NOSE       = 1.5357; // center of mass at missile launch in meters
+const double ROLL_ANGLE_GAIN            = 1.0; 
+const double ROLL_PROP_GAIN             = 0.011;
+const double ROLL_DER_GAIN              = 0.000034125;
 
 /* This struct fully represents a missile. */
 struct Missile
@@ -130,79 +129,72 @@ struct Missile
 		make_shared<secondOrderActuator>(); // pointer to actuator three
 	shared_ptr<secondOrderActuator> actFour  =
 		make_shared<secondOrderActuator>(); // pointer to actuator four
-	double finOneDefl                        = 0.0; // Fin deflection. Radians.
-	double finTwoDefl                        = 0.0; // Fin deflection. Radians.
-	double finThreeDefl                      = 0.0; // Fin deflection. Radians.
-	double finFourDefl                       = 0.0; // Fin deflection. Radians.
-	double pitchFinDefl                      = 0.0; // Radians.
-	double yawFinDefl                        = 0.0; // Radians.
-	double rollFinDefl                       = 0.0; // Radians.
+	double finOneDefl                        = 0.0; // fin one deflection in radians
+	double finTwoDefl                        = 0.0; // fin two deflection in radians
+	double finThreeDefl                      = 0.0; // fin three deflection in radians
+	double finFourDefl                       = 0.0; // fin four deflection in radians
+	double pitchFinDefl                      = 0.0; // encoded pitching deflection in radians
+	double yawFinDefl                        = 0.0; // encoded yawing deflection in radians
+	double rollFinDefl                       = 0.0; // encoded rolling deflection in radians
 
 	// Aerodynamic angles and conversions.
-	double alphaPrimeRadians = 0.0; // Radians.
-	double alphaPrimeDegrees = 0.0; // Degrees.
-	double sinPhiPrime = 0.0; // Non dimensional.
-	double cosPhiPrime = 0.0; // Non dimensional.
-	double pitchAeroBallisticFinDeflectionDegrees = 0.0; // Degrees.
-	double yawAeroBallisticFinDeflectionDegrees = 0.0; // Degrees.
-	double rollFinDeflectionDegrees = 0.0; // Degrees.
-	double totalFinDeflectionDegrees = 0.0; // Degrees.
-	double pitchAeroBallisticBodyRateDegrees = 0.0; // Degrees per second.
-	double yawAeroBallisticBodyRateDegrees = 0.0; // Degrees per second
-	double rollRateDegrees = 0.0; // Degrees per second.
-	double sinOfFourTimesPhiPrime = 0.0; // Non dimensional.
-	double squaredSinOfTwoTimesPhiPrime = 0.0; // Non dimensional.
+	double aoaRad           = 0.0; // total angle of attack in radians
+	double aoaDeg           = 0.0; // total angle of attack in degrees
+	double sinPhiPrime      = 0.0; // sin of phi prime
+	double cosPhiPrime      = 0.0; // cos of phi prime
+	double pitchFinDeflAero = 0.0; // pitching fin deflection in the aero ballistic frame in degrees
+	double yawFinDeflAero   = 0.0; // yawing fin deflection in the aero ballistic frame in degrees
+	double rollFinDeflDeg   = 0.0; // encoded rolling deflection in degrees
+	double totFinDeflDeg    = 0.0; // total fin deflection in degrees
+	double pitchRateAero    = 0.0; // pitching body rate in aero ballistic frame in deg/s
+	double yawRateAero      = 0.0; // yawing body rate in aero ballistic frame in deg/s
+	double rollRateDeg      = 0.0; // rolling rate in deg/s
+	double sin4PhiPrime     = 0.0; // == sin(4 * phiPrime)
+	double sqrtSin2PhiPrime = 0.0; // == sin(sqrt(2 * phiPrime))
 
 	// Table look ups.
-	map<string, int> tableNameIndexPairs;
-	vector<vector<vector<double>>> tables;
+	map<string, int> tableNameIndexPairs; // map to track tables by name and their index in the vector below
+	vector<vector<vector<double>>> tables; // stores the aerodynamic, propulsion, and mass property tables
 
 	// Aerodynamics.
-	double CA0 = 0.0; // Axial force coefficient. Non dimensional.
-	double CAA = 0.0; // Axial force derivative of alpha prime. Per degree.
-	double CAD = 0.0; // Axial force derivative of control fin deflection. Per degree^2.
-	double CA_POWER_CORRECTION = 0.0; // Power off correction term for axial force coefficient. Non dimensional.
-	double CYP = 0.0; // Side force coefficient correction term for when phi is non zero. Non dimensional.
-	double CYDR = 0.0; // Side force derivative of elevator. Per degree.
-	double CN0 = 0.0; // Normal force coefficient. Non dimensional.
-	double CNP = 0.0; // Correction to normal force coefficient term for when phi is non zero. Non dimensional.
-	double CNDQ = 0.0; // Normal force derivative of elevator. Per degree.
-	double CLLAP = 0.0; // Roll moment derivative for (alpha prime^2) for when phi is non zero. Per degree^2
-	double CLLP = 0.0; // Roll moment damping derivative. Degrees.
-	double CLLDP = 0.0; // Roll moment derivative of aileron. Per degree.
-	double CLM0 = 0.0; // Pitching moment coefficient at launch center of gravity. Non dimensional.
-	double CLMP = 0.0; // Correction to pitching moment coefficient for when phi is non zero. Non dimensional.
-	double CLMQ = 0.0; // Pitching moment damping derivative. Per degree.
-	double CLMDQ = 0.0; // Pitching moment derivative of elevator. Per degree.
-	double CLNP = 0.0; // Yaw moment coefficient correction for when phi is non zero. Non dimensional.
+	double CA0    = 0.0; // axial force coefficient
+	double CAA    = 0.0; // axial force derivative of alpha prime in 1/deg
+	double CAD    = 0.0; // axial force derivative of control fin deflection in 1/deg^2
+	double CA_OFF = 0.0; // power off correction term for axial force coefficient
+	double CYP    = 0.0; // side force coefficient correction term for when phi is non zero
+	double CYDR   = 0.0; // side force derivative of elevator in 1/deg
+	double CN0    = 0.0; // normal force coefficient
+	double CNP    = 0.0; // correction to normal force coefficient term for when phi is non zero
+	double CNDQ   = 0.0; // normal force derivative of elevator in 1/deg
+	double CLLAP  = 0.0; // roll moment derivative for aoa^2 for when phi is non zero in 1/deg^2
+	double CLLP   = 0.0; // roll moment damping derivative in degrees
+	double CLLDP  = 0.0; // roll moment derivative of aileron in 1/deg
+	double CLM0   = 0.0; // pitching moment coefficient at launch center of gravity
+	double CLMP   = 0.0; // correction to pitching moment coefficient for when phi is non zero
+	double CLMQ   = 0.0; // pitching moment damping derivative in 1/deg
+	double CLMDQ  = 0.0; // pitching moment derivative of elevator in 1/deg
+	double CLNP   = 0.0; // yaw moment coefficient correction for when phi is non zero
 
-	// Mass and motor properties.
-	double mass = 0.0; // Kilograms.
-	double unadjustedThrust = 0.0; // Newtons.
-	double transverseMomentOfInertia = 0.0; // Kilograms * meters^2.
-	double axialMomentOfInertia = 0.0; // Kilograms * meters^2.
-	double centerOfGravityFromNose = 0.0; // Meters.
+	// Mass properties.
+	double mass = 0.0; // missile mass in kilograms
+	double tmoi = 0.0; // transverse moment of inertia in kg-m^2
+	double amoi = 0.0; // axial moment of inertia in kg-m^2
+	double xcg  = 0.0; // axial center of gravity in meters
 
 	// Propulsion.
-	double thrust = 0.0; // Newtons.
+	double vacThrust = 0.0; // vacuum motor thrust in Newtons
+	double thrust    = 0.0; // corrected motor thrust in Newtons
 
 	// Aerodynamic coefficients.
-	double CX = 0.0; // Non dimensional.
-	double CY = 0.0; // Non dimensional.
-	double CZ = 0.0; // Non dimensional.
-	double CL = 0.0; // Non dimensional.
-	double CM = 0.0; // Non dimensional.
-	double CN = 0.0; // Non dimensional.
+	double CX = 0.0; // axial force coefficient
+	double CY = 0.0; // lateral force coefficient
+	double CZ = 0.0; // normal force coefficient
+	double CL = 0.0; // rolling moment coefficient
+	double CM = 0.0; // pitching moment coefficient
+	double CN = 0.0; // yawing moment coefficient
 
 	// Aerodynamic derivatives.
-	double CNA = 0.0; // Per degree.
-	double CMA = 0.0; // Per degree.
-	double CND = 0.0; // Per degree.
-	double CMD = 0.0; // Per degree.
-	double CMQ = 0.0; // Per degree.
-	double CLP = 0.0; // Per degree.
-	double CLD = 0.0; // Per degree.
-	double staticMargin = 0.0; // Non dimensional.
+	double SM  = 0.0; // Non dimensional.
 
 	// Performance and termination check.
 	double missDistance = 0.0; // Meters.

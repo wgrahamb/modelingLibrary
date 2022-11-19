@@ -13,19 +13,14 @@ Build scripts written in python are included.
 
 To Do:
 - Move the build scripts to the actual directory.
-- Dunk this repository and start a new one. this one has become too large and
-my git practices have improved. Will not be including CADAC fortran in the new
-repo, my experience and expertise in Fortran is little to none. Good reference
-to have laying around.
 - Add all cpp debug configurations to vscode config file.
 - Convert the rest of the CADAC sims to CMake projects.
 - CPP_6DOF_SRAAM_V2
      - Enum modes.
      - Split up look up function into aerodynamics, mass properties, and propulsion.
-     - Clean code and set privacy.
-     - Make variable naming uniform.
-     - Walk through the code and clean it. Update the readme to point out how
-     my programming skills have changed from V1 to V2.
+     - Clean code.
+     - Set privacy and friend functions.
+     - Update the readme to point out how my programming skills have changed from V1 to V2.
      - Three dof could use some work.
      - Add global position.
      - Add a getState method.
