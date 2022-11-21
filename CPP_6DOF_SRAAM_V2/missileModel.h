@@ -129,13 +129,13 @@ struct Missile
 		make_shared<secondOrderActuator>(); // pointer to actuator three
 	shared_ptr<secondOrderActuator> actFour  =
 		make_shared<secondOrderActuator>(); // pointer to actuator four
-	double finOneDefl                        = 0.0; // fin one deflection in radians
-	double finTwoDefl                        = 0.0; // fin two deflection in radians
-	double finThreeDefl                      = 0.0; // fin three deflection in radians
-	double finFourDefl                       = 0.0; // fin four deflection in radians
-	double pitchFinDefl                      = 0.0; // encoded pitching deflection in radians
-	double yawFinDefl                        = 0.0; // encoded yawing deflection in radians
-	double rollFinDefl                       = 0.0; // encoded rolling deflection in radians
+	double finOneDefl   = 0.0; // fin one deflection in radians
+	double finTwoDefl   = 0.0; // fin two deflection in radians
+	double finThreeDefl = 0.0; // fin three deflection in radians
+	double finFourDefl  = 0.0; // fin four deflection in radians
+	double pitchFinDefl = 0.0; // encoded pitching deflection in radians
+	double yawFinDefl   = 0.0; // encoded yawing deflection in radians
+	double rollFinDefl  = 0.0; // encoded rolling deflection in radians
 
 	// Aerodynamic angles and conversions.
 	double aoaRad           = 0.0; // total angle of attack in radians
@@ -194,10 +194,10 @@ struct Missile
 	double CN = 0.0; // yawing moment coefficient
 
 	// Aerodynamic derivatives.
-	double SM  = 0.0; // Non dimensional.
+	double SM  = 0.0; // static margin
 
 	// Performance and termination check.
-	double missDistance = 0.0; // Meters.
+	double missDistance = 0.0; // magnitude of the miss in meters
 	string lethality;
 
 	// Integration states.

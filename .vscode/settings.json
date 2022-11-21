@@ -9,7 +9,12 @@
 		"numeric": "cpp",
 		"ratio": "cpp",
 		"stdexcept": "cpp",
-		"tuple": "cpp"
+		"tuple": "cpp",
+		"ctime": "cpp",
+		"iomanip": "cpp",
+		"streambuf": "cpp",
+		"type_traits": "cpp",
+		"utility": "cpp"
 	},
 	"fortran.fortls.disabled": true
 }

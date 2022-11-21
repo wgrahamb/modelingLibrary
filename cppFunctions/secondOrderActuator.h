@@ -1,51 +1,31 @@
-// Standard.
-#include <iostream>
-#include <fstream>
-#include <sstream>
-#include <iomanip>
-#include <chrono>
-#include <math.h>
-#include <vector>
-#include <map>
-#include <algorithm>
-
-// Namespace.
-using namespace std;
-
-// Utility.
+#pragma once
 #include "util.h"
-
-#ifndef SECONDORDERACTUATOR_H
-#define SECONDORDERACTUATOR_H
 
 class secondOrderActuator
 {
 
-	public:
+public:
 
 	// Methods.
-	secondOrderActuator(string logFilePath);
-	double update(double finCommand, double timeStep);
+	secondOrderActuator();
+	double update(double command, double dt);
 
-	// Log file.
-	ofstream logFile;
+private:
 
-	// Base variables.
-	double time; // Seconds.
-	double timeStep; // Seconds.
+	// Time.
+	double t; // total time in seconds
 
 	// Class variables.
-	double deflectionLimit; // Degrees.
-	double deflectionRateLimit; // Degrees per second.
-	double wn; // Degrees per second.
-	double zeta; // Non dimensional.
+	double deflLim; // fin deflection limit in degrees
+	double deflRateLimit; // fin rate limit in deg/s
+	double wn; // natural frequency in deg/s
+	double zeta; // damping
 
 	// State.
-	double deflection; // Degrees.
-	double deflectionDerivative; // Degrees per second.
-	double deflectionDot; // Degrees per second.
-	double deflectionDotDerivative; // Degrees per second squared.
+	double defl; // deflection in degrees
+	double deflDer; // derivative of deflection in deg/s
+	double deflDot; // fin rate in deg/s
+	double deflDotDer; // derivative of fin rate in deg/s^2
 
 };
 
-#endif

@@ -282,9 +282,9 @@ void emplace(Missile &missile, double phiRads, double thetaRads,
 	missile.enuVel[1] = missile.enuToFlu[0][1];
 	missile.enuVel[2] = missile.enuToFlu[0][2];
 	threeByThreeTimesThreeByOne(missile.enuToFlu, missile.enuVel, missile.fluVel);
-	missile.enuAcc[0] = 0.0;
-	missile.enuAcc[1] = 0.0;
-	missile.enuAcc[2] = 0.0;
+	missile.enuAcc[0]    = 0.0;
+	missile.enuAcc[1]    = 0.0;
+	missile.enuAcc[2]    = 0.0;
 	missile.spcfForce[0] = 0.0;
 	missile.spcfForce[1] = 0.0;
 	missile.spcfForce[2] = 0.0;
@@ -518,7 +518,7 @@ void control(Missile &missile)
 			rollRateCmd = ROLL_ANGLE_GAIN * signRollRateCmd;
 		}
 		missile.lastRollPropErr = missile.rollPropErr;
-		missile.rollPropErr     = rollRateCmd - missile.rate[0]; // Radians per second.
+		missile.rollPropErr     = rollRateCmd - missile.rate[0]; // rads/s
 		rollRateDerErr          = (missile.rollPropErr -
 			missile.lastRollPropErr) / missile.timeStep;
 
@@ -1862,8 +1862,8 @@ void threeDofFly(Missile &missile, string flyOutID, bool writeData, bool console
 
 		// Alpha and beta.
 		threeByThreeTimesThreeByOne(missile.enuToFlu, missile.enuVel, missile.fluVel);
-		missile.alphaRadians = -1.0 * atan2_0(missile.fluVel[2], missile.fluVel[0]);
-		missile.betaRadians = atan2_0(missile.fluVel[1], missile.fluVel[0]);
+		missile.alphaRadians = -1.0 * atan2(missile.fluVel[2], missile.fluVel[0]);
+		missile.betaRadians = atan2(missile.fluVel[1], missile.fluVel[0]);
 
 		// Performance and termination check.
 		performanceAndTerminationCheck(missile, flyForThisLong);

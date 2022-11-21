@@ -9,7 +9,10 @@
 #include <map>
 #include <algorithm>
 #include <string>
+
+#ifndef WIN32
 #include <dirent.h>
+#endif
 
 // Namespace.
 using namespace std;
@@ -17,12 +20,14 @@ using namespace std;
 // Utility.
 #include "util.h"
 
-void loopThroughDirectory(string filepath)
+#ifndef WIN32
+// GB. Lists the files in the input directory.
+void loopThroughDirectory(string dirpath)
 {
 
 	struct dirent *entry = nullptr;
 	DIR *dp = nullptr;
-	dp = opendir(filepath.c_str());
+	dp = opendir(dirpath.c_str());
 	if (dp != nullptr)
 	{
 		while ((entry = readdir(dp)))
@@ -34,7 +39,9 @@ void loopThroughDirectory(string filepath)
 	closedir(dp);
 
 };
+#endif
 
+// Returns the sign of a number.
 double signum(double x)
 {
 	double y;
@@ -53,174 +60,13 @@ double signum(double x)
 	return y;
 }
 
-double atan2_0(double y, double x)
-{
-	if( x == 0.0 && y == 0.0)
-	{
-		return 0.0;
-	}
-	else
-	{
-		return atan2( y, x);
-	} 
-}
-
-///////////////////////////////////////////////////////////////////////////////
-////////////////////// Stochastic functions ///////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////
-//Generating an exponential distribution with a given mean density
-//Ref:
-// Tybrin, "CADAC Program documentation", June 2000 and source code CADX3.FOR
-// Numerical Recipies, p 287, 1992 Cambridge University Press
-//Function unituni() is a CADAC++ utility
-//
-//parameter input:
-//			density = # of events per unit of variable (in the mean)
-//return output:
-//			value = units of variable to be traversed until next event occurs
-//
-//The variance is density^2
-//
-//010919 Created by Peter H Zipfel
-///////////////////////////////////////////////////////////////////////////////
-double exponentialDistribution(double density)
-{
-	double value;
-	value=-log(randomNumberBetweenZeroAndOne());
-	return value/density;
-}
-
-///////////////////////////////////////////////////////////////////////////////
-//Generating a standard distribution with 'mean' and 'sig' std deviation
-//Ref Numerical Recipies, p 289, 1992 Cambridge University Press
-//Function unituni() is a CADAC++ utility
-//
-//parameter input:
-//			min = standard deviation of Gaussian distribution - unit of variable
-//			mean = mean value of Gaussian distribution - unit of variable
-//return output:
-//			value = value of variable - unit of variable
-//
-//010913 Created by Peter H Zipfel
-//010914 Normalized gauss tested with a 2000 sample: mean=0.0054, sigma=0.9759
-///////////////////////////////////////////////////////////////////////////////
-double gaussianDistribution(double mean=0.0, double sig=1.0)
-{
-	static int iset=0;
-	static double gset;
-	double fac,rsq,v1,v2,value;
-
-	if(iset==0)
-	{
-		do
-		{
-			v1=2.*randomNumberBetweenZeroAndOne()-1.;
-			v2=2.*randomNumberBetweenZeroAndOne()-1.;
-			rsq=v1*v1+v2*v2;
-		}while(rsq>=1.0||rsq==0);
-		fac=sqrt(-2.*log(rsq)/rsq);
-		gset=v1*fac;
-		iset=1;
-		value=v2*fac;
-	}
-	else
-	{
-		iset=0;
-		value=gset;
-	}
-	return value*sig+mean;
-}
-
-///////////////////////////////////////////////////////////////////////////////
-//Generating a time-correlated Gaussian variable with zero mean
-//Ref: CADAC Subroutine CNT_GAUSS
-//Function gauss() is CADAC++ utility
-//
-//parameter input:
-//			sigma = standard deviation of Gaussian distribution - unit of variable
-//			bcor = beta time correlation coefficient - 1/s (Hz)
-//			time = simulation time - s
-//			intstep = integration step size - s
-//			value_saved = value of previous integration step
-//return output:
-//			value = value of variable - unit of variable
-//
-//010914 Created by Peter H Zipfel
-//020723 Replaced static variable by '&value_saved', PZi
-///////////////////////////////////////////////////////////////////////////////
-double markovDistribution(double sigma,double bcor,double time,double intstep,double &value_saved)
-{
-	double value=0;
-	value=gaussianDistribution(0.,sigma);
-	if(time==0.) value_saved=value;
-	else
-	{
-		if(bcor!=0.)
-		{
-			double dum=exp(-bcor*intstep);
-			double dumsqrd=dum*dum;
-			value=value*sqrt(1.-dumsqrd)+value_saved*dum;
-			value_saved=value;
-		}
-	}
-	return value;
-}
-
-///////////////////////////////////////////////////////////////////////////////
-//Generating a Rayleigh distribution with peak value of pdf = 'mode'
-//Ref: Tybrin, "CADAC Program documentation", June 2000 and source code CADX3.FOR
-//Function unituni() is a CADAC++ utility
-//
-//parameter input:
-//			mode= mode (peak value of pdf) of Rayleigh distribution - unit of variable
-//return output:
-//			value=value of variable - unit of variable
-//
-//The mean of the distribution is: mean = mode * (pi/2)
-//The variance is: variance = mode^2 * (2 - pi/2)
-//
-//010918 Created by Peter H Zipfel
-///////////////////////////////////////////////////////////////////////////////
-double rayleighDistribution(double mode)
-{
-	double value;
-
-	value=sqrt(2.*(-log(randomNumberBetweenZeroAndOne())));
-	return value*mode;
-}
-
-///////////////////////////////////////////////////////////////////////////////
-//Generating uniform random distribution between 'min' and 'max' 
-//
-//010913 Created by Peter H Zipfel
-///////////////////////////////////////////////////////////////////////////////
-double uniformDistribution(double min,double max)
-{
-	double value;
-	value=min+(max-min)*randomNumberBetweenZeroAndOne();
-	return value;
-}
-
-///////////////////////////////////////////////////////////////////////////////
-//Generating uniform random distribution between 0-1 based on C function rand()
-//
-//010913 Created by Peter H Zipfel
-///////////////////////////////////////////////////////////////////////////////
-double randomNumberBetweenZeroAndOne()
-{
-	double value;
-	value=(double)rand()/RAND_MAX;
-	return value;
-}
-
-// GRAHAM BEECH
+// GB. Simple integration method.
 double trapezoidIntegrate(double dy_new, double dy, double y, double intStep)
 {
 	return y + ((dy_new + dy) * intStep / 2);
 }
 
-// GRAHAM BEECH
+// GB.
 void flightPathAnglesToLocalOrientation (double azimuth, double elevation, double localFrame[3][3])
 {
 	localFrame[0][0] = cos(elevation) * cos(azimuth);
@@ -234,7 +80,7 @@ void flightPathAnglesToLocalOrientation (double azimuth, double elevation, doubl
 	localFrame[2][2] = cos(elevation);
 }
 
-// GRAHAM BEECH
+// GB. Direction cosine matrix.
 void eulerAnglesToLocalOrientation (double phi, double theta, double psi, double matrix[3][3])
 {
 	matrix[0][0] = cos(psi) * cos(theta);
@@ -248,7 +94,7 @@ void eulerAnglesToLocalOrientation (double phi, double theta, double psi, double
 	matrix[2][2] = cos(theta) * cos(phi);
 }
 
-// GRAHAM BEECH
+// GB. Unit vector.
 void unitVec (double vector[3], double unitVector[3])
 {
 	double mag = sqrt(vector[0] * vector[0] + vector[1] * vector[1] + vector[2] * vector[2]);
@@ -257,7 +103,7 @@ void unitVec (double vector[3], double unitVector[3])
 	unitVector[2] = vector[2] / mag;
 }
 
-// GRAHAM BEECH
+// GB.
 void azAndElFromVector (double &az, double &el, double vector[3])
 {
 	az = atan2(vector[1], vector[0]);
@@ -267,7 +113,7 @@ void azAndElFromVector (double &az, double &el, double vector[3])
 	el = atan2(vector[2], t3);
 }
 
-// GRAHAM BEECH
+// GB.
 void oneByThreeTimesThreeByThree(double arr[3], double matrix[3][3], double out[3])
 {
 	out[0] = matrix[0][0] * arr[0] + matrix[1][0] * arr[1] + matrix[2][0] * arr[2];
@@ -275,7 +121,7 @@ void oneByThreeTimesThreeByThree(double arr[3], double matrix[3][3], double out[
 	out[2] = matrix[0][2] * arr[0] + matrix[1][2] * arr[1] + matrix[2][2] * arr[2];
 }
 
-// GRAHAM BEECH
+// GB.
 void threeByThreeTimesThreeByOne(double matrix[3][3], double arr[3], double out[3])
 {
 	out[0] = matrix[0][0] * arr[0] + matrix[0][1] * arr[1] + matrix[0][2] * arr[2];
@@ -283,7 +129,7 @@ void threeByThreeTimesThreeByOne(double matrix[3][3], double arr[3], double out[
 	out[2] = matrix[2][0] * arr[0] + matrix[2][1] * arr[1] + matrix[2][2] * arr[2];
 }
 
-// GRAHAM BEECH
+// GB.
 void threeByThreeTimesThreeByThree(double mat1[3][3], double mat2[3][3], double out[3][3])
 {
 	for (int i = 0; i < 3; i++)
@@ -295,7 +141,7 @@ void threeByThreeTimesThreeByThree(double mat1[3][3], double mat2[3][3], double 
 	}
 }
 
-// GRAHAM BEECH
+// GB.
 void magnitude(double arr[3], double &out)
 {
 	double t1 = pow(arr[0], 2);
@@ -304,7 +150,7 @@ void magnitude(double arr[3], double &out)
 	out = sqrt(t1 + t2 + t3);
 }
 
-// GRAHAM BEECH
+// GB.
 void subtractTwoVectors(double vec1[3], double vec2[3], double out[3])
 {
 	out[0] = vec2[0] - vec1[0];
@@ -312,7 +158,7 @@ void subtractTwoVectors(double vec1[3], double vec2[3], double out[3])
 	out[2] = vec2[2] - vec1[2];
 }
 
-// GRAHAM BEECH
+// GB.
 void addTwoVectors(double vec1[3], double vec2[3], double out[3])
 {
 	out[0] = vec2[0] + vec1[0];
@@ -320,7 +166,7 @@ void addTwoVectors(double vec1[3], double vec2[3], double out[3])
 	out[2] = vec2[2] + vec1[2];
 }
 
-// GRAHAM BEECH
+// GB.
 void multiplyTwoVectors(double vec1[3], double vec2[3], double out[3])
 {
 	out[0] = vec2[0] * vec1[0];
@@ -328,7 +174,7 @@ void multiplyTwoVectors(double vec1[3], double vec2[3], double out[3])
 	out[2] = vec2[2] * vec1[2];
 }
 
-// GRAHAM BEECH
+// GB.
 void crossProductTwoVectors (double vec1[3], double vec2[3], double out[3])
 {
 	out[0] = vec1[1] * vec2[2] - vec1[2] * vec2[1];
@@ -336,13 +182,13 @@ void crossProductTwoVectors (double vec1[3], double vec2[3], double out[3])
 	out[2] = vec1[0] * vec2[1] - vec1[1] * vec2[0];
 }
 
-// GRAHAM BEECH
+// GB.
 void dotProductTwoVectors (double vec1[3], double vec2[3], double &out)
 {
 	out = vec1[0] * vec2[0] + vec1[1] * vec2[1] + vec1[2] * vec2[2];
 }
 
-// GRAHAM BEECH
+// GB.
 void vectorProjection (double uv[3], double vec[3], double out[3])
 {
 	double uvXvu[3][3];
@@ -360,7 +206,7 @@ void vectorProjection (double uv[3], double vec[3], double out[3])
 	out[2] = uvXvu[2][0] * vec[0] + uvXvu[2][1] * vec[1] + uvXvu[2][2] * vec[2];
 }
 
-// GRAHAM BEECH
+// GB.
 void multiplyVectorTimesScalar(double scalar, double vec[3], double out[3])
 {
 	out[0] = scalar * vec[0];
@@ -368,7 +214,7 @@ void multiplyVectorTimesScalar(double scalar, double vec[3], double out[3])
 	out[2] = scalar * vec[2];
 }
 
-// GRAHAM BEECH
+// GB.
 void divideVectorByScalar(double scalar, double vec[3], double out[3])
 {
 	out[0] = vec[0] / scalar;
@@ -376,7 +222,7 @@ void divideVectorByScalar(double scalar, double vec[3], double out[3])
 	out[2] = vec[2] / scalar;
 }
 
-// Graham Beech.
+// GB.
 void setArrayEquivalentToReference(double arrayToBeChanged[3], double reference[3])
 {
 	arrayToBeChanged[0] = reference[0];
@@ -384,7 +230,7 @@ void setArrayEquivalentToReference(double arrayToBeChanged[3], double reference[
 	arrayToBeChanged[2] = reference[2];
 }
 
-// Graham Beech.
+// GB.
 void setArrayEquivalentToZero(double array[3])
 {
 	array[0] = 0.0;
@@ -392,13 +238,13 @@ void setArrayEquivalentToZero(double array[3])
 	array[2] = 0.0;
 }
 
-// Graham Beech.
+// GB.
 void consolePrintArray(string id, double array[3])
 {
 	cout << id << " " << array[0] << " " << array[1] << " " << array[2] << "\n";
 }
 
-// GRAHAM BEECH
+// GB.
 double linearInterpolationWithBoundedEnds(std::vector<std::vector<double>> table, double tableInput)
 {
 	int lowIndex = -100000;
@@ -447,7 +293,7 @@ double linearInterpolationWithBoundedEnds(std::vector<std::vector<double>> table
 	return interpolatedValue;
 }
 
-// GRAHAM BEECH
+// GB.
 double biLinearInterpolationWithBoundedBorders(std::vector<std::vector<double>> table, double tableRowInput, double tableColumnInput)
 {
 	int lowRowIndex = -100000;
