@@ -34,8 +34,16 @@ const double ALPHA_PRIME_MAX            = 40.0; // maximum angle of attack allow
 const double SEA_LEVEL_PRESSURE         = 101325; // nominal pressure in pascals
 const double LAUNCH_XCG_FROM_NOSE       = 1.5357; // center of mass at missile launch in meters
 const double ROLL_ANGLE_GAIN            = 1.0; // 1/s
-const double ROLL_PROP_GAIN             = 0.011;
-const double ROLL_DER_GAIN              = 0.000034125;
+const double ROLL_PROP_GAIN             = 0.011; // 1/s
+const double ROLL_DER_GAIN              = 0.000034125; // nd
+const double PITCH_RATE_COMM_LIMIT      = 20.0; // rads/s
+const double PITCH_PROP_GAIN            = 0.08; // 1/s
+const double PITCH_DER_GAIN             = 0.000375; // nd
+const double PITCH_INT_GAIN             = 0.0018; // nd
+const double YAW_RATE_COMM_LIMIT        = 20.0; // rads/s
+const double YAW_PROP_GAIN              = 0.11; // 1/s
+const double YAW_DER_GAIN               = 0.000375; // nd
+const double YAW_INT_GAIN               = 0.0018; // nd
 
 /* This struct fully represents a missile. */
 struct Missile

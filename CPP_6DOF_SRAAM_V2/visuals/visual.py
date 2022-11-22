@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import matplotlib
 matplotlib.use('WebAgg')
 
-f1 = r"CPP_6DOF_SRAAM_V2/output/missileRk4_6DOF.txt"
+f1 = r"CPP_6DOF_SRAAM_V2/output/missileRk2_6DOF.txt"
 
 viewFile = f1
 

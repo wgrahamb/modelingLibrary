@@ -1,7 +1,7 @@
 import subprocess
 
 ballistic = 0 # Boolean.
-INTEGRATION_METHOD = 0 # 0 = Euler, 1 = RK2, 2 = RK4.
+INTEGRATION_METHOD = 1 # 0 = Euler, 1 = RK2, 2 = RK4.
 phi = 0 # Degrees.
 theta = 55 # Degrees.
 psi = 20 # Degrees.
@@ -13,7 +13,7 @@ tgtN = 5000 # Meters.
 tgtU = 5000 # Meters.
 LogData = 1 # Boolean.
 ConsoleReport = 1 # Boolean.
-ID = "missileRk4"
+ID = "missileRk2"
 
 InputString = f"{ballistic} {INTEGRATION_METHOD} {phi} {theta} \
 {psi} {posE} {posN} {posU} {tgtE} {tgtN} {tgtU} {LogData} {ConsoleReport} {ID}\n"
