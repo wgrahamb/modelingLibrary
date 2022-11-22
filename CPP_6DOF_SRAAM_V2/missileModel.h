@@ -33,7 +33,7 @@ const double ROLL_ANGLE_COMMAND         = 0.0; // commanded roll angle in radian
 const double ALPHA_PRIME_MAX            = 40.0; // maximum angle of attack allowed in radians
 const double SEA_LEVEL_PRESSURE         = 101325; // nominal pressure in pascals
 const double LAUNCH_XCG_FROM_NOSE       = 1.5357; // center of mass at missile launch in meters
-const double ROLL_ANGLE_GAIN            = 1.0; 
+const double ROLL_ANGLE_GAIN            = 1.0; // 1/s
 const double ROLL_PROP_GAIN             = 0.011;
 const double ROLL_DER_GAIN              = 0.000034125;
 
@@ -194,7 +194,7 @@ struct Missile
 	double CN = 0.0; // yawing moment coefficient
 
 	// Aerodynamic derivatives.
-	double SM  = 0.0; // static margin
+	double SM = 0.0; // static margin
 
 	// Performance and termination check.
 	double missDistance = 0.0; // magnitude of the miss in meters

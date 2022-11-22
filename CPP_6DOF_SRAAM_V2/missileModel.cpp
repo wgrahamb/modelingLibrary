@@ -817,7 +817,7 @@ void aerodynamicDerivatives(Missile &missile)
 	double CMQ = missile.CLMQ * radToDeg;
 	double CLP = missile.CLLP * radToDeg;
 	double CLD = missile.CLLDP * radToDeg;
-	double SM  = -1 * (CMA * degToRad) / (CNA * degToRad);
+	missile.SM = -1 * CMA / CNA;
 
 	double T1  = missile.q * REFERENCE_AREA / missile.mass;
 	double DNA = T1 * CNA; // normal force slope derivative in m/s^2
@@ -1235,7 +1235,7 @@ void missileMotion(Missile &missile)
 	missile.enuAttitudeDot[1] = missile.rate[1] * cos(missile.enuAttitude[0]) - missile.rate[2] * sin(missile.enuAttitude[0]);
 	missile.enuAttitudeDot[2] = (missile.rate[1] * sin(missile.enuAttitude[0]) + missile.rate[2] * cos(missile.enuAttitude[0])) / cos(missile.enuAttitude[1]);
 
-	// STATE.
+	/* Integrate state. */
 	if (missile.INTEGRATION_METHOD == 0)
 	{
 		eulerIntegrateStates(missile);
@@ -1257,6 +1257,7 @@ void missileMotion(Missile &missile)
 		missile.enuToFlu
 	);
 
+	// Rotate local velocity into body velocity.
 	threeByThreeTimesThreeByOne(missile.enuToFlu, missile.enuVel, missile.fluVel);
 
 }

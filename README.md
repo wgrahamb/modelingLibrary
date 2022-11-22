@@ -32,7 +32,6 @@ To Do:
 - PY_5DOF_MOCK_HELLFIRE
      - Directly integrating rates into euler angles, switch to quaternions.
      - Rotating elliptical earth.
-     - Coriolos and centrifugal force.
      - INS from Zipfel CADAC_ADS6 project.
      - Kalman Filter to pair with it after finished working through examples.
      - Line of attack into pronav.
