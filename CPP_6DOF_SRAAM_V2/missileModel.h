@@ -13,11 +13,10 @@
 // Namespace.
 using namespace std;
 
-// Components.
-#include "secondOrderActuator.h"
+#pragma once
 
-#ifndef MISSILEMODEL_H
-#define MISSILEMODEL_H
+/* Components. */
+#include "secondOrderActuator.h"
 
 /* Missile constants. */
 const double REFERENCE_AREA             = 0.01824; // missile reference area in m^2
@@ -44,6 +43,33 @@ const double YAW_RATE_COMM_LIMIT        = 20.0; // rads/s
 const double YAW_PROP_GAIN              = 0.11; // 1/s
 const double YAW_DER_GAIN               = 0.000375; // nd
 const double YAW_INT_GAIN               = 0.0018; // nd
+
+/* End modes. */
+enum class endStatus
+{
+	Loitering = -1, // missile is sitting on the ground
+	Flying    = 0, // missile is in flight
+	Ground    = 1, // missile hit the ground
+	Nan       = 2, // not a number has contaminated the data
+	Time      = 3, // maximum time exceeded
+	Poca      = 4, // point of closest approace passed
+	Success   = 5 // missile hit its waypoint
+};
+
+/* Map of end modes for console report. */
+const std::map<int, std::string> endStatusMap =
+{
+	{-1, "Loitering"},
+	{0,  "Flying"},
+	{1,  "Ground"},
+	{2,  "Nan"},
+	{3,  "Time"},
+	{4,  "Poca"},
+	{5,  "Success"}
+};
+
+/* Declare static functions, so that they cannot be used by users.*/
+// static void atmosphere(Missile &missile);
 
 /* This struct fully represents a missile. */
 struct Missile
@@ -202,11 +228,11 @@ struct Missile
 	double CN = 0.0; // yawing moment coefficient
 
 	// Aerodynamic derivatives.
-	double SM = 0.0; // static margin
+	double staticMargin = 0.0; // static margin
 
 	// Performance and termination check.
 	double missDistance = 0.0; // magnitude of the miss in meters
-	string lethality;
+	endStatus lethality; // current missile mode
 
 	// Integration states.
 	// P  = ENUPosition
@@ -217,43 +243,43 @@ struct Missile
 	// W  = BodyRate
 	// WD = BodyRateDot.
 	int INTEGRATION_METHOD = 2;
-	int INTEGRATION_PASS = 0;
+	int INTEGRATION_PASS   = 0;
 
 	double P0[3] = {0.0, 0.0, 0.0};
 	double V0[3] = {0.0, 0.0, 0.0};
 	double E0[3] = {0.0, 0.0, 0.0};
 	double W0[3] = {0.0, 0.0, 0.0};
 
-	double P1[3] = {0.0, 0.0, 0.0};
-	double V1[3] = {0.0, 0.0, 0.0};
-	double A1[3] = {0.0, 0.0, 0.0};
-	double E1[3] = {0.0, 0.0, 0.0};
+	double P1[3]  = {0.0, 0.0, 0.0};
+	double V1[3]  = {0.0, 0.0, 0.0};
+	double A1[3]  = {0.0, 0.0, 0.0};
+	double E1[3]  = {0.0, 0.0, 0.0};
 	double ED1[3] = {0.0, 0.0, 0.0};
-	double W1[3] = {0.0, 0.0, 0.0};
+	double W1[3]  = {0.0, 0.0, 0.0};
 	double WD1[3] = {0.0, 0.0, 0.0};
 
-	double P2[3] = {0.0, 0.0, 0.0};
-	double V2[3] = {0.0, 0.0, 0.0};
-	double A2[3] = {0.0, 0.0, 0.0};
-	double E2[3] = {0.0, 0.0, 0.0};
+	double P2[3]  = {0.0, 0.0, 0.0};
+	double V2[3]  = {0.0, 0.0, 0.0};
+	double A2[3]  = {0.0, 0.0, 0.0};
+	double E2[3]  = {0.0, 0.0, 0.0};
 	double ED2[3] = {0.0, 0.0, 0.0};
-	double W2[3] = {0.0, 0.0, 0.0};
+	double W2[3]  = {0.0, 0.0, 0.0};
 	double WD2[3] = {0.0, 0.0, 0.0};
 
-	double P3[3] = {0.0, 0.0, 0.0};
-	double V3[3] = {0.0, 0.0, 0.0};
-	double A3[3] = {0.0, 0.0, 0.0};
-	double E3[3] = {0.0, 0.0, 0.0};
+	double P3[3]  = {0.0, 0.0, 0.0};
+	double V3[3]  = {0.0, 0.0, 0.0};
+	double A3[3]  = {0.0, 0.0, 0.0};
+	double E3[3]  = {0.0, 0.0, 0.0};
 	double ED3[3] = {0.0, 0.0, 0.0};
-	double W3[3] = {0.0, 0.0, 0.0};
+	double W3[3]  = {0.0, 0.0, 0.0};
 	double WD3[3] = {0.0, 0.0, 0.0};
 
-	double P4[3] = {0.0, 0.0, 0.0};
-	double V4[3] = {0.0, 0.0, 0.0};
-	double A4[3] = {0.0, 0.0, 0.0};
-	double E4[3] = {0.0, 0.0, 0.0};
+	double P4[3]  = {0.0, 0.0, 0.0};
+	double V4[3]  = {0.0, 0.0, 0.0};
+	double A4[3]  = {0.0, 0.0, 0.0};
+	double E4[3]  = {0.0, 0.0, 0.0};
 	double ED4[3] = {0.0, 0.0, 0.0};
-	double W4[3] = {0.0, 0.0, 0.0};
+	double W4[3]  = {0.0, 0.0, 0.0};
 	double WD4[3] = {0.0, 0.0, 0.0};
 
 };
@@ -266,4 +292,3 @@ void seekerOn(Missile &missile);
 void sixDofFly(Missile &missile, string flyOutID, bool writeData, bool consoleReport, double maxTime);
 void threeDofFly(Missile &missile, string flyOutID, bool writeData, bool consoleReport, double maxTime);
 
-#endif

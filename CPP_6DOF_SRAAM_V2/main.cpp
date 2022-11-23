@@ -75,7 +75,7 @@ int main()
 	seekerOn(missile);
 
 	// Set lethality to flying. Missile will not fly unless.
-	missile.lethality = "FLYING";
+	missile.lethality = endStatus::Flying;
 	missile.isLaunched = true;
 
 	// six dof missile flight.

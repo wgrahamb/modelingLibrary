@@ -289,7 +289,7 @@ void emplace(Missile &missile, double phiRads, double thetaRads,
 	missile.spcfForce[1] = 0.0;
 	missile.spcfForce[2] = 0.0;
 	magnitude(missile.enuVel, missile.spd);
-	missile.lethality = "LOITERING"; // STATUS
+	missile.lethality = endStatus::Loitering; // STATUS
 }
 
 // For the case of new flyouts as well as "seeker on."
@@ -314,7 +314,7 @@ void seekerOn(Missile &missile)
 	missile.skrWlq    = missile.skrTht;
 }
 
-void atmosphere(Missile &missile)
+static void atmosphere(Missile &missile)
 {
 	magnitude(missile.enuVel, missile.spd);
 	auto ATM = atm1976_metric::update(missile.enuPos[2], missile.spd);
@@ -867,7 +867,7 @@ void aerodynamicDerivatives(Missile &missile)
 	double CMQ = missile.CLMQ * radToDeg;
 	double CLP = missile.CLLP * radToDeg;
 	double CLD = missile.CLLDP * radToDeg;
-	missile.SM = -1 * CMA / CNA;
+	missile.staticMargin = -1 * CMA / CNA;
 
 	double T1  = missile.q * REFERENCE_AREA / missile.mass;
 	double DNA = T1 * CNA; // normal force slope derivative in m/s^2
@@ -1319,342 +1319,117 @@ void missileMotion(Missile &missile)
 	threeByThreeTimesThreeByOne(missile.enuToFlu, missile.enuVel, missile.fluVel);
 }
 
-void performanceAndTerminationCheck(Missile &missile, double maxTime)
+void endCheck(Missile &missile, double maxTime)
 {
 	magnitude(missile.mslToWaypoint, missile.missDistance);
 
 	if (missile.enuPos[2] < 0)
 	{
-		missile.lethality = "GROUND_COLLISION";
+		missile.lethality = endStatus::Ground;
 	}
 	else if (isnan(missile.enuPos[0]))
 	{
-		missile.lethality = "NOT_A_NUMBER";
+		missile.lethality = endStatus::Nan;
 	}
 	else if (missile.tof > maxTime)
 	{
-		missile.lethality = "MAX_TIME_EXCEEDED";
+		missile.lethality = endStatus::Time;
 	}
 
 	if (!missile.isBallistic)
 	{
 		if (missile.missDistance < 5.0)
 		{
-			missile.lethality = "SUCCESSFUL_INTERCEPT";
+			missile.lethality = endStatus::Success;
 		}
 		else if (missile.mslToWaypoint[0] < 0)
 		{
-			missile.lethality = "POINT_OF_CLOSEST_APPROACH_PASSED";
+			missile.lethality = endStatus::Poca;
 		}
 	}
 }
 
 void writeLogFileHeader(ofstream &logFile)
 {
-	// Logging everything.
 	logFile << fixed << setprecision(10) <<
-	"tgtE" <<
-	" " << "tgtN" <<
-	" " << "tgtU" <<
-	" " << "tof" <<
-	" " << "posE" <<
-	" " << "posN" <<
-	" " << "posU" <<
-	" " << "range" <<
-	" " << "velE" <<
-	" " << "velN" <<
-	" " << "velU" <<
-	" " << "u" <<
-	" " << "v" <<
-	" " << "w" <<
-	" " << "speed" <<
-	" " << "mach" <<
-	" " << "accE" <<
-	" " << "accN" <<
-	" " << "accU" <<
-	" " << "udot" <<
-	" " << "vdot" <<
-	" " << "wdot" <<
-	" " << "ENUToFLU_0_0" <<
-	" " << "ENUToFLU_0_1" <<
-	" " << "ENUToFLU_0_2" <<
-	" " << "ENUToFLU_1_0" <<
-	" " << "ENUToFLU_1_1" <<
-	" " << "ENUToFLU_1_2" <<
-	" " << "ENUToFLU_2_0" <<
-	" " << "ENUToFLU_2_1" <<
-	" " << "ENUToFLU_2_2" <<
-	" " << "alphaRadians" <<
-	" " << "betaRadians" <<
-	" " << "alphaDegrees" <<
-	" " << "betaDegrees" <<
-	" " << "phi" <<
-	" " << "theta" <<
-	" " << "psi" <<
-	" " << "phiDot" <<
-	" " << "thetaDot" <<
-	" " << "psiDot" <<
-	" " << "p" <<
-	" " << "q" <<
-	" " << "r" <<
-	" " << "pdot" <<
-	" " << "qdot" <<
-	" " << "rdot" <<
-	" " << "gravity" <<
-	" " << "axialGravity" <<
-	" " << "sideGravity" <<
-	" " << "normalGravity" <<
-	" " << "pressure" <<
-	" " << "dynamicPressure" <<
-	" " << "seekerPitch" <<
-	" " << "seekerYaw" <<
-	" " << "seekerENUToFLU_0_0" <<
-	" " << "seekerENUToFLU_0_1" <<
-	" " << "seekerENUToFLU_0_2" <<
-	" " << "seekerENUToFLU_1_0" <<
-	" " << "seekerENUToFLU_1_1" <<
-	" " << "seekerENUToFLU_1_2" <<
-	" " << "seekerENUToFLU_2_0" <<
-	" " << "seekerENUToFLU_2_1" <<
-	" " << "seekerENUToFLU_2_2" <<
-	" " << "seekerPitchError" <<
-	" " << "seekerYawError" <<
-	" " << "seekerWLR" <<
-	" " << "seekerWLRD" <<
-	" " << "seekerWLR1" <<
-	" " << "seekerWLR1D" <<
-	" " << "seekerWLR2" <<
-	" " << "seekerWLR2D" <<
-	" " << "seekerWLQ" <<
-	" " << "seekerWLQD" <<
-	" " << "seekerWLQ1" <<
-	" " << "seekerWLQ1D" <<
-	" " << "seekerWLQ2" <<
-	" " << "seekerWLQ2D" <<
-	" " << "homing" <<
-	" " << "timeToGo" <<
-	" " << "missileToInterceptRelativePositionForward"
-	" " << "missileToInterceptRelativePositionLeft"
-	" " << "missileToInterceptRelativePositionUp"
-	" " << "guidanceNormalCommand" <<
-	" " << "guidanceSideCommand" <<
-	" " << "accelerationLimit" <<
-	" " << "lastRollRateError" <<
-	" " << "rollRateError" <<
-	" " << "rollFinCommand" <<
-	" " << "lastPitchRateError" <<
-	" " << "pitchRateError" <<
-	" " << "pitchFinCommand" <<
-	" " << "lastYawRateError" <<
-	" " << "yawRateError" <<
-	" " << "yawFinCommand" <<
-	" " << "rollFinDeflection" <<
-	" " << "pitchFinDeflection" <<
-	" " << "yawFinDeflection" <<
-	" " << "finOneDeflection" <<
-	" " << "finTwoDeflection" <<
-	" " << "finThreeDeflection" <<
-	" " << "finFourDeflection" <<
-	" " << "alphaPrimeRadians" <<
-	" " << "alphaPrimeDegrees"
-	" " << "sinPhiPrime" <<
-	" " << "cosPhiPrime" <<
-	" " << "rollFinDeflectionDegrees" <<
-	" " << "pitchFinDeflectionDegreesAeroBallisticFrame" <<
-	" " << "yawFinDeflectionDegreesAeroBallisticFrame" <<
-	" " << "totalFinDeflectionDegrees" <<
-	" " << "pitchRateDegreesAeroBallisticFrame" <<
-	" " << "yawRateDegreesAeroBallisticFrame" <<
-	" " << "rollRateDegrees" <<
-	" " << "sinOfFourTimesPhiPrime" <<
-	" " << "squaredSinOfTwoTimesPhiPrime"
-	" " << "CA0" <<
-	" " << "CAA" <<
-	" " << "CAD" <<
-	" " << "CAOFF" <<
-	" " << "CYP" <<
-	" " << "CYDR" <<
-	" " << "CN0" <<
-	" " << "CNP" <<
-	" " << "CNDQ" <<
-	" " << "CLLAP" <<
-	" " << "CLLP" <<
-	" " << "CLLDP" <<
-	" " << "CLM0" <<
-	" " << "CLMP" <<
-	" " << "CLMQ" <<
-	" " << "CLMDQ" <<
-	" " << "CLNP" <<
-	" " << "mass" <<
-	" " << "unadjustedThrust" <<
-	" " << "transverseMomentOfInertia" <<
-	" " << "axialMomentOfInertia" <<
-	" " << "centerOfGravityFromNose" <<
-	" " << "thrust" <<
-	" " << "CX" <<
-	" " << "CY" <<
-	" " << "CZ" <<
-	" " << "CL" <<
-	" " << "CM" <<
-	" " << "CN" <<
-	" " << "staticMargin" <<
-	" " << "missDistance" <<
-	" " << "lethality" <<
-	" " << "launch" <<
+	"tof " <<
+	"posE " <<
+	"posN " <<
+	"posU " <<
+	"tgtE " <<
+	"tgtN " <<
+	"tgtU " <<
+	"phi " <<
+	"p " <<
+	"rollRateError " <<
+	"theta " <<
+	"alphaRadians " <<
+	"q " <<
+	"pitchRateError " <<
+	"psi " <<
+	"betaRadians " <<
+	"r " <<
+	"yawRateError " <<
+	"rollFinCommand " <<
+	"rollFinDeflection " <<
+	"pitchFinCommand " <<
+	"pitchFinDeflection " <<
+	"yawFinCommand " <<
+	"yawFinDeflection " <<
+	"vdot " <<
+	"guidanceSideCommand " <<
+	"wdot " <<
+	"guidanceNormalCommand " <<
+	"mach " <<
+	"accelerationLimit " <<
+	"staticMargin " <<
+	"alphaPrimeDegrees " <<
+	"seekerPitch " <<
+	"seekerYaw " <<
+	"seekerPitchError " <<
+	"seekerYawError" <<
 	"\n";
 }
 
 void logData(Missile &missile, ofstream &logFile)
 {
 	logFile << fixed << setprecision(10) <<
-	missile.waypoint[0] << " " <<
-	missile.waypoint[1] << " " <<
-	missile.waypoint[2] << " " <<
 	missile.tof << " " <<
 	missile.enuPos[0] << " " <<
 	missile.enuPos[1] << " " <<
 	missile.enuPos[2] << " " <<
-	missile.rng << " " <<
-	missile.enuVel[0] << " " <<
-	missile.enuVel[1] << " " <<
-	missile.enuVel[2] << " " <<
-	missile.fluVel[0] << " " <<
-	missile.fluVel[1] << " " <<
-	missile.fluVel[2] << " " <<
-	missile.spd << " " <<
-	missile.mach << " " <<
-	missile.enuAcc[0] << " " <<
-	missile.enuAcc[1] << " " <<
-	missile.enuAcc[2] << " " <<
-	missile.spcfForce[0] << " " <<
-	missile.spcfForce[1] << " " <<
-	missile.spcfForce[2] << " " <<
-	missile.enuToFlu[0][0] << " " <<
-	missile.enuToFlu[0][1] << " " <<
-	missile.enuToFlu[0][2] << " " <<
-	missile.enuToFlu[1][0] << " " <<
-	missile.enuToFlu[1][1] << " " <<
-	missile.enuToFlu[1][2] << " " <<
-	missile.enuToFlu[2][0] << " " <<
-	missile.enuToFlu[2][1] << " " <<
-	missile.enuToFlu[2][2] << " " <<
-	missile.alphaRadians << " " <<
-	missile.betaRadians << " " <<
-	missile.alphaDegrees << " " <<
-	missile.betaDegrees << " " <<
+	missile.waypoint[0] << " " <<
+	missile.waypoint[1] << " " <<
+	missile.waypoint[2] << " " <<
 	missile.enuAttitude[0] << " " <<
-	missile.enuAttitude[1] << " " <<
-	missile.enuAttitude[2] << " " <<
-	missile.enuAttitudeDot[0] << " " <<
-	missile.enuAttitudeDot[1] << " " <<
-	missile.enuAttitudeDot[2] << " " <<
 	missile.rate[0] << " " <<
+	missile.rollPropErr << " " <<
+	missile.enuAttitude[1] << " " <<
+	missile.alphaRadians << " " <<
 	missile.rate[1] << " " <<
+	missile.pitchPropErr << " " <<
+	missile.enuAttitude[2] << " " <<
+	missile.betaRadians << " " <<
 	missile.rate[2] << " " <<
-	missile.rateDot[0] << " " <<
-	missile.rateDot[1] << " " <<
-	missile.rateDot[2] << " " <<
-	missile.grav << " " <<
-	missile.fluGrav[0] << " " <<
-	missile.fluGrav[1] << " " <<
-	missile.fluGrav[2] << " " <<
-	missile.p << " " <<
-	missile.q << " " <<
+	missile.yawPropErr << " " <<
+	missile.rollFinComm << " " <<
+	missile.rollFinDefl << " " <<
+	missile.pitchFinComm << " " <<
+	missile.pitchFinDefl << " " <<
+	missile.yawFinComm << " " <<
+	missile.yawFinDefl << " " <<
+	missile.spcfForce[1] << " " <<
+	missile.sideComm << " " <<
+	missile.spcfForce[2] << " " <<
+	missile.normComm << " " <<
+	missile.mach << " " <<
+	missile.commLimit << " " <<
+	missile.staticMargin << " " <<
+	missile.aoaDeg << " " <<
 	missile.skrTht << " " <<
 	missile.skrPsi << " " <<
-	missile.skrEnuToFlu[0][0] << " " <<
-	missile.skrEnuToFlu[0][1] << " " <<
-	missile.skrEnuToFlu[0][2] << " " <<
-	missile.skrEnuToFlu[1][0] << " " <<
-	missile.skrEnuToFlu[1][1] << " " <<
-	missile.skrEnuToFlu[1][2] << " " <<
-	missile.skrEnuToFlu[2][0] << " " <<
-	missile.skrEnuToFlu[2][1] << " " <<
-	missile.skrEnuToFlu[2][2] << " " <<
 	missile.skrThtErr << " " <<
-	missile.skrPsiErr << " " <<
-	missile.skrWlr << " " <<
-	missile.skrWlrDot << " " <<
-	missile.skrWlr1 << " " <<
-	missile.skrWlr1Dot << " " <<
-	missile.skrWlr2 << " " <<
-	missile.skrWlr2Dot << " " <<
-	missile.skrWlq << " " <<
-	missile.skrWlqDot << " " <<
-	missile.skrWlq1 << " " <<
-	missile.skrWlq1Dot << " " <<
-	missile.skrWlq2 << " " <<
-	missile.skrWlq2Dot << " " <<
-	missile.isHoming << " " <<
-	missile.timeToGo << " " <<
-	missile.mslToWaypoint[0] << " " <<
-	missile.mslToWaypoint[1] << " " <<
-	missile.mslToWaypoint[2] << " " <<
-	missile.normComm << " " <<
-	missile.sideComm << " " <<
-	missile.commLimit << " " <<
-	missile.lastRollPropErr << " " <<
-	missile.rollPropErr << " " <<
-	missile.rollFinComm << " " <<
-	missile.lastPitchPropErr << " " <<
-	missile.pitchPropErr << " " <<
-	missile.pitchFinComm << " " <<
-	missile.lastYawPropErr << " " <<
-	missile.yawPropErr << " " <<
-	missile.yawFinComm << " " <<
-	missile.rollFinDefl << " " <<
-	missile.pitchFinDefl << " " <<
-	missile.yawFinDefl << " " <<
-	missile.finOneDefl << " " <<
-	missile.finTwoDefl << " " <<
-	missile.finThreeDefl << " " <<
-	missile.finFourDefl << " " <<
-	missile.aoaRad << " " <<
-	missile.aoaDeg << " " <<
-	missile.sinPhiPrime << " " <<
-	missile.cosPhiPrime << " " <<
-	missile.rollFinDeflDeg << " " <<
-	missile.pitchFinDeflAero << " " <<
-	missile.yawFinDeflAero << " " <<
-	missile.totFinDeflDeg << " " <<
-	missile.pitchRateAero << " " <<
-	missile.yawRateAero << " " <<
-	missile.rollRateDeg << " " <<
-	missile.sin4PhiPrime << " " <<
-	missile.sqrtSin2PhiPrime << " " <<
-	missile.CA0 << " " <<
-	missile.CAA << " " <<
-	missile.CAD << " " <<
-	missile.CA_OFF << " " <<
-	missile.CYP << " " <<
-	missile.CYDR << " " <<
-	missile.CN0 << " " <<
-	missile.CNP << " " <<
-	missile.CNDQ << " " <<
-	missile.CLLAP << " " <<
-	missile.CLLP << " " <<
-	missile.CLLDP << " " <<
-	missile.CLM0 << " " <<
-	missile.CLMP << " " <<
-	missile.CLMQ << " " <<
-	missile.CLMDQ << " " <<
-	missile.CLNP << " " <<
-	missile.mass << " " <<
-	missile.vacThrust << " " <<
-	missile.tmoi << " " <<
-	missile.amoi << " " <<
-	missile.xcg << " " <<
-	missile.thrust << " " <<
-	missile.CX << " " <<
-	missile.CY << " " <<
-	missile.CZ << " " <<
-	missile.CL << " " <<
-	missile.CM << " " <<
-	missile.CN << " " <<
-	missile.SM << " " <<
-	missile.missDistance << " " <<
-	missile.lethality << " " <<
-	missile.isLaunched <<
+	missile.skrPsiErr <<
 	"\n";
 }
 
@@ -1679,7 +1454,7 @@ void sixDofFly(Missile &missile, string flyOutID, bool writeData,
 		cout << "\n";
 	}
 
-	while (missile.lethality == "FLYING")
+	while (missile.lethality == endStatus::Flying)
 	{
 		atmosphere(missile);
 		seeker(missile);
@@ -1696,7 +1471,7 @@ void sixDofFly(Missile &missile, string flyOutID, bool writeData,
 
 		if (missile.INTEGRATION_PASS == 0)
 		{
-			performanceAndTerminationCheck(missile, flyForThisLong);
+			endCheck(missile, flyForThisLong);
 			if (writeData)
 			{
 				logData(missile, logFile);
@@ -1737,7 +1512,8 @@ void sixDofFly(Missile &missile, string flyOutID, bool writeData,
 			<< " FORWARD, LEFT, UP, MISS DISTANCE " << missile.mslToWaypoint[0]
 			<< " " << missile.mslToWaypoint[1] << " "
 			<< missile.mslToWaypoint[2] << endl;
-		cout << "SIMULATION RESULT: " << missile.lethality << endl;
+		cout << "SIMULATION RESULT: " <<
+			endStatusMap.at(static_cast<int>(missile.lethality)) << endl;
 	}
 }
 
@@ -1766,7 +1542,7 @@ void threeDofFly(Missile &missile, string flyOutID, bool writeData,
 	
 	double lastTime = 0.0;
 
-	while (missile.lethality == "FLYING")
+	while (missile.lethality == endStatus::Flying)
 	{
 
 		// Common.
@@ -1916,7 +1692,7 @@ void threeDofFly(Missile &missile, string flyOutID, bool writeData,
 		missile.betaRadians = atan2(missile.fluVel[1], missile.fluVel[0]);
 
 		// Performance and termination check.
-		performanceAndTerminationCheck(missile, flyForThisLong);
+		endCheck(missile, flyForThisLong);
 
 		// Log data.
 		if (writeData)
@@ -1931,7 +1707,7 @@ void threeDofFly(Missile &missile, string flyOutID, bool writeData,
 			missile.waypoint[2] << " " <<
 			missile.alphaRadians << " " <<
 			missile.betaRadians << " " <<
-			missile.lethality << endl;
+			static_cast<int>(missile.lethality) << endl;
 		}
 
 		if (consoleReport)
@@ -1960,7 +1736,8 @@ void threeDofFly(Missile &missile, string flyOutID, bool writeData,
 			missile.missDistance << " FORWARD, LEFT, UP, MISS DISTANCE " <<
 			missile.mslToWaypoint[0] << " " << missile.mslToWaypoint[1] <<
 			" " << missile.mslToWaypoint[2] << endl;
-		cout << "SIMULATION RESULT: " << missile.lethality << endl;
+		cout << "SIMULATION RESULT: " <<
+			endStatusMap.at(static_cast<int>(missile.lethality)) << endl;
 		cout << "\n";
 	}
 }

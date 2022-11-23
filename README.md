@@ -16,14 +16,12 @@ To Do:
 - Add all cpp debug configurations to vscode config file.
 - Convert the rest of the CADAC sims to CMake projects.
 - CPP_6DOF_SRAAM_V2
-     - Enum modes.
      - Set privacy and friend functions.
      - Update the readme to point out how my
      programming skills have changed from V1 to V2.
      - Three dof could use some work.
      - Add global position.
      - Add a getState method.
-     - Reduce the verbosity of the logging. Should increase speed.
      - Add guidance modes to CPP_6DOF_SRAAM_V2. Initial turn, midcourse, terminal.
      - Using Zarchan method, write a rate controller.
 - CPP_6DOF_SAM

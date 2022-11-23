@@ -14,7 +14,8 @@
 		"iomanip": "cpp",
 		"streambuf": "cpp",
 		"type_traits": "cpp",
-		"utility": "cpp"
+		"utility": "cpp",
+		"iostream": "cpp"
 	},
 	"fortran.fortls.disabled": true
 }
