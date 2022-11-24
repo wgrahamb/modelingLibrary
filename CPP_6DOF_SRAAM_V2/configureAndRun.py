@@ -1,19 +1,22 @@
 import subprocess
+import pymap3d
 
-ballistic = 0 # Boolean.
-INTEGRATION_METHOD = 2 # 0 = Euler, 1 = RK2, 2 = RK4.
+pymap3d.enu2ecef()
+
+ballistic = 1 # Boolean.
+INTEGRATION_METHOD = 0 # 0 = Euler, 1 = RK2, 2 = RK4.
 phi = 0 # Degrees.
-theta = 55 # Degrees.
-psi = 20 # Degrees.
+theta = 45 # Degrees.
+psi = 0 # Degrees.
 posE = 0 # Meters.
 posN = 0 # Meters.
 posU = 0 # Meters.
-tgtE = 5000 # Meters.
-tgtN = 5000 # Meters.
-tgtU = 5000 # Meters.
+tgtE = 6000 # Meters.
+tgtN = 6000 # Meters.
+tgtU = 6000 # Meters.
 LogData = 1 # Boolean.
 ConsoleReport = 1 # Boolean.
-ID = "missileRk4"
+ID = "missileEuler"
 
 InputString = f"{ballistic} {INTEGRATION_METHOD} {phi} {theta} \
 {psi} {posE} {posN} {posU} {tgtE} {tgtN} {tgtU} {LogData} {ConsoleReport} {ID}\n"

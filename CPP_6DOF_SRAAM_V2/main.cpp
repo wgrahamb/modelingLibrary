@@ -37,20 +37,20 @@ int main()
 
 	// Populate input.
 	InputFile
-	>> ballistic
-	>> INTEGRATION_METHOD
-	>> phiRads
-	>> thetaRads
-	>> psiRads
-	>> posE
-	>> posN
-	>> posU
-	>> tgtE
-	>> tgtN
-	>> tgtU
-	>> LogData
-	>> ConsoleReport
-	>> ID;
+		>> ballistic
+		>> INTEGRATION_METHOD
+		>> phiRads
+		>> thetaRads
+		>> psiRads
+		>> posE
+		>> posN
+		>> posU
+		>> tgtE
+		>> tgtN
+		>> tgtU
+		>> LogData
+		>> ConsoleReport
+		>> ID;
 
 	// Instantiate missile.
 	Missile missile;
@@ -59,8 +59,7 @@ int main()
 	formatTables(missile, "CPP_6DOF_SRAAM_V2/input/tables.txt");
 
 	// Trajectory and integration type.
-	missile.isBallistic = ballistic;
-	missile.INTEGRATION_METHOD = INTEGRATION_METHOD;
+	configure(missile, ballistic, INTEGRATION_METHOD);
 	
 	// Emplacement.
 	phiRads *= degToRad;
@@ -70,21 +69,22 @@ int main()
 	emplace(missile, phiRads, thetaRads, psiRads, launchPosition);
 	
 	// Waypoint.
-	double pip[3] = {tgtE, tgtN, tgtU};
-	setArrayEquivalentToReference(missile.waypoint, pip);
+	double waypoint[3] = {tgtE, tgtN, tgtU};
+	setWaypoint(missile, waypoint);
+
+	// Turn on the seeker.
 	seekerOn(missile);
 
 	// Set lethality to flying. Missile will not fly unless.
-	missile.lethality = endStatus::Flying;
-	missile.isLaunched = true;
+	launchCommand(missile);
 
 	// six dof missile flight.
 	Missile missile1 = clone(missile);
 	sixDofFly(missile1, ID, LogData, ConsoleReport, 400.0);
 
-	// // three dof missile flight.
-	// Missile missile2 = clone(missile);
-	// threeDofFly(missile2, "missile2", LogData, ConsoleReport, 400.0);
+	// three dof missile flight.
+	Missile missile2 = clone(missile);
+	threeDofFly(missile2, "missile2", LogData, ConsoleReport, 400.0);
 
 	// Console report and terminate.
 	auto wallClockEnd = chrono::high_resolution_clock::now();

@@ -68,12 +68,74 @@ const std::map<int, std::string> endStatusMap =
 	{5,  "Success"}
 };
 
+/* Forward declaration of the Missile type. */
+struct Missile;
+
 /* Declare static functions, so that they cannot be used by users.*/
-// static void atmosphere(Missile &missile);
+static void atmosphere(Missile &missile);
+static void seeker(Missile &missile);
+static void guidance(Missile &missile);
+static void control(Missile &missile);
+static void actuators(Missile &missile);
+static void aerodynamicAnglesAndConversions(Missile &missile);
+static void massProperties(Missile &missile);
+static void accelerationLimit(Missile &missile);
+static void propulsion(Missile &missile);
+static void aerodynamics(Missile &missile);
+static void aerodynamicDerivatives(Missile &missile);
+static void eulerIntegrateStates(Missile &missile);
+static void rk2IntegrateStates(Missile &missile);
+static void rk4IntegrateStates(Missile &missile);
+static void missileMotion(Missile &missile);
+static void endCheck(Missile &missile, double maxTime);
+static void logData(Missile &missile, ofstream &logFile);
+
+// Public Functions.
+void formatTables (Missile &missile, string dataFile);
+Missile clone(const Missile &missile);
+void configure(Missile &missile, bool isBallistic, int integrationMethod);
+void emplace(Missile &missile, double phi, double theta, double psi, double ENUPosition[3]);
+void setWaypoint(Missile &missile, double waypoint[3]);
+void launchCommand(Missile &missile);
+void seekerOn(Missile &missile);
+void sixDofFly(Missile &missile, string flyOutID, bool writeData, bool consoleReport, double maxTime);
+void threeDofFly(Missile &missile, string flyOutID, bool writeData, bool consoleReport, double maxTime);
 
 /* This struct fully represents a missile. */
 struct Missile
 {
+
+private:
+
+	// Static Friends.
+	friend void atmosphere(Missile &missile);
+	friend void seeker(Missile &missile);
+	friend void guidance(Missile &missile);
+	friend void control(Missile &missile);
+	friend void actuators(Missile &missile);
+	friend void aerodynamicAnglesAndConversions(Missile &missile);
+	friend void massProperties(Missile &missile);
+	friend void accelerationLimit(Missile &missile);
+	friend void propulsion(Missile &missile);
+	friend void aerodynamics(Missile &missile);
+	friend void aerodynamicDerivatives(Missile &missile);
+	friend void eulerIntegrateStates(Missile &missile);
+	friend void rk2IntegrateStates(Missile &missile);
+	friend void rk4IntegrateStates(Missile &missile);
+	friend void missileMotion(Missile &missile);
+	friend void endCheck(Missile &missile, double maxTime);
+	friend void logData(Missile &missile, ofstream &logFile);
+
+	// Public Friends.
+	friend void formatTables (Missile &missile, string dataFile);
+	friend Missile clone(const Missile &missile);
+	friend void configure(Missile &missile, bool isBallistic, int integrationMethod);
+	friend void emplace(Missile &missile, double phi, double theta, double psi, double ENUPosition[3]);
+	friend void setWaypoint(Missile &missile, double waypoint[3]);
+	friend void launchCommand(Missile &missile);
+	friend void seekerOn(Missile &missile);
+	friend void sixDofFly(Missile &missile, string flyOutID, bool writeData, bool consoleReport, double maxTime);
+	friend void threeDofFly(Missile &missile, string flyOutID, bool writeData, bool consoleReport, double maxTime);
 
 	/* Variables */
 
@@ -284,11 +346,5 @@ struct Missile
 
 };
 
-// Public Functions.
-void formatTables (Missile &missile, string dataFile);
-Missile clone(const Missile &missile);
-void emplace(Missile &missile, double phi, double theta, double psi, double ENUPosition[3]);
-void seekerOn(Missile &missile);
-void sixDofFly(Missile &missile, string flyOutID, bool writeData, bool consoleReport, double maxTime);
-void threeDofFly(Missile &missile, string flyOutID, bool writeData, bool consoleReport, double maxTime);
+
 

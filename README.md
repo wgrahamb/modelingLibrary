@@ -16,10 +16,9 @@ To Do:
 - Add all cpp debug configurations to vscode config file.
 - Convert the rest of the CADAC sims to CMake projects.
 - CPP_6DOF_SRAAM_V2
-     - Set privacy and friend functions.
      - Update the readme to point out how my
      programming skills have changed from V1 to V2.
-     - Three dof could use some work.
+     - Three dof needs some work.
      - Add global position.
      - Add a getState method.
      - Add guidance modes to CPP_6DOF_SRAAM_V2. Initial turn, midcourse, terminal.
