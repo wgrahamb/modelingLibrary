@@ -31,9 +31,20 @@ using namespace std;
 int main()
 {
 
-     // auto data = atm1976_metric::update(1000.0, 100.0);
-     auto x = atmNASA_imperial::update(14000.0, 0.0);
-     cout << x.rho << endl;
-     cout << "HOWDY\n";
+    class x
+    {
+    public:
+        x() {};
+        double arr[3] = {0.0, 0.0, 0.0};
+    };
+
+    x one = x{};
+    consolePrintArray("one", one.arr);
+
+    x two = one;
+    two.arr[0] = 1.0;
+    consolePrintArray("two", two.arr);
+
+    return 0;
 
 }
