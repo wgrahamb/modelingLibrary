@@ -12,6 +12,8 @@ Start with numpy, pandas, and matplotlib.
 Build scripts written in python are included.
 
 To Do:
+- Finish the clerical stuff and start ANOTHER repository. Remove build and
+output directories.
 - Move the build scripts to the actual directory.
 - Add all cpp debug configurations to vscode config file.
 - Convert the rest of the CADAC sims to CMake projects.
