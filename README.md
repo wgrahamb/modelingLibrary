@@ -18,7 +18,7 @@ To Do:
 - CPP_6DOF_SRAAM_V2
      - Update the readme to point out how my
      programming skills have changed from V1 to V2.
-     - Three dof needs some work.
+     - Three dof needs some work?
      - Add global position.
      - Add a getState method.
      - Add guidance modes to CPP_6DOF_SRAAM_V2. Initial turn, midcourse, terminal.
@@ -39,10 +39,9 @@ To Do:
      - Model the moment due to drag.
      - Check alpha and beta calculations.
 - pythonFunctions
-     - Finish working through filters.py.
-     - I have multiple rocket propulsion functions in this folder. They need to 
-     be cleaned and organized at some point. May end up just putting the final
-     class project here.
+     - Finish working through filters.py
+     - At the end of MAE540 compile working code into two scripts, one called
+     rocketPropulsionFxns.py and one called solidRocketMotor.py
 
 Folder Structure:
 

@@ -7,6 +7,7 @@ from numpy import array as npa
 from numpy import linalg as la
 from dictFxns import printValuesInADictionary
 import copy
+from labellines import labelLine, labelLines
 
 """
 
@@ -557,13 +558,7 @@ def SP04A1():
 
 def SP04_B():
 
-	gamma = 1.2
-	sigmas = np.linspace(1.01, 100, 10000)
-	PcOverPa_iters = [2, 4, 10, 25, 75, 150, 500, 1000, 1000000000000]
-	# PcOverPa_iters = [2]
-
-	# uses newton raphson method for function with more than one root
-	def RobertFrederick_findMach(initialMachGuess, gamma, sigma):
+	def newtonGetMach_(initialMachGuess, gamma, sigma):
 		StopCriteria = 0.000001
 		EA = StopCriteria * 1.1
 		AM2 = copy.deepcopy(initialMachGuess)
@@ -581,22 +576,7 @@ def SP04_B():
 			EA = np.abs((AM2 - AMOLD) / AM2) * 100.0
 		return AM2
 
-	def vacuumForceCoefficient(gamma, sigma, PcOverPe):
-		t1 = 2 * gamma * gamma / (gamma - 1)
-		t2 = 2 / (gamma + 1)
-		t3 = (gamma + 1) / (gamma - 1)
-		t4 = 1
-		t5 = 1.0 / PcOverPe
-		t6 = (gamma - 1) / gamma
-		t7 = (1.0 / PcOverPe) * sigma
-		ret = np.sqrt(t1 * (t2 ** t3) * (t4 - t5 ** t6)) + t7
-		return ret
-
-	def forceCoefficient(cfv, PcOverPa, sigma):
-		ret = (cfv - (1.0 / PcOverPa) * sigma)
-		return ret
-
-	def nozzleAreaRatio(mach, gamma):
+	def getNozzAreaRatio_(mach, gamma):
 		t1 = (1 / mach)
 		t2 = 2 + (gamma - 1) * mach * mach
 		t3 = gamma + 1
@@ -604,14 +584,14 @@ def SP04_B():
 		t = t1 * ((t2 / t3) ** t4)
 		return t
 
-	def findMach(low, high, gamma, sigma):
+	def bisectionGetMach_(low, high, gamma, sigma):
 		l = low
 		h = high
 		index = 0
 		while True:
 			index += 1
 			machGuess = (l + h) / 2.0
-			x = nozzleAreaRatio(machGuess, gamma)
+			x = getNozzAreaRatio_(machGuess, gamma)
 			check = x / sigma
 			# print(f"REPORT\n  INDEX {index}\n  LOW {l}\n  HIGH {h}\n  MACH {machGuess:.2f}\n  CALC {x:.2f}\n  SIGMA {sigma:.2f}\n  CHECK {check:.2f}\n")
 			if 0.99 < check < 1.01:
@@ -626,7 +606,22 @@ def SP04_B():
 				break
 		return machGuess
 
-	def isentropicPressureRatio(gamma, mach):
+	def getCfv_(gamma, sigma, PcOverPe):
+		t1 = 2 * gamma * gamma / (gamma - 1)
+		t2 = 2 / (gamma + 1)
+		t3 = (gamma + 1) / (gamma - 1)
+		t4 = 1
+		t5 = 1.0 / PcOverPe
+		t6 = (gamma - 1) / gamma
+		t7 = (1.0 / PcOverPe) * sigma
+		ret = np.sqrt(t1 * (t2 ** t3) * (t4 - t5 ** t6)) + t7
+		return ret
+
+	def getCf_(cfv, PcOverPa, sigma):
+		ret = (cfv - (1.0 / PcOverPa) * sigma)
+		return ret
+
+	def getIsenPRatio_(gamma, mach):
 		t1 = 1
 		t2 = (gamma - 1) / 2.0
 		t3 = mach * mach
@@ -634,67 +629,89 @@ def SP04_B():
 		ret = (t1 + t2 * t3) ** t4
 		return ret
 
-	def lineOfSeperation(sigma):
+	def getCfMin_(sigma):
 		t1 = -1.0 * 0.0445 * (np.log(sigma) ** 2)
 		t2 = 0.5324 * np.log(sigma)
 		t3 = 0.1843
 		ret = t1 + t2 + t3
 		return ret
 
-	lineOfMaxCfsX = []
-	lineOfMaxCfsY = []
-	data = []
-	for index, n in enumerate(PcOverPa_iters):
-		x = []
-		y = []
-		flag = 0
-		for index, sigma in enumerate(sigmas):
-			PcOverPa = n
-			Pc = PcOverPa * 14.7
-			Me = None
-			if n == 2:
-				Me = RobertFrederick_findMach(2.0, gamma, sigma)
+	# initialize
+	gamma_          = 1.2
+	ambPress_       = 14.7
+	sigmas_         = np.linspace(1.01, 100, 10000)
+	PcOverPaList_   = [2, 4, 10, 25, 75, 150, 500, 1000, 1000000000000]
+	lineOfMaxCfsX_  = []
+	lineOfMaxCfsY_  = []
+	data_           = []
+	cfBottomLim_    = 0.6
+	cfTopLim_       = 2.0
+
+	# loop over set PcOverPa list
+	for index_, PcOverPa_ in enumerate(PcOverPaList_):
+		sigmaData_ = []
+		cfData_    = []
+		flag_      = 0
+		for i_, sigma_ in enumerate(sigmas_):
+			Pc_       = PcOverPa_ * ambPress_
+			Me_       = None
+			if PcOverPa_ == 2:
+				Me_ = newtonGetMach_(2.0, gamma_, sigma_)
 			else:
-				Me = findMach(0, 5, gamma, sigma)
-			PcOverPe = isentropicPressureRatio(gamma, Me)
-			Pe = (1.0 / PcOverPe) * Pc
-			check = np.abs(Pe - 14.7)
-			cfv = vacuumForceCoefficient(gamma, sigma, PcOverPe)
-			cf = forceCoefficient(cfv, PcOverPa, sigma)
-			pd = (check / 14.7) * 100.0
-			if pd < 5:
-				if flag == 0:
-					lineOfMaxCfsX.append(sigma)
-					lineOfMaxCfsY.append(cf)
-					flag = 1
+				Me_ = bisectionGetMach_(0, 5, gamma_, sigma_)
+			PcOverPe_ = getIsenPRatio_(gamma_, Me_)
+			Pe_       = (1.0 / PcOverPe_) * Pc_
+			check_    = np.abs(Pe_ - ambPress_)
+			cfv_      = getCfv_(gamma_, sigma_, PcOverPe_)
+			cf_       = getCf_(cfv_, PcOverPa_, sigma_)
+			diff_     = (check_ / ambPress_) * 100.0
+			if diff_ < 5:
+				if flag_ == 0:
+					lineOfMaxCfsX_.append(sigma_)
+					lineOfMaxCfsY_.append(cf_)
+					flag_ = 1
 				else:
 					pass
-			x.append(sigma)
-			y.append(cf)
-		if n == 1000000000000:
-			dp = [x, y, "INF"]
+			sigmaData_.append(sigma_)
+			cfData_.append(cf_)
+		if PcOverPa_ == 1000000000000:
+			dp_ = [sigmaData_, cfData_, "INF"]
 		else:
-			dp = [x, y, f"{n}"]
-		data.append(dp)
+			dp_ = [sigmaData_, cfData_, f"{PcOverPa_}"]
+		data_.append(dp_)
 
-	x = []
-	y = []
-	for index, sigma in enumerate(sigmas):
-		n = lineOfSeperation(sigma)
-		x.append(sigma)
-		y.append(n)
-	dp = [x, y, "Line of Seperation"]
-	data.append(dp)
+	# line of seperation
+	sigmaData_ = []
+	cfData_    = []
+	for index_, sigma_ in enumerate(sigmas_):
+		PcOverPa_ = getCfMin_(sigma_)
+		sigmaData_.append(sigma_)
+		cfData_.append(PcOverPa_)
+	dp_ = [sigmaData_, cfData_, "Line of Seperation"]
+	data_.append(dp_)
 
+	# truncate data
+	for i_, dataSet_ in enumerate(data_):
+		popIndices_ = []
+		for ii_, dataPoint_ in enumerate(dataSet_[1]):
+			if cfBottomLim_ < dataPoint_ < cfTopLim_:
+				pass
+			else:
+				popIndices_.append(ii_)
+		for iii_ in sorted(popIndices_, reverse=True):
+			dataSet_[0].pop(iii_)
+			dataSet_[1].pop(iii_)
+
+	# plot
 	fig = plt.figure()
 	ax = fig.add_subplot(111)
 	ax.set_xscale("log")
 	ax.set_xlim([1.05, 100.0])
-	ax.set_ylim([0.6, 2.0])
-	for index, dataSet in enumerate(data):
-		ax.plot(dataSet[0], dataSet[1], label=dataSet[2])
-	ax.plot(lineOfMaxCfsX, lineOfMaxCfsY, label="Line of Max Thrust Coefficient")
-	ax.legend(fontsize="xx-small")
+	ax.set_ylim([cfBottomLim_, cfTopLim_])
+	for index_, dataSet_ in enumerate(data_):
+		ax.plot(dataSet_[0], dataSet_[1], label=dataSet_[2])
+	ax.plot(lineOfMaxCfsX_, lineOfMaxCfsY_, label="Max CF")
+	labelLines(ax.get_lines(), align=False, fontsize=12)
 	plt.show()
 
 def momentumThrust(gamma, sigma, Pc, diamThroat): # nd, nd, psi, inches

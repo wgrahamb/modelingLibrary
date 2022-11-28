@@ -3,8 +3,8 @@ STD_GRAV = 32.2
 
 def atmosphere(altitude, spd): # feet. ft/s
 
-    if altitude > 32809:
-        print("Altitude exceeds 32,809 feet.")
+    if altitude > 80000:
+        print("Altitude exceeds 80,000 feet.")
         print("Model ceiling exceeded. Terminating.")
         exit(0)
 
