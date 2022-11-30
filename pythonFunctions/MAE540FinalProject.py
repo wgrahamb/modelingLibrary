@@ -1,7 +1,7 @@
 import numpy as np
 import copy
 import matplotlib.pyplot as plt
-from labellines import labelLines
+from labellines import labelLines, labelLine
 import matplotlib
 matplotlib.use("WebAgg")
 
@@ -19,11 +19,6 @@ def GET_ISENP_RATIO(G, MACH):
 
 def GET_ATMOSPHERE(ALT, SPD): # feet. ft/s
 
-    if ALT > 80000:
-        print("Altitude exceeds 80,000 feet.")
-        print("Model ceiling exceeded. Terminating.")
-        exit(0)
-
     P    = None # air pressure in psi
     T    = None # air temperature in Rankine
     RHO  = None # air density in lbm/ft^3
@@ -33,16 +28,25 @@ def GET_ATMOSPHERE(ALT, SPD): # feet. ft/s
     MACH = None # mach speed, non dimensional
     RAD  = 2.0856e+7 # radius of earth in feet
 
-    P    = -4.272981E-14*(ALT**3) + 0.000000008060081*(ALT**2) - 0.0005482655*ALT + 14.692410
+    if ALT < 83000:
+        P = -4.272981E-14*(ALT**3) + 0.000000008060081*(ALT**2) - 0.0005482655*ALT + 14.692410
+    else:
+        P = 0.0
+
     if ALT < 32809:
         T = -1.0 * 0.0036 * ALT + 518.
     else:
         T = 399.0
-    RHO  = (0.00000000001255)*(ALT**2) - (0.0000019453)*ALT + 0.07579
-    Q    = (0.5 * RHO * SPD * SPD) * (1 / STD_GRAV) * (1.0 / 144.0)
-    G    = STD_GRAV * ((RAD / (RAD+ALT)) ** 2)
-    A    = np.sqrt((T * 1.4 * 1545.3 * STD_GRAV) / 28.97)
-    MACH = SPD / A
+
+    if ALT < 82000:
+        RHO = (0.00000000001255)*(ALT**2) - (0.0000019453)*ALT + 0.07579
+    else:
+        RHO = 0.0
+
+    Q     = (0.5 * RHO * SPD * SPD) * (1 / STD_GRAV) * (1.0 / 144.0)
+    G     = STD_GRAV * ((RAD / (RAD+ALT)) ** 2)
+    A     = np.sqrt((T * 1.4 * 1545.3 * STD_GRAV) / 28.97)
+    MACH  = SPD / A
 
     return P, T, RHO, A, Q, G, MACH
 
@@ -60,73 +64,138 @@ def GET_CD(MACH):
         RET = 0.175
     return RET
 
-### Sim constants. ###
-#########################################################################################################
-# Baseline. #
-CHECKS_AND_BALANCES     = False # flag for termination checks
-BORE_RADIUS             = 1.0 # radius of the inner bore due to the grain, inches
-END_RADIUS              = 2.375 # radius of the chamber, inches
-INITIAL_GRAIN_LENGTH    = 8.0 # initial length of each individual grain, inches
-THROAT_AREA_0           = 1.0 # initial area of the throat, in^2
-THROAT_DIAM_0           = np.sqrt(THROAT_AREA_0 * 4.0 / np.pi) # initial diameter of the throat, inches
-EPSILON_0               = 4.0 # initial nozzle expansion ratio
-NUMBER_OF_GRAINS        = int(4) # number of grains, count
-#########################################################################################################
+# ### Simulation input. ###
+# #########################################################################################################
+# # Baseline. #
+# CHECKS_AND_BALANCES     = False # flag for termination checks
+# BORE_RADIUS             = 1.0 # radius of the inner bore due to the grain, inches
+# END_RADIUS              = 2.375 # radius of the chamber, inches
+# INITIAL_GRAIN_LENGTH    = 8.0 # initial length of each individual grain, inches
+# THROAT_AREA_0           = 1.0 # initial area of the throat, in^2
+# THROAT_DIAM_0           = np.sqrt(THROAT_AREA_0 * 4.0 / np.pi) # initial diameter of the throat, inches
+# EPSILON_0               = 4.0 # initial nozzle expansion ratio
+# NUMBER_OF_GRAINS        = int(4) # number of grains, count
+# GRAIN_TEMP              = 70.0 # grain temperature, Farenheit
+# BALLAST_MASS            = 1.0 # rocket mass that seperates at rocket burnout
+# PLOT_FLAG               = False # flag to show simulation plots
+# PLOT2_FLAG              = False # flag to show temperature plots
+# RPT                     = False # flag to show console report at each iteration
+# ID                      = "BASE" # identification for plots
+# #########################################################################################################
 
-#########################################################################################################
-# # Final Project. #
+# ### Simulation input. ###
+# #########################################################################################################
+# # 5000 Feet. #
 # CHECKS_AND_BALANCES     = True # flag for termination checks
 # BORE_RADIUS             = 1.0 # radius of the inner bore due to the grain, inches
 # END_RADIUS              = 2.1 # radius of the chamber, inches
 # INITIAL_GRAIN_LENGTH    = 3.2704 # initial length of each individual grain, inches
-
-# # 5000 Feet.
+# PLOT_FLAG               = True # flag to show simulation plots
+# PLOT2_FLAG              = False # flag to show temperature plots
+# RPT                     = False # flag to show console report at each iteration
 # THROAT_AREA_0           = 0.6512 # initial area of the throat, in^2
 # THROAT_DIAM_0           = np.sqrt(THROAT_AREA_0 * 4.0 / np.pi) # initial diameter of the throat, inches
 # EPSILON_0               = 2.0 # initial nozzle expansion ratio
 # NUMBER_OF_GRAINS        = int(2) # number of grains, count
+# GRAIN_TEMP              = 70.0 # grain temperature, Farenheit
+# BALLAST_MASS            = 1.0 # rocket mass that seperates at rocket burnout
+# ID                      = "5K FT" # identification for plots
+# #########################################################################################################
 
-# # 10000 Feet.
+# ### Simulation input. ###
+# #########################################################################################################
+# # 10000 Feet, 30F. #
+# CHECKS_AND_BALANCES     = True # flag for termination checks
+# BORE_RADIUS             = 1.0 # radius of the inner bore due to the grain, inches
+# END_RADIUS              = 2.1 # radius of the chamber, inches
+# INITIAL_GRAIN_LENGTH    = 3.2704 # initial length of each individual grain, inches
+# PLOT_FLAG               = False # flag to show simulation plots
+# PLOT2_FLAG              = False # flag to show temperature plots
+# RPT                     = False # flag to show console report at each iteration
 # THROAT_AREA_0           = 1.0 # initial area of the throat, in^2
 # THROAT_DIAM_0           = np.sqrt(THROAT_AREA_0 * 4.0 / np.pi) # initial diameter of the throat, inches
 # EPSILON_0               = 2.0 # initial nozzle expansion ratio
 # NUMBER_OF_GRAINS        = int(3) # number of grains, count
+# GRAIN_TEMP              = 30.0 # grain temperature, Farenheit
+# BALLAST_MASS            = 1.0 # rocket mass that seperates at rocket burnout
+# ID                      = "10K FT, 30F" # identification for plots
+# #########################################################################################################
 
-# # 15000 Feet.
+# ### Simulation input. ###
+# #########################################################################################################
+# # 10000 Feet, 70F. #
+# CHECKS_AND_BALANCES     = True # flag for termination checks
+# BORE_RADIUS             = 1.0 # radius of the inner bore due to the grain, inches
+# END_RADIUS              = 2.1 # radius of the chamber, inches
+# INITIAL_GRAIN_LENGTH    = 3.2704 # initial length of each individual grain, inches
+# PLOT_FLAG               = True # flag to show simulation plots
+# PLOT2_FLAG              = False # flag to show temperature plots
+# RPT                     = False # flag to show console report at each iteration
 # THROAT_AREA_0           = 1.0 # initial area of the throat, in^2
 # THROAT_DIAM_0           = np.sqrt(THROAT_AREA_0 * 4.0 / np.pi) # initial diameter of the throat, inches
-# EPSILON_0               = 2.268 # initial nozzle expansion ratio
-# NUMBER_OF_GRAINS        = int(4) # number of grains, count
+# EPSILON_0               = 2.0 # initial nozzle expansion ratio
+# NUMBER_OF_GRAINS        = int(3) # number of grains, count
+# GRAIN_TEMP              = 70.0 # grain temperature, Farenheit
+# BALLAST_MASS            = 1.0 # rocket mass that seperates at rocket burnout
+# ID                      = "10K FT, 70F" # identification for plots
+# #########################################################################################################
+
+# ### Simulation input. ###
+# #########################################################################################################
+# # 10000 Feet, 120F. #
+# CHECKS_AND_BALANCES     = True # flag for termination checks
+# BORE_RADIUS             = 1.0 # radius of the inner bore due to the grain, inches
+# END_RADIUS              = 2.1 # radius of the chamber, inches
+# INITIAL_GRAIN_LENGTH    = 3.2704 # initial length of each individual grain, inches
+# PLOT_FLAG               = False # flag to show simulation plots
+# PLOT2_FLAG              = False # flag to show temperature plots
+# RPT                     = False # flag to show console report at each iteration
+# THROAT_AREA_0           = 1.0 # initial area of the throat, in^2
+# THROAT_DIAM_0           = np.sqrt(THROAT_AREA_0 * 4.0 / np.pi) # initial diameter of the throat, inches
+# EPSILON_0               = 2.0 # initial nozzle expansion ratio
+# NUMBER_OF_GRAINS        = int(3) # number of grains, count
+# GRAIN_TEMP              = 120.0 # grain temperature, Farenheit
+# BALLAST_MASS            = 1.0 # rocket mass that seperates at rocket burnout
+# ID                      = "10K FT, 120F" # identification for plots
+# #########################################################################################################
+
+### Simulation input. ###
+#########################################################################################################
+# 15000 Feet. #
+CHECKS_AND_BALANCES     = True # flag for termination checks
+BORE_RADIUS             = 1.0 # radius of the inner bore due to the grain, inches
+END_RADIUS              = 2.1 # radius of the chamber, inches
+INITIAL_GRAIN_LENGTH    = 3.2704 # initial length of each individual grain, inches
+PLOT_FLAG               = True # flag to show simulation plots
+PLOT2_FLAG              = False # flag to show temperature plots
+RPT                     = False # flag to show console report at each iteration
+THROAT_AREA_0           = 1.0 # initial area of the throat, in^2
+THROAT_DIAM_0           = np.sqrt(THROAT_AREA_0 * 4.0 / np.pi) # initial diameter of the throat, inches
+EPSILON_0               = 2.268 # initial nozzle expansion ratio
+NUMBER_OF_GRAINS        = int(4) # number of grains, count
+GRAIN_TEMP              = 70.0 # grain temperature, Farenheit
+BALLAST_MASS            = 1.0 # rocket mass that seperates at rocket burnout
+ID                      = "15K FT" # identification for plots
 #########################################################################################################
 
-CSTAR                   = 5210 # characteristic velocity, ft/s
+# Propellant characteristics.
+CSTAR                   = 5210.0 # characteristic velocity, ft/s
 GAMMA                   = 1.25 # specific heat ratio, non dimensional
 BURNING_RATE_CONSTANT   = 0.03 # burning rate constant, (in/s) * [(psi)] ** (-n)
 MOTOR_PARAM             = 0.001 # motor parameter, 1/Farenheit
-GRAIN_TEMP              = 70.0 # grain temperature, Farenheit
 NOMINAL_TEMP            = 70.0 # nominal temperature, Farenheit
 PROPELLANT_DENSITY      = 0.065 # density of the propellant grain, lbm/in^3
 NCONST                  = 0.35 # constant for burning rate
 
+# Rocket constants.
 GRAIN_BUFFER            = 0.125 # required buffer between each grain, inches
 EXIT_AREA               = EPSILON_0 * THROAT_AREA_0 # nozzle exit area, in^2
 EXIT_DIAM               = np.sqrt(EXIT_AREA * 4.0 / np.pi) # nozzle exit diameter, inches
 ROCKET_DIAM             = 6.19 # reference diameter, inches
 ROCKET_AREA             = (np.pi * (ROCKET_DIAM ** 2) / 4.0) / (12.0 * 12.0) # forward area of the rocket, in^2
 ROCKET_MASS             = 40.0 # inert and payload mass of the rocket, lbm
-CASE_LENGTH_MAX         = 34.0 # maximum length of the motor case, feet
-CASE_MASS_SCALE         = 0.25 # motor case weight per unit length of the case, lbm/in
-BALLAST_MASS            = 1.0 # rocket mass that seperates at rocket burnout
-TOF_STEP                = 0.1 # time step, seconds
-WEB_STEP                = 0.01 # web step, inches
-CHAMBER_PRESSURE_THRESH = 1000.0 # maximum chamber pressure, psi
 
-if EXIT_DIAM > ROCKET_DIAM:
-    print("Rocket nozzle too large. Terminating.")
-    if CHECKS_AND_BALANCES:
-        exit(0)
-
-# Initialize.
+# Initialize data variables.
 ITERATION         = None
 WEB               = None
 AREA_BURN         = None
@@ -160,10 +229,32 @@ ACC_G             = None
 CF_PLOT           = None
 CF_MIN            = None
 
-# Web distances.
-C1     = END_RADIUS - BORE_RADIUS
-C2     = INITIAL_GRAIN_LENGTH / 2
-MAXWEB = None
+# Check to see if the nozzle exit area is larger than the rocket diameter.
+if EXIT_DIAM > ROCKET_DIAM:
+    if CHECKS_AND_BALANCES:
+        print("Rocket nozzle too large. Terminating.")
+        exit(0)
+
+# Check to see that the bore area is at least twice the throat area.
+AP_OVER_AT = (np.pi * (BORE_RADIUS ** 2)) / THROAT_AREA_0
+if AP_OVER_AT < 2.0:
+    if CHECKS_AND_BALANCES:
+        print("Initial grain area is not twice the initial throat area. Terminating.")
+        exit(0)
+
+# Calculate mass of the motor case. Check to see if it exceeds thresholds.
+MOTOR_CASE_LENGTH = NUMBER_OF_GRAINS * (INITIAL_GRAIN_LENGTH + GRAIN_BUFFER)
+if MOTOR_CASE_LENGTH > 34.0:
+    if CHECKS_AND_BALANCES:
+        print("Motor Case Length Threshold Exceeded. Terminating.")
+        exit(0)
+MOTOR_CASE_MASS = 0.25 * MOTOR_CASE_LENGTH
+
+# Create a list of set web distances in inches.
+WEB_STEP = 0.01
+C1       = END_RADIUS - BORE_RADIUS
+C2       = INITIAL_GRAIN_LENGTH / 2
+MAXWEB   = None
 if C1 <= C2:
     MAXWEB = C1
 else:
@@ -177,15 +268,7 @@ while True:
         break
     WEBS.append(NEWWEB)
 
-# Mass of the motor.
-MOTOR_CASE_LENGTH = NUMBER_OF_GRAINS * (INITIAL_GRAIN_LENGTH + GRAIN_BUFFER)
-if MOTOR_CASE_LENGTH > CASE_LENGTH_MAX:
-    print("Motor Case Length Threshold Exceeded. Terminating.")
-    if CHECKS_AND_BALANCES:
-        exit(0)
-MOTOR_CASE_MASS = CASE_MASS_SCALE * MOTOR_CASE_LENGTH
-
-# Atmosphere.
+# Initialize the atmosphere.
 ATMOS = GET_ATMOSPHERE(0.0, 0.0)
 P     = ATMOS[0]
 T     = ATMOS[1]
@@ -195,7 +278,7 @@ Q     = ATMOS[4]
 G     = ATMOS[5]
 MACH  = ATMOS[6]
 
-# State.
+# Initialize state.
 ITERATION         = int(0) # loop count
 TIME_STEP         = 0.0 # seconds
 TOF               = 0.0 # seconds
@@ -214,26 +297,15 @@ LAST_TIME         = None # seconds
 THIS_TIME         = 0.0 # seconds
 
 # Checks and flags.
-MAX_CHAMBER_PRESSURE                       = -1.0 # psi
-MAX_THRUST                                 = -1.0 # lbf
-INITIAL_BORE_AREA_OVER_INITIAL_THROAT_AREA = \
-    (np.pi * (BORE_RADIUS ** 2)) / THROAT_AREA_0
-BURNOUT_HGT                                = -1.0 # ft
-BURNOUT_SPD                                = -1.0 # ft/s
-BURNOUT_ACC                                = -1.0 # ft/s^2
-BURNOUT_TOF                                = -1.0 # seconds
-MAX_HGT                                    = -1.0 # ft
-MAX_SPD                                    = -1.0 # ft/s
-MAX_ACC                                    = -1.0 # ft/s^2
-PLOT_FLAG                                  = True
-
-if INITIAL_BORE_AREA_OVER_INITIAL_THROAT_AREA < 2.0:
-    print("Initial grain area is not twice the initial throat area. Terminating.")
-    if CHECKS_AND_BALANCES:
-        exit(0)
-
-# Flag for console report.
-RPT = False
+MAX_CHAMBER_PRESSURE = -1.0 # psi
+MAX_THRUST           = -1.0 # lbf
+BURNOUT_HGT          = -1.0 # ft
+BURNOUT_SPD          = -1.0 # ft/s
+BURNOUT_ACC          = -1.0 # ft/s^2
+BURNOUT_TOF          = -1.0 # seconds
+MAX_HGT              = -1.0 # ft
+MAX_SPD              = -1.0 # ft/s
+MAX_ACC              = -1.0 # ft/s^2
 
 # Data.
 DATA = {
@@ -412,17 +484,21 @@ for INDEX, WEB in enumerate(WEBS):
         MAX_SPD = SPD
     if ACC > MAX_ACC:
         MAX_ACC = ACC
-    if CHAMBER_PRESSURE > CHAMBER_PRESSURE_THRESH:
-        print("Chamber pressure maximum exceeded. Terminating.")
+    if CHAMBER_PRESSURE > 1000.0:
         if CHECKS_AND_BALANCES:
+            print("Chamber pressure maximum exceeded. Terminating.")
             exit(0)
     if CF < CF_MIN:
-        print("Flow seperation. Terminating.")
         if CHECKS_AND_BALANCES:
+            print("Flow seperation. Terminating.")
             exit(0)
     if EPSILON < 1.0:
-        print("Area of the nozzle throat exceeds the area of the nozzle exit. Terminating.")
         if CHECKS_AND_BALANCES:
+            print("Area of the nozzle throat exceeds the area of the nozzle exit. Terminating.")
+            exit(0)
+    if ACC_G > 15.0:
+        if CHECKS_AND_BALANCES:
+            print("Acceleration of the rocket exceeds 15 Gs. Terminating.")
             exit(0)
 
     # Report.
@@ -499,7 +575,7 @@ BURNOUT_HGT = copy.deepcopy(HGT)
 BURNOUT_SPD = copy.deepcopy(SPD)
 BURNOUT_ACC = copy.deepcopy(ACC)
 BURNOUT_TOF = copy.deepcopy(TOF)
-ISP = np.sum(DATA["IMPULSE_BIT"]) / DATA['PROPELLANT_MASS'][0]
+ISP         = np.sum(DATA["IMPULSE_BIT"]) / DATA['PROPELLANT_MASS'][0]
 
 # Adjust variables for burnout.
 CHAMBER_PRESSURE = 0.0
@@ -636,24 +712,24 @@ print(f"BURN TIME:                                  {BURNOUT_TOF:.6f} SECONDS")
 print(f"SPECIFIC IMPULSE:                           {ISP:.6f} SECONDS")
 print(f"MAX CHAMBER PRESSURE:                       {MAX_CHAMBER_PRESSURE:.6f} PSI")
 print(f"MAX THRUST:                                 {MAX_THRUST:.6f} LBF")
-print(f"INITIAL BORE AREA OVER INITIAL THROAT AREA: {INITIAL_BORE_AREA_OVER_INITIAL_THROAT_AREA:.6f}")
+print(f"INITIAL BORE AREA OVER INITIAL THROAT AREA: {AP_OVER_AT:.6f}")
 print(f"MAX WEB:                                    {MAXWEB:.6f} IN")
 print(f"MASS OF THE MOTOR CASE:                     {MOTOR_CASE_MASS:.6f} LBM")
-print(f"INITIAL TOTAL MASS                          {DATA['TOTAL_MASS'][0]:.6f} LBM")
-print(f"BURNOUT HEIGHT                              {BURNOUT_HGT:.6f} FT")
-print(f"BURNOUT SPEED                               {BURNOUT_SPD:.6f} FT/S")
-print(f"BURNOUT ACCELERATION                        {BURNOUT_ACC:.6f} FT/S^2")
-print(f"MAX HEIGHT                                  {MAX_HGT:.6f} FT")
-print(f"MAX SPEED                                   {MAX_SPD:.6f} FT/S")
-print(f"MAX ACCELERATION                            {MAX_ACC:.6f} FT/S^2")
-print(f"MAX ACCELERATION                            {MAX_ACC/STD_GRAV:.6f} Gs")
+print(f"INITIAL TOTAL MASS:                         {DATA['TOTAL_MASS'][0]:.6f} LBM")
+print(f"BURNOUT HEIGHT:                             {BURNOUT_HGT:.6f} FT")
+print(f"BURNOUT SPEED:                              {BURNOUT_SPD:.6f} FT/S")
+print(f"BURNOUT ACCELERATION:                       {BURNOUT_ACC:.6f} FT/S^2")
+print(f"MAX HEIGHT:                                 {MAX_HGT:.6f} FT")
+print(f"MAX SPEED:                                  {MAX_SPD:.6f} FT/S")
+print(f"MAX ACCELERATION:                           {MAX_ACC:.6f} FT/S^2")
+print(f"MAX ACCELERATION:                           {MAX_ACC/STD_GRAV:.6f} Gs")
 print("\n")
 
 if PLOT_FLAG:
 
     ### Figure One. ###
     ### Cross section of baseline vehicle grain shapes with dimensions. ###
-    plt.figure(1, figsize=[20, 20])
+    plt.figure(1, figsize=[7,7])
     plt.xlim([-2, 2])
     plt.ylim([-2, 2])
     plt.xticks([])
@@ -759,63 +835,81 @@ if PLOT_FLAG:
     ###################
 
     ### Figure Two. ###
-    ### Baseline mass of propellant as a function of time. ###
-    plt.figure(2, figsize=[20, 20])
+    ### Mass of propellant as a function of time. ###
+    plt.figure(2, figsize=[7,7])
     plt.plot(DATA["TIME_OF_FLIGHT"], DATA["PROPELLANT_MASS"], color="b")
     plt.grid()
     plt.xlim([0.0, BURNOUT_TOF+1.0])
-    plt.xlabel("TIME (SEC)", fontsize=11)
-    plt.ylabel("Mp, MASS PROP., (LBm)", fontsize=11)
+    plt.tick_params(labelsize=12, axis="both")
+    plt.xlabel("TIME (SEC)", fontsize=13)
+    plt.ylabel("Mp, MASS PROP., (LBm)", fontsize=13)
+    plt.title("MASS OF PROPELLANT")
     ###################
 
     ### Figure Three. ###
-    ### Baseline mass of propellant as a function of time. ###
-    plt.figure(3, figsize=[20, 20])
+    ### Chamber as a function of time. ###
+    plt.figure(3, figsize=[7,7])
     plt.plot(DATA["TIME_OF_FLIGHT"], DATA["CHAMBER_PRESSURE"], color="b")
     plt.grid()
     plt.xlim([0.0, BURNOUT_TOF+1.0])
-    plt.xlabel("TIME (SEC)", fontsize=11)
-    plt.ylabel("Pc, PRESSURE, (PSIA)", fontsize=11)
+    plt.tick_params(labelsize=12, axis="both")
+    plt.xlabel("TIME (SEC)", fontsize=13)
+    plt.ylabel("Pc, PRESSURE, (PSIA)", fontsize=13)
+    plt.title("CHAMBER PRESSURE")
     ###################
 
     ### Figure Four. ###
     ### Baseline thrust as a function of time. ###
-    plt.figure(4, figsize=[20, 20])
+    plt.figure(4, figsize=[7,7])
     plt.plot(DATA["TIME_OF_FLIGHT"], DATA["THRUST"], color="b")
     plt.grid()
     plt.xlim([0.0, BURNOUT_TOF+1.0])
-    plt.xlabel("TIME (SEC)", fontsize=11)
-    plt.ylabel("F, THRUST, (LBF)", fontsize=11)
+    plt.tick_params(labelsize=12, axis="both")
+    plt.xlabel("TIME (SEC)", fontsize=13)
+    plt.ylabel("F, THRUST, (LBF)", fontsize=13)
+    plt.title("THRUST")
     ###################
 
     ### Figure Five. ###
     ### Baseline acceleration as a function of time. ###
-    plt.figure(5, figsize=[20, 20])
-    plt.plot(DATA["TIME_OF_FLIGHT"], DATA["TOTAL_ACCELERATION"], color="b")
+    plt.figure(5, figsize=[7,7])
+    if ID == "BASE":
+        plt.plot(DATA["TIME_OF_FLIGHT"], DATA["TOTAL_ACCELERATION"], color="b")
+    else:
+        plt.plot(DATA["TIME_OF_FLIGHT"], DATA["TOTAL_ACCELERATION_GS"], color="b")
     plt.grid()
     plt.xlim([0.0, DATA["TIME_OF_FLIGHT"][-1]+1.0])
-    plt.xlabel("TIME (SEC)", fontsize=11)
-    plt.ylabel("ACCEL, (FT/S^2)", fontsize=11)
+    plt.tick_params(labelsize=12, axis="both")
+    plt.xlabel("TIME (SEC)", fontsize=13)
+    if ID == "BASE":
+        plt.ylabel("ACCEL, (FT/S^2)", fontsize=13)
+    else:
+        plt.ylabel("ACCEL, (Gs)", fontsize=13)
+    plt.title("TRAJECTORY")
     ###################
 
     ### Figure Six. ###
     ### Baseline speed as a function of time. ###
-    plt.figure(6, figsize=[20, 20])
+    plt.figure(6, figsize=[7,7])
     plt.plot(DATA["TIME_OF_FLIGHT"], DATA["SPEED"], color="b")
     plt.grid()
     plt.xlim([0.0, DATA["TIME_OF_FLIGHT"][-1]+1.0])
-    plt.xlabel("TIME (SEC)", fontsize=11)
-    plt.ylabel("VEL, (FT/S)", fontsize=11)
+    plt.tick_params(labelsize=12, axis="both")
+    plt.xlabel("TIME (SEC)", fontsize=13)
+    plt.ylabel("VEL, (FT/S)", fontsize=13)
+    plt.title("TRAJECTORY")
     ###################
 
     ### Figure Seven. ###
     ### Baseline altitude as a function of time. ###
-    plt.figure(7, figsize=[20, 20])
+    plt.figure(7, figsize=[7,7])
     plt.plot(DATA["TIME_OF_FLIGHT"], DATA["HEIGHT"], color="b")
     plt.grid()
     plt.xlim([0.0, DATA["TIME_OF_FLIGHT"][-1]+1.0])
-    plt.xlabel("TIME (SEC)", fontsize=11)
-    plt.ylabel("ALTITUDE, (FT)", fontsize=11)
+    plt.tick_params(labelsize=12, axis="both")
+    plt.xlabel("TIME (SEC)", fontsize=13)
+    plt.ylabel("ALTITUDE, (FT)", fontsize=13)
+    plt.title("TRAJECTORY")
     ###################
 
     ### Figure Eight. ###
@@ -949,7 +1043,7 @@ if PLOT_FLAG:
         PcOverPa_ = getCfMin_(sigma_)
         sigmaData_.append(sigma_)
         cfData_.append(PcOverPa_)
-    dp_ = [sigmaData_, cfData_, "Line of Seperation"]
+    dp_ = [sigmaData_, cfData_, "Seperation"]
     data_.append(dp_)
 
     # truncate data
@@ -965,23 +1059,111 @@ if PLOT_FLAG:
             dataSet_[1].pop(iii_)
 
     # plot
-    fig = plt.figure(8, figsize=[20, 20])
+    fig = plt.figure(8, figsize=[7,7])
     ax = fig.add_subplot(111)
     ax.set_xscale("log")
     ax.set_xlim([1.05, 100.0])
     ax.set_ylim([cfBottomLim_, cfTopLim_])
     for index_, dataSet_ in enumerate(data_):
         ax.plot(dataSet_[0], dataSet_[1], label=dataSet_[2])
+        thisLine = ax.get_lines()[index_]
+        if dataSet_[2] == "500" or dataSet_[2] == "1000" or dataSet_[2] == "INF":
+            labelLine(
+                thisLine,
+                x=dataSet_[0][int(len(dataSet_[0])*0.85)],
+                align=False,
+                fontsize=11,
+                ha="right",
+                va="bottom"
+            )
+        elif dataSet_[2] == "Seperation":
+            labelLine(
+                thisLine,
+                x=dataSet_[0][int(len(dataSet_[0])*0.2)],
+                align=False,
+                fontsize=11,
+                ha="right",
+                va="bottom"
+            )
+        else:
+            labelLine(
+                thisLine,
+                x=dataSet_[0][int(len(dataSet_[0])/2)],
+                align=False,
+                fontsize=11,
+                ha="right",
+                va="bottom"
+            )
     ax.plot(lineOfMaxCfsX_, lineOfMaxCfsY_, label="Max CF")
-    ax.plot(DATA["NOZZLE_AREA_RATIO"], DATA["PLOT_FORCE_COEFFICIENT"], label="This Run.")
-    labelLines(ax.get_lines(), align=False, fontsize=12)
+    labelLine(
+        ax.get_lines()[-1],
+        x=lineOfMaxCfsX_[int(len(lineOfMaxCfsX_)*0.7)],
+        align=False,
+        fontsize=11,
+        ha="right",
+        va="top"
+    )
+    ax.plot(DATA["NOZZLE_AREA_RATIO"], DATA["PLOT_FORCE_COEFFICIENT"], label=f"{ID}", color="k")
+    labelLine(
+        ax.get_lines()[-1],
+        x=max(DATA["NOZZLE_AREA_RATIO"]),
+        align=False,
+        fontsize=11,
+        ha="left",
+        va="bottom",
+        backgroundcolor="none"
+    )
+    ax.set_title("Thrust Coefficient")
     ###################
 
     ###################
     plt.show()
     ###################
 
+if PLOT2_FLAG:
+    
+    ### Figure One. ###
+    ### Baseline mass of propellant as a function of time. ###
+    plt.figure(1, figsize=[7,7])
+    plt.scatter(1, 9812.8317, color="b", label="30F")
+    plt.scatter(2, 10000.6568, color="g", label="70F")
+    plt.scatter(3, 10211.0928, color="r", label="120F")
+    plt.grid()
+    plt.xlim([0, 4])
+    plt.tick_params(labelsize=12, axis="both", labelbottom=False)
+    plt.ylabel("ALTITUDE, (FT)", fontsize=13)
+    plt.legend(fontsize="xx-large", loc="upper left")
+    ###################
 
+    ### Figure One. ###
+    ### Baseline mass of propellant as a function of time. ###
+    plt.figure(2, figsize=[7,7])
+    plt.scatter(1, 703.709, color="b", label="30F")
+    plt.scatter(2, 722.76877, color="g", label="70F")
+    plt.scatter(3, 745.4425, color="r", label="120F")
+    plt.grid()
+    plt.xlim([0, 4])
+    plt.tick_params(labelsize=12, axis="both", labelbottom=False)
+    plt.ylabel("VELOCITY, (FT/S)", fontsize=13)
+    plt.legend(fontsize="xx-large", loc="upper left")
+    ###################
+
+    ### Figure One. ###
+    ### Baseline mass of propellant as a function of time. ###
+    plt.figure(3, figsize=[7,7])
+    plt.scatter(1, 6.2963, color="b", label="30F")
+    plt.scatter(2, 6.7964, color="g", label="70F")
+    plt.scatter(3, 7.4664, color="r", label="120F")
+    plt.grid()
+    plt.xlim([0, 4])
+    plt.tick_params(labelsize=12, axis="both", labelbottom=False)
+    plt.ylabel("ACCEL, (Gs)", fontsize=13)
+    plt.legend(fontsize="xx-large", loc="upper left")
+    ###################
+
+    ###################
+    plt.show()
+    ###################
 
 
 
