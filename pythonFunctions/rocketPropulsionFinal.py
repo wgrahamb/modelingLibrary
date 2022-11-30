@@ -1,7 +1,7 @@
 import numpy as np
 import copy
 import matplotlib.pyplot as plt
-from labellines import labelLines, labelLine
+from labellines import labelLine
 import matplotlib
 matplotlib.use("WebAgg")
 
@@ -14,8 +14,8 @@ def GET_ISENP_RATIO(G, MACH):
     T2 = (G - 1) / 2.0
     T3 = MACH * MACH
     T4 = G / (G - 1)
-    P  = (T1 + T2 * T3) ** T4
-    return P
+    PR = (T1 + T2 * T3) ** T4
+    return PR
 
 def GET_ATMOSPHERE(ALT, SPD): # feet. ft/s
 
@@ -1123,7 +1123,7 @@ if PLOT_FLAG:
 if PLOT2_FLAG:
     
     ### Figure One. ###
-    ### Baseline mass of propellant as a function of time. ###
+    ### Grain temperature effect on maximum altitude. ###
     plt.figure(1, figsize=[7,7])
     plt.scatter(1, 9812.8317, color="b", label="30F")
     plt.scatter(2, 10000.6568, color="g", label="70F")
@@ -1136,7 +1136,7 @@ if PLOT2_FLAG:
     ###################
 
     ### Figure One. ###
-    ### Baseline mass of propellant as a function of time. ###
+    ### Grain temperature effect on maximum speed. ###
     plt.figure(2, figsize=[7,7])
     plt.scatter(1, 703.709, color="b", label="30F")
     plt.scatter(2, 722.76877, color="g", label="70F")
@@ -1149,7 +1149,7 @@ if PLOT2_FLAG:
     ###################
 
     ### Figure One. ###
-    ### Baseline mass of propellant as a function of time. ###
+    ### Grain temperature effect on maximum acceleration. ###
     plt.figure(3, figsize=[7,7])
     plt.scatter(1, 6.2963, color="b", label="30F")
     plt.scatter(2, 6.7964, color="g", label="70F")

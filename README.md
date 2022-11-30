@@ -12,19 +12,16 @@ Start with numpy, pandas, and matplotlib.
 Build scripts written in python are included.
 
 To Do:
-- Finish the clerical stuff and start ANOTHER repository. Remove build and
-output directories.
 - Move the build scripts to the actual directory.
 - Add all cpp debug configurations to vscode config file.
 - Convert the rest of the CADAC sims to CMake projects.
 - CPP_6DOF_SRAAM_V2
      - Update the readme to point out how my
      programming skills have changed from V1 to V2.
-     - Three dof needs some work?
      - Add global position.
      - Add a getState method.
      - Add guidance modes to CPP_6DOF_SRAAM_V2. Initial turn, midcourse, terminal.
-     - Using Zarchan method, write a rate controller.
+     - Using Zarchan method, write a rate controller. Needs work.
 - CPP_6DOF_SAM
      - Start project. Reuse as much Zipfel code as possible.
 - PY_5DOF_MOCK_HELLFIRE
@@ -42,8 +39,8 @@ output directories.
      - Check alpha and beta calculations.
 - pythonFunctions
      - Finish working through filters.py
-     - At the end of MAE540 compile working code into two scripts, one called
-     rocketPropulsionFxns.py and one called solidRocketMotor.py
+     - need to derive a class from MAE540FinalProject.py called
+     solidRocketBooster.py
 
 Folder Structure:
 

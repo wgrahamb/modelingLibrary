@@ -19,16 +19,16 @@ class SecondOrderActuator:
 		self.DEFLECTION_DOT = 0.0 # Degrees per second.
 		self.DEFLECTION_DOT_DER = 0.0 #  # Degrees per second.squared.
 
-		self.LOGFILE = open(f"PY_5DOF_HIGH_FIDELITY_MOCK_HELLFIRE/output/{ID}.txt", "w")
+		# self.LOGFILE = open(f"PY_5DOF_HIGH_FIDELITY_MOCK_HELLFIRE/output/{ID}.txt", "w")
 
-		self.STATE = {
-			"TIME": self.TIME,
-			"COMMAND": 0.0,
-			"DEFL": self.DEFLECTION
-		}
+		# self.STATE = {
+		# 	"TIME": self.TIME,
+		# 	"COMMAND": 0.0,
+		# 	"DEFL": self.DEFLECTION
+		# }
 
-		lf.writeHeader(self.STATE, self.LOGFILE)
-		lf.writeData(self.STATE, self.LOGFILE)
+		# lf.writeHeader(self.STATE, self.LOGFILE)
+		# lf.writeData(self.STATE, self.LOGFILE)
 
 		print("SECOND ORDER ACTUATOR LOADED")
 
@@ -57,11 +57,11 @@ class SecondOrderActuator:
 		self.TIME += self.TIME_STEP
 		self.NEXT_UPDATE_TIME = self.TIME + self.TIME_STEP # Seconds.
 
-		self.STATE = {
-			"TIME": self.TIME,
-			"COMMAND": DEFLECTION_COMMAND,
-			"DEFL": self.DEFLECTION
-		}
+		# self.STATE = {
+		# 	"TIME": self.TIME,
+		# 	"COMMAND": DEFLECTION_COMMAND,
+		# 	"DEFL": self.DEFLECTION
+		# }
 
-		lf.writeData(self.STATE, self.LOGFILE)
+		# lf.writeData(self.STATE, self.LOGFILE)
 

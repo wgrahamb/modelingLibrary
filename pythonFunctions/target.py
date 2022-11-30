@@ -2,16 +2,16 @@ import numpy as np
 
 class Target:
 
-	def __init__(self, enuPos0, enuVel0):
-		self.t_tof = 0.0
-		self.TIME_STEP = None
-		self.enuPos = enuPos0
-		self.enuVel = enuVel0
+	def __init__(self, pos0, vel0):
+		self.tof = 0.0
+		self.dt = None
+		self.pos = pos0
+		self.vel = vel0
 
 		print("TARGET CONSTRUCTED")
 
 	def update(self, DT):
-		self.TIME_STEP = DT
-		deltaPos = self.TIME_STEP * self.enuVel
-		self.enuPos += deltaPos
-		self.t_tof += self.TIME_STEP
+		self.dt = DT
+		deltaPos = self.dt * self.vel
+		self.pos += deltaPos
+		self.tof += self.dt

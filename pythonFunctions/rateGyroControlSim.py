@@ -82,7 +82,7 @@ EDOT0 = None
 
 # SIMULATION CONTROL
 TOF = 0.0
-DT = 0.001
+DT = 0.01
 MAXT = 100
 
 # DATA
@@ -164,6 +164,7 @@ while TOF <= MAXT:
 	CMD = 8 * TAIL_AREA * TEMP2 / (BETA * REF_AREA)
 	MA = Q * REF_AREA * REF_DIAM * CMA / TMOI
 	MD = Q * REF_AREA * REF_DIAM * CMD / TMOI
+
 	OMEGAZ = np.sqrt((MA * ZD - MD * ZA) / ZD)
 	OMEGAAF = np.sqrt(-1 * MA)
 	ZETAAF = ZA * OMEGAAF / (2 * MA)
