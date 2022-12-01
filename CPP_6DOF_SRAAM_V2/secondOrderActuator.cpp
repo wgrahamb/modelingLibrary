@@ -5,7 +5,7 @@ secondOrderActuator::secondOrderActuator()
 	t             = 0.0;
 	deflLim       = 28.0;
 	deflRateLimit = 225;
-	wn            = 100;
+	wn            = 120;
 	zeta          = 0.9;
 	defl          = 0.0;
 	deflDer       = 0.0;

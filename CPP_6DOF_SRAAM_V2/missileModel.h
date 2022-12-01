@@ -90,7 +90,7 @@ static void missileMotion(Missile &missile);
 static void endCheck(Missile &missile, double maxTime);
 static void logData(Missile &missile, ofstream &logFile);
 
-// Public Functions.
+/* Declare public functions, so that they can be used by users.*/
 void formatTables (Missile &missile, string dataFile);
 Missile clone(const Missile &missile);
 void configure(Missile &missile, bool isBallistic, int integrationMethod);

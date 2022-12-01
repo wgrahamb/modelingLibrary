@@ -153,11 +153,13 @@ while TOF <= MAXT:
 	P3 = Y1 - (Y3 * Y4) / Y6
 	ATRIM = (-1 * P3 + np.sqrt(P3 * P3 + 4 * P2 * CNTRIM)) / (2 * P2)
 	DTRIM = (-1 * Y4 * ATRIM - Y5 * ATRIM * ATRIM) / Y6
+
 	CNA = 2 + 1.5 * PLANFORM_AREA * ATRIM / REF_AREA + 8 * WNG_AREA / \
 		(BETA * REF_AREA) + 8 * TAIL_AREA / (BETA * REF_AREA)
 	CND = 8 * TAIL_AREA / (BETA * REF_AREA)
 	ZA = -1 * G * Q * REF_AREA * CNA / (MASS * SPD)
 	ZD = -1 * G * Q * REF_AREA * CND / (MASS * SPD)
+
 	CMAP = 2 * TEMP4 + 1.5 * PLANFORM_AREA * ATRIM * TEMP3 / \
 		REF_AREA + 8 * WNG_AREA * TEMP1 / (BETA * REF_AREA)
 	CMA = CMAP + 8 * TAIL_AREA * TEMP2 / (BETA * REF_AREA)
