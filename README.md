@@ -12,7 +12,6 @@ Start with numpy, pandas, and matplotlib.
 Build scripts written in python are included.
 
 To Do:
-- Add all cpp debug configurations to vscode config file.
 - CPP_6DOF_SRAAM_V2
      - Update the readme to point out how my
      programming skills have changed from V1 to V2.
@@ -37,7 +36,7 @@ To Do:
      - Check alpha and beta calculations.
 - pythonFunctions
      - Finish working through filters.py
-     - need to derive a class from MAE540FinalProject.py called
+     - need to derive a class from rocketPropulsionFinal.py called
      solidRocketBooster.py
 
 Folder Structure:
