@@ -2,11 +2,12 @@
 	"version": "0.2.0",
 	"configurations":
 	[
+
 		{
-			"name": "debug cppFunctions",
+			"name": "debug CPP_3DOF_BASE",
 			"type": "cppdbg",
 			"request": "launch",
-			"program": "/home/graham/codeBase/cppFunctions/build/UTIL_TESTS",
+			"program": "${workspaceFolder}/3DOFS/CPP_3DOF_BASE/build/missileModel",
 			"args": [],
 			"stopAtEntry": false,
 			"cwd": "${workspaceFolder}",
@@ -22,11 +23,12 @@
 			],
 			"miDebuggerPath": "/usr/bin/gdb"
 		},
+
 		{
-			"name": "debug CPP_3DOF_BASE",
+			"name": "debug CPP_3DOF_LINE_OF_ATTACK",
 			"type": "cppdbg",
 			"request": "launch",
-			"program": "/home/graham/codeBase/3DOFS/CPP_3DOF_BASE/build/missileModel",
+			"program": "${workspaceFolder}/3DOFS/CPP_3DOF_LINE_OF_ATTACK/build/missileModel",
 			"args": [],
 			"stopAtEntry": false,
 			"cwd": "${workspaceFolder}",
@@ -41,6 +43,301 @@
 				}
 			],
 			"miDebuggerPath": "/usr/bin/gdb"
-		}
+		},
+
+		{
+			"name": "debug CPP_3DOF_PIP_SELECTION",
+			"type": "cppdbg",
+			"request": "launch",
+			"program": "${workspaceFolder}/3DOFS/CPP_3DOF_PIP_SELECTION/build/missileModel",
+			"args": [],
+			"stopAtEntry": false,
+			"cwd": "${workspaceFolder}",
+			"environment": [],
+			"externalConsole": false,
+			"MIMode": "gdb",
+			"setupCommands": [
+				{
+					"description": "Enable pretty-printing for gdb",
+					"text": "-enable-pretty-printing",
+					"ignoreFailures": true
+				}
+			],
+			"miDebuggerPath": "/usr/bin/gdb"
+		},
+
+		{
+			"name": "debug ADS6",
+			"type": "cppdbg",
+			"request": "launch",
+			"program": "${workspaceFolder}/CADAC_SIMS/ADS6/build/ADS6",
+			"args": [],
+			"stopAtEntry": false,
+			"cwd": "${workspaceFolder}",
+			"environment": [],
+			"externalConsole": false,
+			"MIMode": "gdb",
+			"setupCommands": [
+				{
+					"description": "Enable pretty-printing for gdb",
+					"text": "-enable-pretty-printing",
+					"ignoreFailures": true
+				}
+			],
+			"miDebuggerPath": "/usr/bin/gdb"
+		},
+
+		{
+			"name": "debug AGM6",
+			"type": "cppdbg",
+			"request": "launch",
+			"program": "${workspaceFolder}/CADAC_SIMS/AGM6/build/AGM6",
+			"args": [],
+			"stopAtEntry": false,
+			"cwd": "${workspaceFolder}",
+			"environment": [],
+			"externalConsole": false,
+			"MIMode": "gdb",
+			"setupCommands": [
+				{
+					"description": "Enable pretty-printing for gdb",
+					"text": "-enable-pretty-printing",
+					"ignoreFailures": true
+				}
+			],
+			"miDebuggerPath": "/usr/bin/gdb"
+		},
+
+		{
+			"name": "debug AIM5",
+			"type": "cppdbg",
+			"request": "launch",
+			"program": "${workspaceFolder}/CADAC_SIMS/AIM5/build/AIM5",
+			"args": [],
+			"stopAtEntry": false,
+			"cwd": "${workspaceFolder}",
+			"environment": [],
+			"externalConsole": false,
+			"MIMode": "gdb",
+			"setupCommands": [
+				{
+					"description": "Enable pretty-printing for gdb",
+					"text": "-enable-pretty-printing",
+					"ignoreFailures": true
+				}
+			],
+			"miDebuggerPath": "/usr/bin/gdb"
+		},
+
+		{
+			"name": "debug CRUISE5",
+			"type": "cppdbg",
+			"request": "launch",
+			"program": "${workspaceFolder}/CADAC_SIMS/CRUISE5/build/CRUISE5",
+			"args": [],
+			"stopAtEntry": false,
+			"cwd": "${workspaceFolder}",
+			"environment": [],
+			"externalConsole": false,
+			"MIMode": "gdb",
+			"setupCommands": [
+				{
+					"description": "Enable pretty-printing for gdb",
+					"text": "-enable-pretty-printing",
+					"ignoreFailures": true
+				}
+			],
+			"miDebuggerPath": "/usr/bin/gdb"
+		},
+
+		{
+			"name": "debug FALCON6",
+			"type": "cppdbg",
+			"request": "launch",
+			"program": "${workspaceFolder}/CADAC_SIMS/FALCON6/build/FALCON6",
+			"args": [],
+			"stopAtEntry": false,
+			"cwd": "${workspaceFolder}",
+			"environment": [],
+			"externalConsole": false,
+			"MIMode": "gdb",
+			"setupCommands": [
+				{
+					"description": "Enable pretty-printing for gdb",
+					"text": "-enable-pretty-printing",
+					"ignoreFailures": true
+				}
+			],
+			"miDebuggerPath": "/usr/bin/gdb"
+		},
+
+		{
+			"name": "debug GHAME3",
+			"type": "cppdbg",
+			"request": "launch",
+			"program": "${workspaceFolder}/CADAC_SIMS/GHAME3/build/GHAME3",
+			"args": [],
+			"stopAtEntry": false,
+			"cwd": "${workspaceFolder}",
+			"environment": [],
+			"externalConsole": false,
+			"MIMode": "gdb",
+			"setupCommands": [
+				{
+					"description": "Enable pretty-printing for gdb",
+					"text": "-enable-pretty-printing",
+					"ignoreFailures": true
+				}
+			],
+			"miDebuggerPath": "/usr/bin/gdb"
+		},
+
+		{
+			"name": "debug GHAME6",
+			"type": "cppdbg",
+			"request": "launch",
+			"program": "${workspaceFolder}/CADAC_SIMS/GHAME6/build/GHAME6",
+			"args": [],
+			"stopAtEntry": false,
+			"cwd": "${workspaceFolder}",
+			"environment": [],
+			"externalConsole": false,
+			"MIMode": "gdb",
+			"setupCommands": [
+				{
+					"description": "Enable pretty-printing for gdb",
+					"text": "-enable-pretty-printing",
+					"ignoreFailures": true
+				}
+			],
+			"miDebuggerPath": "/usr/bin/gdb"
+		},
+
+		{
+			"name": "debug MAGSIX",
+			"type": "cppdbg",
+			"request": "launch",
+			"program": "${workspaceFolder}/CADAC_SIMS/MAGSIX/build/MAGSIX",
+			"args": [],
+			"stopAtEntry": false,
+			"cwd": "${workspaceFolder}",
+			"environment": [],
+			"externalConsole": false,
+			"MIMode": "gdb",
+			"setupCommands": [
+				{
+					"description": "Enable pretty-printing for gdb",
+					"text": "-enable-pretty-printing",
+					"ignoreFailures": true
+				}
+			],
+			"miDebuggerPath": "/usr/bin/gdb"
+		},
+
+		{
+			"name": "debug ROCKET6G",
+			"type": "cppdbg",
+			"request": "launch",
+			"program": "${workspaceFolder}/CADAC_SIMS/ROCKET6G/build/ROCKET6G",
+			"args": [],
+			"stopAtEntry": false,
+			"cwd": "${workspaceFolder}",
+			"environment": [],
+			"externalConsole": false,
+			"MIMode": "gdb",
+			"setupCommands": [
+				{
+					"description": "Enable pretty-printing for gdb",
+					"text": "-enable-pretty-printing",
+					"ignoreFailures": true
+				}
+			],
+			"miDebuggerPath": "/usr/bin/gdb"
+		},
+
+		{
+			"name": "debug SRAAM6",
+			"type": "cppdbg",
+			"request": "launch",
+			"program": "${workspaceFolder}/CADAC_SIMS/SRAAM6/build/SRAAM6",
+			"args": [],
+			"stopAtEntry": false,
+			"cwd": "${workspaceFolder}",
+			"environment": [],
+			"externalConsole": false,
+			"MIMode": "gdb",
+			"setupCommands": [
+				{
+					"description": "Enable pretty-printing for gdb",
+					"text": "-enable-pretty-printing",
+					"ignoreFailures": true
+				}
+			],
+			"miDebuggerPath": "/usr/bin/gdb"
+		},
+
+		{
+			"name": "debug SRAAM6_V1",
+			"type": "cppdbg",
+			"request": "launch",
+			"program": "${workspaceFolder}/CPP_6DOF_SRAAM_V1/build/missileModel",
+			"args": [],
+			"stopAtEntry": false,
+			"cwd": "${workspaceFolder}",
+			"environment": [],
+			"externalConsole": false,
+			"MIMode": "gdb",
+			"setupCommands": [
+				{
+					"description": "Enable pretty-printing for gdb",
+					"text": "-enable-pretty-printing",
+					"ignoreFailures": true
+				}
+			],
+			"miDebuggerPath": "/usr/bin/gdb"
+		},
+
+		{
+			"name": "debug SRAAM6_V2",
+			"type": "cppdbg",
+			"request": "launch",
+			"program": "${workspaceFolder}/CPP_6DOF_SRAAM_V2/build/missileModel",
+			"args": [],
+			"stopAtEntry": false,
+			"cwd": "${workspaceFolder}",
+			"environment": [],
+			"externalConsole": false,
+			"MIMode": "gdb",
+			"setupCommands": [
+				{
+					"description": "Enable pretty-printing for gdb",
+					"text": "-enable-pretty-printing",
+					"ignoreFailures": true
+				}
+			],
+			"miDebuggerPath": "/usr/bin/gdb"
+		},
+
+		{
+			"name": "debug cppFunctions",
+			"type": "cppdbg",
+			"request": "launch",
+			"program": "${workspaceFolder}/cppFunctions/build/UTIL_TESTS",
+			"args": [],
+			"stopAtEntry": false,
+			"cwd": "${workspaceFolder}",
+			"environment": [],
+			"externalConsole": false,
+			"MIMode": "gdb",
+			"setupCommands": [
+				{
+					"description": "Enable pretty-printing for gdb",
+					"text": "-enable-pretty-printing",
+					"ignoreFailures": true
+				}
+			],
+			"miDebuggerPath": "/usr/bin/gdb"
+		},
+
 	]
 }
