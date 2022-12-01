@@ -1,7 +1,7 @@
 import numpy as np
 import copy
 import matplotlib.pyplot as plt
-from labellines import labelLine
+from labellines import labelLine # pip install matplotlib-label-lines
 import matplotlib
 matplotlib.use("WebAgg")
 

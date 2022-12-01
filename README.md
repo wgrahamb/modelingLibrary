@@ -12,9 +12,8 @@ Start with numpy, pandas, and matplotlib.
 Build scripts written in python are included.
 
 To Do:
-- Move the build scripts to the actual directory.
+- .gitignore everywhere
 - Add all cpp debug configurations to vscode config file.
-- Convert the rest of the CADAC sims to CMake projects.
 - CPP_6DOF_SRAAM_V2
      - Update the readme to point out how my
      programming skills have changed from V1 to V2.
@@ -52,7 +51,7 @@ Folder Structure:
      prototype test beds.
 
 
-     CADAC_SIMULATIONS
+     CADAC_SIMS
 
      REF: Modeling and Simulation of Aerospace Vehicle Dynamics,
      Second Edition, Peter H. Zipfel.
