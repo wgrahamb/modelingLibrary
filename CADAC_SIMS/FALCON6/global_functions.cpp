@@ -347,7 +347,7 @@ void merge_plot_files(string *plot_file_list,int num_plane,char *title)
 	}
 
 	//determining number of lines to be stripped of ploti.asc, i=1,2,3...
-	ifstream fplot1("plot1.asc");
+	ifstream fplot1("CADAC_SIMS/FALCON6/plot1.asc");
 	fplot1.getline(line_clear,CHARL,'\n');
 	fplot1>>buff;
 	fplot1>>buff;

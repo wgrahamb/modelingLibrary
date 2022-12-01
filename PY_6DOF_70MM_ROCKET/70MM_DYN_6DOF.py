@@ -11,7 +11,7 @@ import utility.angles as ang
 import utility.coordinateTransformations as ct
 from utility.ATM_IMPERIAL import ATM_IMPERIAL
 from utility.interpolationGivenTwoVectors import linearInterpolation
-import data.matPlotLibColors as mc
+import utility.matPlotLibColors as mc
 
 matplotlib.use('WebAgg')
 np.set_printoptions(precision=2, suppress=True)

@@ -8,7 +8,7 @@ matplotlib.use("WebAgg")
 RAD_TO_DEG = 57.2957795130823
 
 # Setup.
-f1 = r"3DOFS/PY_3DOF_MOCK_HELLFIRE_SIDE_SCROLLER/MOCK_HELLFIRE3DOF.txt"
+f1 = r"3DOFS/PY_3DOF_MOCK_HELLFIRE_SIDE_SCROLLER/data/MOCK_HELLFIRE3DOF.txt"
 viewFile = f1
 df = pd.read_csv(open(f"{viewFile}"), delimiter=" ")
 for index, header in enumerate(df.columns):

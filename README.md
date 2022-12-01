@@ -12,7 +12,6 @@ Start with numpy, pandas, and matplotlib.
 Build scripts written in python are included.
 
 To Do:
-- .gitignore everywhere
 - Add all cpp debug configurations to vscode config file.
 - CPP_6DOF_SRAAM_V2
      - Update the readme to point out how my
