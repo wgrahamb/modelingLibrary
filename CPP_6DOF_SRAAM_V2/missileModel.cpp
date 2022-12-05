@@ -453,9 +453,9 @@ static void accelerationLimit(Missile &missile)
 		{
 			missile.commLimit = 1;
 		}
-		else if (availableAccelerationEstimate > MAXIMUM_ACCELERATION)
+		else if (availableAccelerationEstimate > TERMINAL_ACC_LIMIT)
 		{
-			missile.commLimit = MAXIMUM_ACCELERATION;
+			missile.commLimit = TERMINAL_ACC_LIMIT;
 		}
 		else
 		{

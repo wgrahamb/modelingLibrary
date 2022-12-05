@@ -13,6 +13,7 @@ Build scripts written in python are included.
 
 To Do:
 - CPP_6DOF_SRAAM_V2
+     - Need to be able to specify output path.
      - Update the readme to point out how my
      programming skills have changed from V1 to V2.
      - Add global position.

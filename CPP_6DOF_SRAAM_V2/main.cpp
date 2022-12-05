@@ -82,9 +82,9 @@ int main()
 	Missile missile1 = clone(missile);
 	sixDofFly(missile1, ID, LogData, ConsoleReport, 400.0);
 
-	// three dof missile flight.
-	Missile missile2 = clone(missile);
-	threeDofFly(missile2, "missile2", LogData, ConsoleReport, 400.0);
+	// // three dof missile flight.
+	// Missile missile2 = clone(missile);
+	// threeDofFly(missile2, "missile2", LogData, ConsoleReport, 400.0);
 
 	// Console report and terminate.
 	auto wallClockEnd = chrono::high_resolution_clock::now();

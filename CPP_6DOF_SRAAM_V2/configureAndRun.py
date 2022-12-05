@@ -1,12 +1,9 @@
 import subprocess
-import pymap3d
 
-# pymap3d.enu2ecef()
-
-ballistic = 0 # Boolean.
+ballistic = 1 # Boolean.
 INTEGRATION_METHOD = 1 # 0 = Euler, 1 = RK2, 2 = RK4.
 phi = 0 # Degrees.
-theta = 45 # Degrees.
+theta = 85 # Degrees.
 psi = 0 # Degrees.
 posE = 0 # Meters.
 posN = 0 # Meters.

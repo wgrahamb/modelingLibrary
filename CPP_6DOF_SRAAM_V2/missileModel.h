@@ -1,4 +1,4 @@
-// Standard.
+/* Standard. */
 #include <iostream>
 #include <fstream>
 #include <sstream>
@@ -10,9 +10,10 @@
 #include <algorithm>
 #include <memory>
 
-// Namespace.
+/* Namespace. */
 using namespace std;
 
+/* Guard against multiple header inclusion. */
 #pragma once
 
 /* Components. */
@@ -27,11 +28,15 @@ const double SEEKER_KF_G                = 10.0; // seeker Kalman filter gain in 
 const double SEEKER_KF_ZETA             = 0.9; // seeker Kalman filter damping
 const double SEEKER_KF_WN               = 60.0; // seeker Kalman filter natural frequency in rads/s
 const double PROPORTIONAL_GUIDANCE_GAIN = 2.75; // proportional navigation gain
-const double MAXIMUM_ACCELERATION       = 450.0; // maximum acceleration allowed in m/s^2
 const double ROLL_ANGLE_COMMAND         = 0.0; // commanded roll angle in radians or degrees
 const double ALPHA_PRIME_MAX            = 40.0; // maximum angle of attack allowed in radians
 const double SEA_LEVEL_PRESSURE         = 101325; // nominal pressure in pascals
 const double LAUNCH_XCG_FROM_NOSE       = 1.5357; // center of mass at missile launch in meters
+
+const double INIT_TURN_ACC_LIMIT        = 25.0; // maximum initial turn acceleration allowed in m/s^2
+const double MIDCOURSE_ACC_LIMIT        = 25.0; // maximum midcourse acceleration allowed in m/s^2
+const double TERMINAL_ACC_LIMIT         = 450.0; // maximum terminal acceleration allowed in m/s^2
+
 const double ROLL_ANGLE_GAIN            = 1.0; // 1/s
 const double ROLL_PROP_GAIN             = 0.011; // 1/s
 const double ROLL_DER_GAIN              = 0.000034125; // nd
@@ -43,6 +48,21 @@ const double YAW_RATE_COMM_LIMIT        = 20.0; // rads/s
 const double YAW_PROP_GAIN              = 0.11; // 1/s
 const double YAW_DER_GAIN               = 0.000375; // nd
 const double YAW_INT_GAIN               = 0.0018; // nd
+
+/* Flight modes. */
+enum class flightModes
+{
+	InitialTurn = 0, // assuming a near vertical launch, this tips the missile towards the target.
+	Midcourse   = 1, // this is the trajectory shaping phase of flight
+	Terminal    = 2 // this is the homing phase of flight
+};
+
+const std::map<int, std::string> flightModeMap =
+{
+	{0, "InitialTurn"},
+	{1, "Midcourse"},
+	{2, "Terminal"}
+};
 
 /* End modes. */
 enum class endStatus
@@ -71,7 +91,7 @@ const std::map<int, std::string> endStatusMap =
 /* Forward declaration of the Missile type. */
 struct Missile;
 
-/* Declare static functions, so that they cannot be used by users.*/
+/* Declare static functions, so that they cannot be accessed by users.*/
 static void atmosphere(Missile &missile);
 static void seeker(Missile &missile);
 static void guidance(Missile &missile);
@@ -90,16 +110,16 @@ static void missileMotion(Missile &missile);
 static void endCheck(Missile &missile, double maxTime);
 static void logData(Missile &missile, ofstream &logFile);
 
-/* Declare public functions, so that they can be used by users.*/
-void formatTables (Missile &missile, string dataFile);
+/* Declare public functions, so that they can be accessed by users.*/
+void    formatTables (Missile &missile, string dataFile);
 Missile clone(const Missile &missile);
-void configure(Missile &missile, bool isBallistic, int integrationMethod);
-void emplace(Missile &missile, double phi, double theta, double psi, double ENUPosition[3]);
-void setWaypoint(Missile &missile, double waypoint[3]);
-void launchCommand(Missile &missile);
-void seekerOn(Missile &missile);
-void sixDofFly(Missile &missile, string flyOutID, bool writeData, bool consoleReport, double maxTime);
-void threeDofFly(Missile &missile, string flyOutID, bool writeData, bool consoleReport, double maxTime);
+void    configure(Missile &missile, bool isBallistic, int integrationMethod);
+void    emplace(Missile &missile, double phi, double theta, double psi, double ENUPosition[3]);
+void    setWaypoint(Missile &missile, double waypoint[3]);
+void    launchCommand(Missile &missile);
+void    seekerOn(Missile &missile);
+void    sixDofFly(Missile &missile, string flyOutID, bool writeData, bool consoleReport, double maxTime);
+void    threeDofFly(Missile &missile, string flyOutID, bool writeData, bool consoleReport, double maxTime);
 
 /* This struct fully represents a missile. */
 struct Missile
@@ -127,15 +147,15 @@ private:
 	friend void logData(Missile &missile, ofstream &logFile);
 
 	// Public Friends.
-	friend void formatTables (Missile &missile, string dataFile);
+	friend void    formatTables(Missile &missile, string dataFile);
 	friend Missile clone(const Missile &missile);
-	friend void configure(Missile &missile, bool isBallistic, int integrationMethod);
-	friend void emplace(Missile &missile, double phi, double theta, double psi, double ENUPosition[3]);
-	friend void setWaypoint(Missile &missile, double waypoint[3]);
-	friend void launchCommand(Missile &missile);
-	friend void seekerOn(Missile &missile);
-	friend void sixDofFly(Missile &missile, string flyOutID, bool writeData, bool consoleReport, double maxTime);
-	friend void threeDofFly(Missile &missile, string flyOutID, bool writeData, bool consoleReport, double maxTime);
+	friend void    configure(Missile &missile, bool isBallistic, int integrationMethod);
+	friend void    emplace(Missile &missile, double phi, double theta, double psi, double ENUPosition[3]);
+	friend void    setWaypoint(Missile &missile, double waypoint[3]);
+	friend void    launchCommand(Missile &missile);
+	friend void    seekerOn(Missile &missile);
+	friend void    sixDofFly(Missile &missile, string flyOutID, bool writeData, bool consoleReport, double maxTime);
+	friend void    threeDofFly(Missile &missile, string flyOutID, bool writeData, bool consoleReport, double maxTime);
 
 	/* Variables */
 
@@ -196,12 +216,13 @@ private:
 	double skrWlq2Dot = 0.0; // derivative of second state variable in pitching kalman filter in rads/s^3
 
 	// Guidance.
+	flightModes             guidancePhase; // which mode of flight is the missile in
 	bool isHoming           = false; // flag to indicate whether or not the missile has entered the homing phase
 	double timeToGo         = 0.0; // time to reach waypoint in seconds
 	double mslToWaypoint[3] = {0.0, 0.0, 0.0}; // waypoint position relative to missile body in meters
 	double normComm         = 0.0; // body normal guidance command in m/s^2
 	double sideComm         = 0.0; // body lateral guidance command in m/s^2
-	double commLimit        = MAXIMUM_ACCELERATION; // guidance command limit in m/s^2
+	double commLimit        = TERMINAL_ACC_LIMIT; // guidance command limit in m/s^2
 
 	// Control
 	double yawIntErr        = 0.0; // Something.
@@ -294,7 +315,7 @@ private:
 
 	// Performance and termination check.
 	double missDistance = 0.0; // magnitude of the miss in meters
-	endStatus lethality; // current missile mode
+	endStatus lethality = endStatus::Loitering; // current missile end status
 
 	// Integration states.
 	// P  = ENUPosition
