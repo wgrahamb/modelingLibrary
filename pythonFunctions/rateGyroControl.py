@@ -8,7 +8,7 @@ import matplotlib
 matplotlib.use('WebAgg')
 
 # INPUTS
-ALT     = 1000.0 # FEET
+ALT     = 10000.0 # FEET
 SPD     = 1200.0 # FEET PER SEC
 COMMAND = 10.0 # Gs
 
@@ -107,12 +107,13 @@ PASS   = 0
 # SIMULATION CONTROL
 TOF  = 0.0
 DT   = 0.01
-MAXT = 3
+MAXT = 10
 
 # DATA
 DATA = {"TOF": [], "WDOT": [], "CMD": [], "DEFL": []}
 
 # LOOP
+LAST_TIME = int(0)
 while TOF <= MAXT:
 
 	THD     = K3 * (E + TA * EDOT)
@@ -121,6 +122,11 @@ while TOF <= MAXT:
 	WDOT    = K1 * (E - (EDOTDOT / (OMEGAZ ** 2)))
 
 	if PASS == 0:
+
+		# REPORT
+		if np.floor(TOF) == LAST_TIME:
+			print("TOF", int(TOF))
+			LAST_TIME += 1
 
 		# DATA
 		DATA["TOF"].append(TOF)
@@ -145,6 +151,8 @@ while TOF <= MAXT:
 		EDOT  = EDOT0 + EDOTDOT * DT
 		E0    = None
 		EDOT0 = None
+
+print("TOF", int(TOF))
 
 DF = pd.DataFrame(DATA)
 plt.plot(DF.iloc[:]["TOF"], DF.iloc[:]["WDOT"], \

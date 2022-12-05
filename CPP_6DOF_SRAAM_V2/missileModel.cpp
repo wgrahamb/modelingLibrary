@@ -370,7 +370,7 @@ static void actuators(Missile &missile)
 	}
 }
 
-static void aerodynamicAnglesAndConversions(Missile &missile)
+static void aeroAngles(Missile &missile)
 {
 	double phiPrime;
 	double pitchDeflAeroFrame;
@@ -590,7 +590,7 @@ static void aerodynamics(Missile &missile)
 	missile.CN = -CMAERO * missile.sinPhiPrime + CNAERO * missile.cosPhiPrime;
 }
 
-static void aerodynamicDerivatives(Missile &missile)
+static void aeroDerivatives(Missile &missile)
 {
 	int index;
 
@@ -627,9 +627,9 @@ static void aerodynamicDerivatives(Missile &missile)
 
 	double T2  = missile.q * REFERENCE_AREA * REFERENCE_DIAMETER / missile.tmoi;
 	double DMA = T2 * CMA; // pitch moment derivative in 1/s^2
+	double DMD = T2 * CMD; // pitch control moment derivative in 1/s^2
 	double DMQ = T2 *
 		(REFERENCE_DIAMETER/(2*missile.spd))*CMQ; // pitch damping derivative in 1/s
-	double DMD = T2 * CMD; // pitch control derivative in 1/s^2
 
 	double T3  = missile.q * REFERENCE_AREA * REFERENCE_DIAMETER / missile.amoi;
 	double DLP = T3 *
@@ -1475,12 +1475,12 @@ void sixDofFly(Missile &missile, string flyOutID, bool writeData,
 		guidance(missile);
 		control(missile);
 		actuators(missile);
-		aerodynamicAnglesAndConversions(missile);
+		aeroAngles(missile);
 		massProperties(missile);
 		accelerationLimit(missile);
 		propulsion(missile);
 		aerodynamics(missile);
-		aerodynamicDerivatives(missile);
+		aeroDerivatives(missile);
 		missileMotion(missile);
 
 		if (missile.INTEGRATION_PASS == 0)
@@ -1582,7 +1582,7 @@ void threeDofFly(Missile &missile, string flyOutID, bool writeData,
 		threeByThreeTimesThreeByOne(missile.enuToFlu, localGrav, missile.fluGrav);
 
 		// Aero ballistic angles.
-		aerodynamicAnglesAndConversions(missile);
+		aeroAngles(missile);
 
 		// Lookups.
 		index = missile.tableNameIndexPairs["MASS"];
