@@ -273,12 +273,12 @@ ZMAX = max(list(DF.iloc[START:STOP]["Y"]) + \
 TRAJ.set_box_aspect(
 	(
 		np.ptp([XMIN - 1000, XMAX + 1000]), 
-		np.ptp([YMIN - 1000, YMAX + 1000]), 
+		np.ptp([YMIN - 5000, YMAX + 5000]), 
 		np.ptp([ZMIN, ZMAX + 1000]),
 	)
 )
 TRAJ.set_xlim([XMIN - 1000, XMAX + 1000])
-TRAJ.set_ylim([YMIN - 1000, YMAX + 1000])
+TRAJ.set_ylim([YMIN - 5000, YMAX + 5000])
 TRAJ.set_zlim([ZMIN, ZMAX + 1000])
 TRAJ.plot(
 	DF.iloc[START:STOP]["X"],
