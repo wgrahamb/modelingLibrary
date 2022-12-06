@@ -257,8 +257,9 @@ class fiveDofInterceptor:
 		absAlphaDeg = np.abs(np.degrees(self.alpha))
 		absBetaDeg = np.abs(np.degrees(self.beta))
 		CX = CD * cosAlpha - CL * sinAlpha
+		CX = np.negative(np.abs(CX))
 		CT = CD * sinAlpha + CL * cosAlpha
-		CZ = np.abs(CT) * np.cos(phiPrime)
+		CZ = np.negative(np.abs(CT)) * np.cos(phiPrime)
 		CY = np.negative(np.abs(CT)) * np.sin(phiPrime)
 		CNA = None
 		CYB = None
@@ -270,26 +271,6 @@ class fiveDofInterceptor:
 			CYB = np.degrees(0.123 + 0.013 * absBetaDeg)
 		else:
 			CYB = np.degrees(0.06 * (absBetaDeg ** 0.625))
-
-		# FORCE CHECK AND BALANCE. THIS IS A KLUDGE, BUT IT WORKS. #
-		# AXIAL FORCE COEFFICIENT ALWAYS ACTS IN THE NEGATIVE AXIS
-		CX = np.negative(np.abs(CX))
-		# NOSE BELOW FREE STREAM,
-		# NORMAL FORCE PUSHES INTERCEPTOR TOWARD THE GROUND
-		if self.alpha >= 0.0:
-			CZ = np.negative(np.abs(CZ))
-		# NOSE ABOVE FREE STREAM,
-		# NORMAL FORCE PUSHES INTERCEPTOR TOWARDS SPACE
-		elif self.alpha < 0.0:
-			CZ = np.positive(np.abs(CZ))
-		# NOSE LEFT OF FREE STREAM,
-		# SIDE FORCE PUSHES INTERCEPTOR LEFT
-		if self.beta >= 0.0:
-			CY = np.negative(np.abs(CY))
-		# NOSE RIGHT OF FREE STREAM,
-		# SIDE FORCE PUSHES INTERCEPTOR RIGHT
-		elif self.beta < 0.0:
-			CY = np.positive(np.abs(CY))
 
 		# PITCH AUTOPILOT.
 		tip = freeStreamSpeed * mass / (thrust + self.Q * self.refArea * np.abs(CNA))
@@ -379,10 +360,10 @@ class fiveDofInterceptor:
 if __name__ == "__main__":
 	x = fiveDofInterceptor(
 		targetPos=npa([3000.0, 3000.0, 3000.0]),
-		targetVel=npa([-50.0, -50.0, -50.0]),
+		targetVel=npa([0.0, 0.0, 0.0]),
 		launchElDeg=55.0,
 		launchAzDeg=40.0,
-		launchSpeed=25,
+		launchSpeed=55,
 		launchAltitude=10
 	)
 	x.main()
