@@ -79,5 +79,5 @@ acc.plot(
 )
 acc.legend()
 
-plt.get_current_fig_manager().full_screen_toggle()
+# plt.get_current_fig_manager().full_screen_toggle()
 plt.show()

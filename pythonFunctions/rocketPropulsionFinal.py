@@ -159,23 +159,42 @@ def GET_CD(MACH):
 # ID                      = "10K FT, 120F" # identification for plots
 # #########################################################################################################
 
+# ### Simulation input. ###
+# #########################################################################################################
+# # 15000 Feet. #
+# CHECKS_AND_BALANCES     = True # flag for termination checks
+# BORE_RADIUS             = 1.0 # radius of the inner bore due to the grain, inches
+# END_RADIUS              = 2.1 # radius of the chamber, inches
+# INITIAL_GRAIN_LENGTH    = 3.2704 # initial length of each individual grain, inches
+# PLOT_FLAG               = True # flag to show simulation plots
+# PLOT2_FLAG              = False # flag to show temperature plots
+# RPT                     = False # flag to show console report at each iteration
+# THROAT_AREA_0           = 1.0 # initial area of the throat, in^2
+# THROAT_DIAM_0           = np.sqrt(THROAT_AREA_0 * 4.0 / np.pi) # initial diameter of the throat, inches
+# EPSILON_0               = 2.268 # initial nozzle expansion ratio
+# NUMBER_OF_GRAINS        = int(4) # number of grains, count
+# GRAIN_TEMP              = 70.0 # grain temperature, Farenheit
+# BALLAST_MASS            = 1.0 # rocket mass that seperates at rocket burnout
+# ID                      = "15K FT" # identification for plots
+# #########################################################################################################
+
 ### Simulation input. ###
 #########################################################################################################
-# 15000 Feet. #
+# Test. #
 CHECKS_AND_BALANCES     = True # flag for termination checks
-BORE_RADIUS             = 1.0 # radius of the inner bore due to the grain, inches
-END_RADIUS              = 2.1 # radius of the chamber, inches
-INITIAL_GRAIN_LENGTH    = 3.2704 # initial length of each individual grain, inches
-PLOT_FLAG               = True # flag to show simulation plots
+BORE_RADIUS             = 0.9 # radius of the inner bore due to the grain, inches
+END_RADIUS              = 2.0 # radius of the chamber, inches
+INITIAL_GRAIN_LENGTH    = 3.4489795918367347 # initial length of each individual grain, inches
+PLOT_FLAG               = False # flag to show simulation plots
 PLOT2_FLAG              = False # flag to show temperature plots
 RPT                     = False # flag to show console report at each iteration
-THROAT_AREA_0           = 1.0 # initial area of the throat, in^2
+THROAT_AREA_0           = 0.65 # initial area of the throat, in^2
 THROAT_DIAM_0           = np.sqrt(THROAT_AREA_0 * 4.0 / np.pi) # initial diameter of the throat, inches
-EPSILON_0               = 2.268 # initial nozzle expansion ratio
-NUMBER_OF_GRAINS        = int(4) # number of grains, count
+EPSILON_0               = 2.0157894736842104 # initial nozzle expansion ratio
+NUMBER_OF_GRAINS        = int(2) # number of grains, count
 GRAIN_TEMP              = 70.0 # grain temperature, Farenheit
-BALLAST_MASS            = 1.0 # rocket mass that seperates at rocket burnout
-ID                      = "15K FT" # identification for plots
+BALLAST_MASS            = 0.0 # rocket mass that seperates at rocket burnout
+ID                      = "TEST" # identification for plots
 #########################################################################################################
 
 # Propellant characteristics.

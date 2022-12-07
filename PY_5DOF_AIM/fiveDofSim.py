@@ -89,7 +89,7 @@ class fiveDofInterceptor:
 
 		# SIM CONTROL
 		self.wallClockStart = time.time()
-		self.timeStep       = (1.0 / 600.0) # SECONDS
+		self.timeStep       = (1.0 / 100.0) # SECONDS
 		self.go             = True
 		self.maxTime        = 200 # SECONDS
 
@@ -248,11 +248,10 @@ class fiveDofInterceptor:
 		sinAlpha    = np.sin(self.alpha)
 		absAlphaDeg = np.abs(np.degrees(self.alpha))
 		absBetaDeg  = np.abs(np.degrees(self.beta))
-		CX          = CD * cosAlpha - CL * sinAlpha
-		CX          = np.negative(np.abs(CX))
+		CX          = -1 * (CD * cosAlpha - CL * sinAlpha)
 		CT          = CD * sinAlpha + CL * cosAlpha
-		CZ          = np.negative(np.abs(CT)) * np.cos(phiPrime)
-		CY          = np.negative(np.abs(CT)) * np.sin(phiPrime)
+		CZ          = -1 * CT * np.cos(phiPrime)
+		CY          = -1 * CT * np.sin(phiPrime)
 		CNA         = None
 		CYB         = None
 		if absAlphaDeg < 10:
@@ -340,24 +339,27 @@ class fiveDofInterceptor:
 
 	def main(self):
 		print("FIVE DOF INTERCEPTOR")
+		lastTime = int(0)
 		while self.go:
 			self.fly()
-			if round(self.tof, 3).is_integer():
+			if np.floor(self.tof) == lastTime:
 				print(f"TOF {self.tof:.1f} ENU {self.posEnu}")
+				lastTime += 1
 		wallClockEnd = time.time()
+		print(f"TOF {self.tof:.4f} ENU {self.posEnu}")
 		print(f"SIMULATION RUN TIME : {(wallClockEnd - self.wallClockStart):.2f}")
-		print(f"SIMULATION RESULT {self.lethality.name}")
-		print(f"MISS DISTANCE {self.missDistance:.2f}")
+		print(f"SIMULATION RESULT   : {self.lethality.name}")
+		print(f"MISS DISTANCE       : {self.missDistance:.2f}")
 
 
 
 if __name__ == "__main__":
 	x = fiveDofInterceptor(
-		targetPos   = npa([4000.0, 4000.0, 3000.0]),
+		targetPos   = npa([4000.0, 4000.0, 2000.0]),
 		targetVel   = npa([0.0, 0.0, 0.0]),
-		launchElDeg = 50.0,
-		launchAzDeg = 40.0,
-		launchSpeed = 55,
-		launchHgt   = 10
+		launchElDeg = 20.0,
+		launchAzDeg = 20.0,
+		launchSpeed = 55.0,
+		launchHgt   = 10.0
 	)
 	x.main()
