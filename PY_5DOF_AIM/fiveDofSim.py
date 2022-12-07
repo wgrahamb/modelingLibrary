@@ -20,12 +20,12 @@ from utility.unitVector import unitvector
 from utility import loggingFxns as lf
 
 class endChecks(Enum):
-	intercept                    = 1
-	flying                       = 0
-	groundCollision              = -1
-	pointOfClosestApproachPassed = -2
-	notANumber                   = -3
-	maxTimeExceeded              = -4
+	HIT    = 1
+	FLIGHT = 0
+	GROUND = -1
+	POCA   = -2
+	NAN    = -3
+	TIME   = -4
 
 class fiveDofInterceptor:
 
@@ -41,7 +41,7 @@ class fiveDofInterceptor:
 
 		############################################################################
 		#
-		# AUTHOR - WILSON GRAHAM BEECH
+		# AUTHOR - GRAHAM BEECH
 		# REFERENCE - MODELING AND SIMULATION OF AEROSPACE
 		# VEHICLE DYNAMICS SECOND EDITON, PETER H. ZIPFEL
 		#
@@ -89,7 +89,7 @@ class fiveDofInterceptor:
 
 		# SIM CONTROL
 		self.wallClockStart = time.time()
-		self.timeStep       = (1.0 / 100.0) # SECONDS
+		self.timeStep       = (1.0 / 600.0) # SECONDS
 		self.go             = True
 		self.maxTime        = 200 # SECONDS
 
@@ -104,7 +104,6 @@ class fiveDofInterceptor:
 		self.posEnu   = npa([0.0, 0.0, launchHgt]) # METERS
 		self.velEnu   = self.ENUtoFLU[0] * launchSpeed
 		self.accEnu   = np.zeros(3) # METERS / S^2
-		
 
 		# INTERCEPTOR CONSTANTS
 		self.refArea        = 0.01767 # M^2
@@ -150,7 +149,7 @@ class fiveDofInterceptor:
 		self.betd   = 0.0
 
 		# END CHECK
-		self.lethality    = endChecks.flying
+		self.lethality    = endChecks.FLIGHT
 		self.missDistance = 0.0
 
 		# INITIALIZE LOG FILE AND WRITE HEADER
@@ -199,6 +198,7 @@ class fiveDofInterceptor:
 		self.G          = self.ATMOS.g # Meters per second squared.
 		self.MACH       = self.ATMOS.mach # Non dimensional.
 		gravityVec      = npa([0, 0, -1.0 * self.G])
+		bodyGrav        = self.ENUtoFLU @ gravityVec
 
 		# KINEMATIC TRUTH SEEKER AND PROPORTIONAL GUIDANCE.
 		FLUMslToPipRelPos  = self.ENUtoFLU @ (self.targetPos - self.posEnu)
@@ -266,7 +266,7 @@ class fiveDofInterceptor:
 		# PITCH AUTOPILOT.
 		tip         = freeStreamSpeed * mass / (thrust + self.Q * \
 			self.refArea * np.abs(CNA))
-		fspz        = self.Q * self.refArea * CZ / mass
+		fspz        = (self.Q * self.refArea * CZ / mass) + bodyGrav[2]
 		gr          = self.gacp * tip * self.tr / freeStreamSpeed
 		gi          = gr / self.ta
 		abez        = self.normCommand
@@ -318,19 +318,19 @@ class fiveDofInterceptor:
 		# END CHECK.
 		self.missDistance = la.norm(FLUMslToPipRelPos)
 		if self.missDistance < 5.0:
-			self.lethality = endChecks.intercept
+			self.lethality = endChecks.HIT
 			self.go        = False
 		elif self.posEnu[2] < 0.0:
-			self.lethality = endChecks.groundCollision
+			self.lethality = endChecks.GROUND
 			self.go        = False
 		elif FLUMslToPipRelPos[0] < 0.0:
-			self.lethality = endChecks.pointOfClosestApproachPassed
+			self.lethality = endChecks.POCA
 			self.go        = False
 		elif np.isnan(np.sum(self.posEnu)):
-			self.lethality = endChecks.notANumber
+			self.lethality = endChecks.NAN
 			self.go        = False
 		elif self.tof > self.maxTime:
-			self.lethality = endChecks.maxTimeExceeded
+			self.lethality = endChecks.TIME
 			self.go        = False
 
 		# LOG DATA
@@ -343,7 +343,7 @@ class fiveDofInterceptor:
 		while self.go:
 			self.fly()
 			if np.floor(self.tof) == lastTime:
-				print(f"TOF {self.tof:.1f} ENU {self.posEnu}")
+				print(f"TOF {self.tof:.0f} ENU {self.posEnu}")
 				lastTime += 1
 		wallClockEnd = time.time()
 		print(f"TOF {self.tof:.4f} ENU {self.posEnu}")
@@ -355,10 +355,10 @@ class fiveDofInterceptor:
 
 if __name__ == "__main__":
 	x = fiveDofInterceptor(
-		targetPos   = npa([4000.0, 4000.0, 2000.0]),
+		targetPos   = npa([4000.0, 1000.0, 2000.0]),
 		targetVel   = npa([0.0, 0.0, 0.0]),
-		launchElDeg = 20.0,
-		launchAzDeg = 20.0,
+		launchElDeg = 30.0,
+		launchAzDeg = 0.0,
 		launchSpeed = 55.0,
 		launchHgt   = 10.0
 	)
