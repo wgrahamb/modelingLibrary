@@ -1,23 +1,24 @@
 
 # INCLUDED WITH PYTHON.
-from enum import Enum
+from   enum import Enum
 import time
 
 # PIP INSTALLED LIBRARIES.
 import numpy as np
-from numpy import array as npa
-from numpy import linalg as la
+from   numpy import array as npa
+from   numpy import linalg as la
 np.set_printoptions(suppress=True, precision=2)
 
 # UTILITY.
-from utility.loadPickle import loadpickle as lp
+from utility.loadPickle                import loadpickle as lp
 from utility.coordinateTransformations import FLIGHTPATH_TO_LOCAL_TM
 from utility.coordinateTransformations import ORIENTATION_TO_LOCAL_TM
-from utility.returnAzAndElevation import returnAzAndElevation
-from utility.ATM1976 import ATM1976
-from utility.trapezoidIntegrate import integrate
-from utility.unitVector import unitvector
-from utility import loggingFxns as lf
+from utility.angles                    import returnAzAndElevation
+from utility.angles                    import projection
+from utility.ATM1976                   import ATM1976
+from utility.trapezoidIntegrate        import integrate
+from utility.unitVector                import unitvector
+from utility                           import loggingFxns as lf
 
 class endChecks(Enum):
 	HIT    = 1
@@ -69,97 +70,95 @@ class fiveDofInterceptor:
 		#
 		# POSITIVE ALPHA INDICATES NOSE BELOW FREE STREAM VELOCITY
 		# POSITIVE BETA INDICATES NOSE LEFT FREE STREAM VELOCITY
-		# POSITIVE ROLL INDICATES NORMAL AXIS CLOCKWISELY
-		# ROTATED FROM TWELVE O'CLOCK
-		#
-		# FIN ORIENTATION
-		# LOOKING DOWN THE NOZZLE OF THE MISSILE
-		#
-		#                   FIN 4       FIN 1
-		#                           X
-		#                   FIN 3       FIN 2
 		#
 		############################################################################
 
-		# INPUT #
-		self.targetPos = targetPos
-		self.targetVel = targetVel
-		el             = np.radians(launchElDeg) # CONVERT INPUT ELEVATION TO RADS
-		az             = np.radians(launchAzDeg) # CONVERT INPUT AZIMUTH TO RADS
+		# INPUT.
+		self.targetPos = targetPos # m
+		self.targetVel = targetVel # m/s
+		el             = np.radians(launchElDeg) # Convert input elevation to rads.
+		az             = np.radians(launchAzDeg) # Convert input azimuth to rads.
 
-		# SIM CONTROL
-		self.wallClockStart = time.time()
-		self.timeStep       = (1.0 / 600.0) # SECONDS
-		self.go             = True
-		self.maxTime        = 200 # SECONDS
+		# SIM CONTROL.
+		self.wallClockStart = time.time() # Real time start.
+		self.timeStep       = (1.0 / 600.0) # seconds
+		self.go             = True # Flag for termination.
+		self.maxTime        = 200.0 # seconds
 
 		# BODY.
-		self.tof       = 0.0 # SECONDS
-		self.specForce = np.zeros(3) # METERS / S^2
-		self.alpha     = 0.0 # RADIANS
-		self.beta      = 0.0 # RADIANS
+		self.tof       = 0.0 # seconds
+		self.specForce = np.zeros(3) # m/s^2
+		self.alpha     = 0.0 # rads
+		self.beta      = 0.0 # rads
 
 		# FRAME.
-		self.ENUtoFLU = FLIGHTPATH_TO_LOCAL_TM(az, -1.0 * el)
-		self.posEnu   = npa([0.0, 0.0, launchHgt]) # METERS
-		self.velEnu   = self.ENUtoFLU[0] * launchSpeed
-		self.accEnu   = np.zeros(3) # METERS / S^2
+		self.enuToFlu = FLIGHTPATH_TO_LOCAL_TM(az, -1.0 * el) # nd
+		self.posEnu   = npa([0.0, 0.0, launchHgt]) # m
+		self.velEnu   = self.enuToFlu[0] * launchSpeed # m/s
+		self.accEnu   = np.zeros(3) # m/s^2
 
-		# INTERCEPTOR CONSTANTS
-		self.refArea        = 0.01767 # M^2
-		self.nozzleExitArea = 0.00948 # M^2
-		self.burnOut        = 3.02 # SECONDS
+		# INTERCEPTOR CONSTANTS.
+		self.refArea        = 0.01767 # m^2
+		self.nozzleExitArea = 0.00948 # m^2
+		self.burnOut        = 3.02 # seconds
+		self.burnOutMass    = 38.5 # kilograms
 
-		# LOOK UP DATA
+		# CONSTANTS.
+		self.ambPress = 101325.0 # Ambient pressure in Pascals.
+
+		# LOOK UP TABLES.
 		self.lookUps = lp("PY_5DOF_AIM/lookUps.pickle")
 
 		 # ATMOSPHERE.
-		self.ATMOS = ATM1976()
-		self.ATMOS.update(self.posEnu[2], launchSpeed)
-		self.RHO   = self.ATMOS.rho # Kilograms per meter cubed.
-		self.Q     = self.ATMOS.q # Pascals.
-		self.P     = self.ATMOS.p # Pascals.
-		self.A     = self.ATMOS.a # Meters per second.
-		self.G     = self.ATMOS.g # Meters per second squared.
-		self.MACH  = self.ATMOS.mach # Non dimensional.
+		self.atm = ATM1976()
+		self.atm.update(self.posEnu[2], launchSpeed)
+		self.rho   = self.atm.rho # kg/m^3
+		self.q     = self.atm.q # pa
+		self.p     = self.atm.p # pa
+		self.a     = self.atm.a # m/s
+		self.g     = self.atm.g # m/s^2
+		self.mach  = self.atm.mach # nd
 
-		# SEEKER AND GUIDANCE
-		self.commLimit   = 250
-		self.proNavGain  = 4
-		self.normCommand = 0.0
-		self.sideCommand = 0.0
+		# GUIDANCE.
+		self.midGuideLimit  = 50.0 # m/s^2
+		self.lineOfAttack   = npa([0.7, 0.7, -0.3]) # nd
+		self.loaGain        = 1.5 # nd
+		self.termGuideLimit = 250.0 # m/s^2
+		self.proNavGain     = 4.0 # nd
+		self.normComm       = 0.0 # m/s^2
+		self.sideComm       = 0.0 # m/s^2
 
-		# AUTOPILOT #
-		self.ta   = 2
-		self.tr   = 0.1
-		self.gacp = 40
+		# AUTOPILOT.
+		self.ta   = 2 # Ratio of proportional/integral gain. nd
+		self.tr   = 0.1 # Rate loop time constant. seconds
+		self.gacp = 40 # Root locus gain of acceleration loop. rad/s^2
 
-		# PITCH
-		self.xi     = 0.0
-		self.xid    = 0.0
-		self.ratep  = 0.0
-		self.ratepd = 0.0
-		self.alpd   = 0.0
+		# PITCH.
+		self.xi     = 0.0 # Integral feedback. rad/s
+		self.xid    = 0.0 # Integral feedback derivative. rad/s^2
+		self.ratep  = 0.0 # Pitch rate. rad/s
+		self.ratepd = 0.0 # Pitch rate dot. rad/s^2
+		self.alpd   = 0.0 # Alpha dot. rad/s
 
-		# YAW
-		self.yi     = 0.0
-		self.yid    = 0.0
-		self.ratey  = 0.0
-		self.rateyd = 0.0
-		self.betd   = 0.0
+		# YAW.
+		self.yi     = 0.0 # Integral feedback. rad/s
+		self.yid    = 0.0 # Integral feedback derivative. rad/s^2
+		self.ratey  = 0.0 # Yaw rate. rad/s
+		self.rateyd = 0.0 # Yaw rate dot. rad/s^2
+		self.betd   = 0.0 # Beta dot. rad/s
 
-		# END CHECK
+		# END CHECK.
 		self.lethality    = endChecks.FLIGHT
-		self.missDistance = 0.0
+		self.missDistance = 0.0 # m
 
-		# INITIALIZE LOG FILE AND WRITE HEADER
+		# INITIALIZE LOG FILE AND WRITE HEADER.
 		self.logFile = open("PY_5DOF_AIM/log.txt", "w")
-		self.STATE   = self.populateState()
-		lf.writeHeader(self.STATE, self.logFile)
-		lf.writeData(self.STATE, self.logFile)
+		self.state   = self.populateState()
+		lf.writeHeader(self.state, self.logFile)
+		lf.writeData(self.state, self.logFile)
 
 	def populateState(self):
-		STATE = {
+		state = {
 			"tof": self.tof,
 			"posE": self.posEnu[0],
 			"posN": self.posEnu[1],
@@ -167,109 +166,124 @@ class fiveDofInterceptor:
 			"tgtE": self.targetPos[0],
 			"tgtN": self.targetPos[1],
 			"tgtU": self.targetPos[2],
-			"normComm": self.normCommand,
+			"normComm": self.normComm,
 			"normAch": self.specForce[2],
-			"sideComm": self.sideCommand,
+			"sideComm": self.sideComm,
 			"sideAch": self.specForce[1]
 		}
-		return STATE
+		return state
 
 	def fly(self):
 
 		# UPDATE TARGET.
-		self.targetPos += (self.timeStep * self.targetVel)
+		self.targetPos += (self.timeStep * self.targetVel) # m
 
 		# ENU TO FLU MATRIX.
-		freeStreamAz, freeStreamEl = returnAzAndElevation(self.velEnu)
-		freeStreamLocalOrientation = \
-			FLIGHTPATH_TO_LOCAL_TM(freeStreamAz, -freeStreamEl)
-		attitudeToLocalTransformationMatrix = \
-			ORIENTATION_TO_LOCAL_TM(0.0, self.alpha, self.beta)
-		self.ENUtoFLU = \
-			attitudeToLocalTransformationMatrix @ freeStreamLocalOrientation
+		velAz, velEl  = returnAzAndElevation(self.velEnu) # rads
+		velFrame      = FLIGHTPATH_TO_LOCAL_TM(velAz, -velEl) # nd
+		aeroFrame     = ORIENTATION_TO_LOCAL_TM(0.0, self.alpha, self.beta) # nd
+		self.enuToFlu = aeroFrame @ velFrame # nd
 
 		# ATMOSPHERE.
-		freeStreamSpeed = la.norm(self.velEnu)
-		self.ATMOS.update(self.posEnu[2], freeStreamSpeed)
-		self.RHO        = self.ATMOS.rho # Kilograms per meter cubed.
-		self.Q          = self.ATMOS.q # Pascals.
-		self.P          = self.ATMOS.p # Pascals.
-		self.A          = self.ATMOS.a # Meters per second.
-		self.G          = self.ATMOS.g # Meters per second squared.
-		self.MACH       = self.ATMOS.mach # Non dimensional.
-		gravityVec      = npa([0, 0, -1.0 * self.G])
-		bodyGrav        = self.ENUtoFLU @ gravityVec
+		spd       = la.norm(self.velEnu) # m/s
+		self.atm.update(self.posEnu[2], spd)
+		self.rho  = self.atm.rho # kg/m^3
+		self.q    = self.atm.q # pa
+		self.p    = self.atm.p # pa
+		self.a    = self.atm.a # m/s
+		self.g    = self.atm.g # m/s^2
+		self.mach = self.atm.mach # nd
+		localGrav = npa([0, 0, -1.0 * self.g]) # m/s^2
+		bodyGrav  = self.enuToFlu @ localGrav # m/s^2
 
-		# KINEMATIC TRUTH SEEKER AND PROPORTIONAL GUIDANCE.
-		FLUMslToPipRelPos  = self.ENUtoFLU @ (self.targetPos - self.posEnu)
-		FLUMslToPipRelPosU = unitvector(FLUMslToPipRelPos)
-		closingVel         = self.ENUtoFLU @ (self.targetVel - self.velEnu)
-		closingSpeed       = la.norm(closingVel)
-		T1                 = np.cross(FLUMslToPipRelPos, closingVel)
-		T2                 = np.dot(FLUMslToPipRelPos, FLUMslToPipRelPos)
-		lineOfSightRate    = T1 / T2
-		T3                 = -1.0 * self.proNavGain * closingSpeed\
-			 * FLUMslToPipRelPosU
-		command            = np.cross(T3, lineOfSightRate)
-		self.normCommand   = command[2]
-		self.sideCommand   = command[1]
-		accCommMag         = np.sqrt(self.normCommand ** 2 + self.sideCommand ** 2)
-		trigRatio          = np.arctan2(self.normCommand, self.sideCommand)
-		if accCommMag > self.commLimit:
-			accCommMag = self.commLimit
-		self.normCommand   = accCommMag * np.sin(trigRatio)
-		self.sideCommand   = accCommMag * np.cos(trigRatio)
+		# KINEMATIC TRUTH SEEKER.
+		fluMslToTgt   = self.enuToFlu @ (self.targetPos - self.posEnu) # m
+		fluMslToTgtU  = unitvector(fluMslToTgt) # nd
+		fluMslToTgtM  = la.norm(fluMslToTgt) # m
+		closingVel    = self.enuToFlu @ (self.targetVel - self.velEnu) # m/s
+		closingSpeed  = la.norm(closingVel) # m/s
+		tgo           = fluMslToTgtM / closingSpeed # seconds
+
+		# PROPORTIONAL GUIDANCE.
+		if tgo < 5.0:
+			T1            = np.cross(fluMslToTgt, closingVel)
+			T2            = np.dot(fluMslToTgt, fluMslToTgt)
+			omega         = T1 / T2 # rad/s
+			T3            = -1.0 * self.proNavGain * closingSpeed * fluMslToTgtU
+			comm          = np.cross(T3, omega) # m/s^2
+			self.normComm = comm[2] # m/s^2
+			self.sideComm = comm[1] # m/s^2
+			aMag          = np.sqrt(self.normComm ** 2 + self.sideComm ** 2) # m/s^2
+			trigRatio     = np.arctan2(self.normComm, self.sideComm) # nd
+			if aMag > self.termGuideLimit:
+				aMag = self.termGuideLimit # m/s^2
+			self.normComm = aMag * np.sin(trigRatio) # m/s^2
+			self.sideComm = aMag * np.cos(trigRatio) # m/s^2
+
+		# LINE OF ATTACK GUIDANCE.
+		else:
+			losVel        = projection(fluMslToTgtU, closingVel) # m/s
+			loaVel        = projection(self.lineOfAttack, closingVel) # m/s
+			G = 1 - np.exp(-0.001 * fluMslToTgtM) # nd
+			self.normComm = self.loaGain * (losVel[2] + G * loaVel[2]) # m/s^2
+			self.sideComm = self.loaGain * (losVel[1] + G * loaVel[1]) # m/s^2
+			aMag          = np.sqrt(self.normComm ** 2 + self.sideComm ** 2) # m/s^2
+			trigRatio     = np.arctan2(self.normComm, self.sideComm) # nd
+			if aMag > self.midGuideLimit:
+				aMag = self.midGuideLimit # m/s^2
+			self.normComm = aMag * np.sin(trigRatio) # m/s^2
+			self.sideComm = aMag * np.cos(trigRatio) # m/s^2
 
 		# AEROBALLISTIC ANGLES.
-		angleOfAttack    = np.arccos(np.cos(self.alpha) * np.cos(self.beta))
-		angleOfAttackDeg = np.degrees(angleOfAttack)
-		phiPrime         = np.arctan2(np.tan(self.beta), np.sin(self.alpha))
+		angleOfAttack    = np.arccos(np.cos(self.alpha) * np.cos(self.beta)) # rads
+		angleOfAttackDeg = np.degrees(angleOfAttack) # deg
+		phiPrime         = np.arctan2(np.tan(self.beta), np.sin(self.alpha)) # rads
 
 		# LOOK UPS.
-		CD     = None
-		thrust = None
-		mass   = None
+		CD     = None # nd
+		thrust = None # newtons
+		mass   = None # kg
 		if self.tof <= self.burnOut:
-			mass           = self.lookUps["MASS (KG)"](self.tof)
-			CD             = self.lookUps["CD MOTOR ON"]\
-				(self.MACH, angleOfAttackDeg)[0]
-			thrustSeaLevel = self.lookUps["THRUST (NEWTONS)"](self.tof)
-			thrust         = thrustSeaLevel + \
-				(101325 - self.P) * self.nozzleExitArea
+			mass      = self.lookUps["MASS (KG)"](self.tof) # kg
+			CD        = self.lookUps["CD MOTOR ON"]\
+				(self.mach, angleOfAttackDeg)[0] # nd
+			vacThrust = self.lookUps["THRUST (NEWTONS)"](self.tof) # newtons
+			thrust    = vacThrust + \
+				(self.ambPress - self.p) * self.nozzleExitArea # newtons
 		else:
-			mass   = 38.5
+			mass   = self.burnOutMass # kg
 			CD     = self.lookUps["CD MOTOR OFF"]\
-				(self.MACH, angleOfAttackDeg)[0]
-			thrust = 0.0
-		CL = self.lookUps["CL"](self.MACH, angleOfAttackDeg)[0]
+				(self.mach, angleOfAttackDeg)[0] # nd
+			thrust = 0.0 # newtons
+		CL = self.lookUps["CL"](self.mach, angleOfAttackDeg)[0] # nd
 
 		# AERODYNAMICS.
-		cosAlpha    = np.cos(self.alpha)
-		sinAlpha    = np.sin(self.alpha)
-		absAlphaDeg = np.abs(np.degrees(self.alpha))
-		absBetaDeg  = np.abs(np.degrees(self.beta))
-		CX          = -1 * (CD * cosAlpha - CL * sinAlpha)
-		CT          = CD * sinAlpha + CL * cosAlpha
-		CZ          = -1 * CT * np.cos(phiPrime)
-		CY          = -1 * CT * np.sin(phiPrime)
-		CNA         = None
-		CYB         = None
+		cosAlpha    = np.cos(self.alpha) # rads
+		sinAlpha    = np.sin(self.alpha) # rads
+		absAlphaDeg = np.abs(np.degrees(self.alpha)) # deg
+		absBetaDeg  = np.abs(np.degrees(self.beta)) # deg
+		CX          = -1 * (CD * cosAlpha - CL * sinAlpha) # nd
+		CT          = CD * sinAlpha + CL * cosAlpha # nd
+		CZ          = -1 * CT * np.cos(phiPrime) # nd
+		CY          = -1 * CT * np.sin(phiPrime) # nd
+		CNA         = None # 1/deg
+		CYB         = None # 1/deg
 		if absAlphaDeg < 10:
-			CNA = np.degrees(0.123 + 0.013 * absAlphaDeg)
+			CNA = np.degrees(0.123 + 0.013 * absAlphaDeg) # 1/deg
 		else:
-			CNA = np.degrees(0.06 * (absAlphaDeg ** 0.625))
+			CNA = np.degrees(0.06 * (absAlphaDeg ** 0.625)) # 1/deg
 		if absBetaDeg < 10:
-			CYB = np.degrees(0.123 + 0.013 * absBetaDeg)
+			CYB = np.degrees(0.123 + 0.013 * absBetaDeg) # 1/deg
 		else:
-			CYB = np.degrees(0.06 * (absBetaDeg ** 0.625))
+			CYB = np.degrees(0.06 * (absBetaDeg ** 0.625)) # 1/deg
 
 		# PITCH AUTOPILOT.
-		tip         = freeStreamSpeed * mass / (thrust + self.Q * \
+		tip         = spd * mass / (thrust + self.q * \
 			self.refArea * np.abs(CNA))
-		fspz        = (self.Q * self.refArea * CZ / mass) + bodyGrav[2]
-		gr          = self.gacp * tip * self.tr / freeStreamSpeed
+		fspz        = (self.q * self.refArea * CZ / mass) + bodyGrav[2]
+		gr          = self.gacp * tip * self.tr / spd
 		gi          = gr / self.ta
-		abez        = self.normCommand
+		abez        = self.normComm
 		ep          = abez - fspz
 		xid_new     = gi * ep
 		self.xi     = integrate(xid_new, self.xid, self.xi, self.timeStep)
@@ -283,12 +297,12 @@ class fiveDofInterceptor:
 		self.alpd   = alpd_new
 
 		# YAW AUTOPILOT.
-		tiy         = freeStreamSpeed * mass / (thrust + self.Q * \
+		tiy         = spd * mass / (thrust + self.q * \
 			self.refArea * np.abs(CYB))
-		fspy        = self.Q * self.refArea * CY / mass
-		gr          = self.gacp * tiy * self.tr / freeStreamSpeed
+		fspy        = self.q * self.refArea * CY / mass
+		gr          = self.gacp * tiy * self.tr / spd
 		gi          = gr / self.ta
-		abey        = self.sideCommand
+		abey        = self.sideComm
 		ey          = abey - fspy
 		yid_new     = gi * ey
 		self.yi     = integrate(yid_new, self.yid, self.yi, self.timeStep)
@@ -302,28 +316,28 @@ class fiveDofInterceptor:
 		self.betd   = betd_new
 
 		# DERIVATIVE.
-		axialAcc       = (thrust + CX * self.Q * self.refArea) / mass
-		sideAcc        = (CY * self.Q * self.refArea) / mass
-		normalAcc      = (CZ * self.Q * self.refArea) / mass
-		self.specForce = npa([axialAcc, sideAcc, normalAcc])
-		self.accEnu    = (self.specForce @ self.ENUtoFLU) + gravityVec
+		axialAcc       = (thrust + CX * self.q * self.refArea) / mass # m/s^2
+		sideAcc        = (CY * self.q * self.refArea) / mass # m/s^2
+		normalAcc      = (CZ * self.q * self.refArea) / mass # m/s^2
+		self.specForce = npa([axialAcc, sideAcc, normalAcc]) # m/s^2
+		self.accEnu    = (self.specForce @ self.enuToFlu) + localGrav # m/s^2
 
 		# INTEGRATE STATE USING EULER METHOD.
-		deltaPos    = self.timeStep * self.velEnu
-		deltaVel    = self.timeStep * self.accEnu
-		self.tof    += self.timeStep
-		self.posEnu += deltaPos
-		self.velEnu += deltaVel
+		deltaPos    = self.timeStep * self.velEnu # m
+		deltaVel    = self.timeStep * self.accEnu # m/s
+		self.tof    += self.timeStep # seconds
+		self.posEnu += deltaPos # m
+		self.velEnu += deltaVel # m/s
 
 		# END CHECK.
-		self.missDistance = la.norm(FLUMslToPipRelPos)
+		self.missDistance = la.norm(fluMslToTgt) # m
 		if self.missDistance < 5.0:
 			self.lethality = endChecks.HIT
 			self.go        = False
 		elif self.posEnu[2] < 0.0:
 			self.lethality = endChecks.GROUND
 			self.go        = False
-		elif FLUMslToPipRelPos[0] < 0.0:
+		elif fluMslToTgt[0] < 0.0:
 			self.lethality = endChecks.POCA
 			self.go        = False
 		elif np.isnan(np.sum(self.posEnu)):
@@ -334,8 +348,8 @@ class fiveDofInterceptor:
 			self.go        = False
 
 		# LOG DATA
-		self.STATE = self.populateState()
-		lf.writeData(self.STATE, self.logFile)
+		self.state = self.populateState()
+		lf.writeData(self.state, self.logFile)
 
 	def main(self):
 		print("FIVE DOF INTERCEPTOR")
