@@ -2,6 +2,7 @@
 # INCLUDED WITH PYTHON.
 from   enum import Enum
 import time
+import copy
 
 # PIP INSTALLED LIBRARIES.
 import numpy as np
@@ -81,7 +82,7 @@ class fiveDofInterceptor:
 
 		# SIM CONTROL.
 		self.wallClockStart = time.time() # Real time start.
-		self.timeStep       = (1.0 / 600.0) # seconds
+		self.dt             = (1.0 / 50.0) # seconds
 		self.go             = True # Flag for termination.
 		self.maxTime        = 200.0 # seconds
 
@@ -90,6 +91,23 @@ class fiveDofInterceptor:
 		self.specForce = np.zeros(3) # m/s^2
 		self.alpha     = 0.0 # rads
 		self.beta      = 0.0 # rads
+
+		# INTEGRATION.
+		self.PASS = int(0)
+		self.P0   = np.zeros(3)
+		self.V0   = np.zeros(3)
+		self.P1   = np.zeros(3)
+		self.V1   = np.zeros(3)
+		self.A1   = np.zeros(3)
+		self.P2   = np.zeros(3)
+		self.V2   = np.zeros(3)
+		self.A2   = np.zeros(3)
+		self.P3   = np.zeros(3)
+		self.V3   = np.zeros(3)
+		self.A3   = np.zeros(3)
+		self.P4   = np.zeros(3)
+		self.V4   = np.zeros(3)
+		self.A4   = np.zeros(3)
 
 		# FRAME.
 		self.enuToFlu = FLIGHTPATH_TO_LOCAL_TM(az, -1.0 * el) # nd
@@ -121,7 +139,7 @@ class fiveDofInterceptor:
 
 		# GUIDANCE.
 		self.midGuideLimit  = 50.0 # m/s^2
-		self.lineOfAttack   = npa([0.7, 0.7, -0.3]) # nd
+		self.lineOfAttack   = npa([0.7, 0.9, -0.2]) # nd
 		self.loaGain        = 1.5 # nd
 		self.termGuideLimit = 250.0 # m/s^2
 		self.proNavGain     = 4.0 # nd
@@ -131,7 +149,7 @@ class fiveDofInterceptor:
 		# AUTOPILOT.
 		self.ta   = 2 # Ratio of proportional/integral gain. nd
 		self.tr   = 0.1 # Rate loop time constant. seconds
-		self.gacp = 40 # Root locus gain of acceleration loop. rad/s^2
+		self.gacp = 40.0 # Root locus gain of acceleration loop. rad/s^2
 
 		# PITCH.
 		self.xi     = 0.0 # Integral feedback. rad/s
@@ -176,7 +194,7 @@ class fiveDofInterceptor:
 	def fly(self):
 
 		# UPDATE TARGET.
-		self.targetPos += (self.timeStep * self.targetVel) # m
+		self.targetPos += (self.dt * self.targetVel) # m
 
 		# ENU TO FLU MATRIX.
 		velAz, velEl  = returnAzAndElevation(self.velEnu) # rads
@@ -205,7 +223,7 @@ class fiveDofInterceptor:
 		tgo           = fluMslToTgtM / closingSpeed # seconds
 
 		# PROPORTIONAL GUIDANCE.
-		if tgo < 5.0:
+		if tgo < 4.0:
 			T1            = np.cross(fluMslToTgt, closingVel)
 			T2            = np.dot(fluMslToTgt, fluMslToTgt)
 			omega         = T1 / T2 # rad/s
@@ -266,54 +284,61 @@ class fiveDofInterceptor:
 		CT          = CD * sinAlpha + CL * cosAlpha # nd
 		CZ          = -1 * CT * np.cos(phiPrime) # nd
 		CY          = -1 * CT * np.sin(phiPrime) # nd
-		CNA         = None # 1/deg
-		CYB         = None # 1/deg
+		
+		# AERODYNAMIC DERIVATIVES.
+		# CNA and CYB are multiplied by 57.3 to make them dimensionless.
+		# (1/deg)*deg == 1
+		CNA = None # nd
+		CYB = None # nd
 		if absAlphaDeg < 10:
-			CNA = np.degrees(0.123 + 0.013 * absAlphaDeg) # 1/deg
+			CNA = 57.3 * (0.123 + 0.013 * absAlphaDeg) # nd
 		else:
-			CNA = np.degrees(0.06 * (absAlphaDeg ** 0.625)) # 1/deg
+			CNA = 57.3 * (0.06 * (absAlphaDeg ** 0.625)) # nd
 		if absBetaDeg < 10:
-			CYB = np.degrees(0.123 + 0.013 * absBetaDeg) # 1/deg
+			CYB = 57.3 * (0.123 + 0.013 * absBetaDeg) # nd
 		else:
-			CYB = np.degrees(0.06 * (absBetaDeg ** 0.625)) # 1/deg
+			CYB = 57.3 * (0.06 * (absBetaDeg ** 0.625)) # nd
 
-		# PITCH AUTOPILOT.
-		tip         = spd * mass / (thrust + self.q * \
-			self.refArea * np.abs(CNA))
-		fspz        = (self.q * self.refArea * CZ / mass) + bodyGrav[2]
-		gr          = self.gacp * tip * self.tr / spd
-		gi          = gr / self.ta
-		abez        = self.normComm
-		ep          = abez - fspz
-		xid_new     = gi * ep
-		self.xi     = integrate(xid_new, self.xid, self.xi, self.timeStep)
-		self.xid    = xid_new
-		ratepc      = -1 * (ep * gr + self.xi)
-		ratepd_new  = (ratepc - self.ratep) / self.tr
-		self.ratep  = integrate(ratepd_new, self.ratepd, self.ratep, self.timeStep)
-		self.ratepd = ratepd_new
-		alpd_new    = (tip * self.ratep - self.alpha) / tip
-		self.alpha  = integrate(alpd_new, self.alpd, self.alpha, self.timeStep)
-		self.alpd   = alpd_new
+		# AUTOPILOT.
+		if self.PASS == 0:
+			
+			# PITCH AUTOPILOT.
+			tip         = spd * mass / (thrust + self.q * \
+				self.refArea * np.abs(CNA))
+			fspz        = (self.q * self.refArea * CZ / mass) + bodyGrav[2]
+			gr          = self.gacp * tip * self.tr / spd
+			gi          = gr / self.ta
+			abez        = self.normComm
+			ep          = abez - fspz
+			xid_new     = gi * ep
+			self.xi     = integrate(xid_new, self.xid, self.xi, self.dt)
+			self.xid    = xid_new
+			ratepc      = -1 * (ep * gr + self.xi)
+			ratepd_new  = (ratepc - self.ratep) / self.tr
+			self.ratep  = integrate(ratepd_new, self.ratepd, self.ratep, self.dt)
+			self.ratepd = ratepd_new
+			alpd_new    = (tip * self.ratep - self.alpha) / tip
+			self.alpha  = integrate(alpd_new, self.alpd, self.alpha, self.dt)
+			self.alpd   = alpd_new
 
-		# YAW AUTOPILOT.
-		tiy         = spd * mass / (thrust + self.q * \
-			self.refArea * np.abs(CYB))
-		fspy        = self.q * self.refArea * CY / mass
-		gr          = self.gacp * tiy * self.tr / spd
-		gi          = gr / self.ta
-		abey        = self.sideComm
-		ey          = abey - fspy
-		yid_new     = gi * ey
-		self.yi     = integrate(yid_new, self.yid, self.yi, self.timeStep)
-		self.yid    = yid_new
-		rateyc      = ey * gr + self.yi
-		rateyd_new  = (rateyc - self.ratey) / self.tr
-		self.ratey  = integrate(rateyd_new, self.rateyd, self.ratey, self.timeStep)
-		self.rateyd = rateyd_new
-		betd_new    = -1 * (tiy * self.ratey + self.beta) / tiy
-		self.beta   = integrate(betd_new, self.betd, self.beta, self.timeStep)
-		self.betd   = betd_new
+			# YAW AUTOPILOT.
+			tiy         = spd * mass / (thrust + self.q * \
+				self.refArea * np.abs(CYB))
+			fspy        = self.q * self.refArea * CY / mass
+			gr          = self.gacp * tiy * self.tr / spd
+			gi          = gr / self.ta
+			abey        = self.sideComm
+			ey          = abey - fspy
+			yid_new     = gi * ey
+			self.yi     = integrate(yid_new, self.yid, self.yi, self.dt)
+			self.yid    = yid_new
+			rateyc      = ey * gr + self.yi
+			rateyd_new  = (rateyc - self.ratey) / self.tr
+			self.ratey  = integrate(rateyd_new, self.rateyd, self.ratey, self.dt)
+			self.rateyd = rateyd_new
+			betd_new    = -1 * (tiy * self.ratey + self.beta) / tiy
+			self.beta   = integrate(betd_new, self.betd, self.beta, self.dt)
+			self.betd   = betd_new
 
 		# DERIVATIVE.
 		axialAcc       = (thrust + CX * self.q * self.refArea) / mass # m/s^2
@@ -322,34 +347,78 @@ class fiveDofInterceptor:
 		self.specForce = npa([axialAcc, sideAcc, normalAcc]) # m/s^2
 		self.accEnu    = (self.specForce @ self.enuToFlu) + localGrav # m/s^2
 
-		# INTEGRATE STATE USING EULER METHOD.
-		deltaPos    = self.timeStep * self.velEnu # m
-		deltaVel    = self.timeStep * self.accEnu # m/s
-		self.tof    += self.timeStep # seconds
-		self.posEnu += deltaPos # m
-		self.velEnu += deltaVel # m/s
+		# RK4 INTEGRATION.
+		if self.PASS == 0:
 
-		# END CHECK.
-		self.missDistance = la.norm(fluMslToTgt) # m
-		if self.missDistance < 5.0:
-			self.lethality = endChecks.HIT
-			self.go        = False
-		elif self.posEnu[2] < 0.0:
-			self.lethality = endChecks.GROUND
-			self.go        = False
-		elif fluMslToTgt[0] < 0.0:
-			self.lethality = endChecks.POCA
-			self.go        = False
-		elif np.isnan(np.sum(self.posEnu)):
-			self.lethality = endChecks.NAN
-			self.go        = False
-		elif self.tof > self.maxTime:
-			self.lethality = endChecks.TIME
-			self.go        = False
+			# END CHECK.
+			self.missDistance = la.norm(fluMslToTgt) # m
+			if self.missDistance < 5.0:
+				self.lethality = endChecks.HIT
+				self.go        = False
+			elif self.posEnu[2] < 0.0:
+				self.lethality = endChecks.GROUND
+				self.go        = False
+			elif fluMslToTgt[0] < 0.0:
+				self.lethality = endChecks.POCA
+				self.go        = False
+			elif np.isnan(np.sum(self.posEnu)):
+				self.lethality = endChecks.NAN
+				self.go        = False
+			elif self.tof > self.maxTime:
+				self.lethality = endChecks.TIME
+				self.go        = False
 
-		# LOG DATA
-		self.state = self.populateState()
-		lf.writeData(self.state, self.logFile)
+			# LOG DATA
+			self.state = self.populateState()
+			lf.writeData(self.state, self.logFile)
+
+			# UPDATE PASS.
+			self.PASS += 1
+
+			# BEGIN INTEGRATION.
+			self.P0     = copy.deepcopy(self.posEnu)
+			self.V0     = copy.deepcopy(self.velEnu)
+			self.V1     = copy.deepcopy(self.velEnu)
+			self.A1     = copy.deepcopy(self.accEnu)
+			self.tof    += (self.dt / 2.0)
+			self.posEnu = self.P0 + self.V1 * (self.dt / 2.0)
+			self.velEnu = self.V0 + self.A1 * (self.dt / 2.0)
+
+		elif self.PASS == 1:
+
+			# UPDATE PASS.
+			self.PASS += 1
+
+			# INTEGRATION.
+			self.V2     = copy.deepcopy(self.velEnu)
+			self.A2     = copy.deepcopy(self.accEnu)
+			self.posEnu = self.P0 + self.V2 * (self.dt / 2.0)
+			self.velEnu = self.V0 + self.A2 * (self.dt / 2.0)
+
+		elif self.PASS == 2:
+
+			# UPDATE PASS.
+			self.PASS += 1
+
+			# INTEGRATION.
+			self.V3     = copy.deepcopy(self.velEnu)
+			self.A3     = copy.deepcopy(self.accEnu)
+			self.tof    += (self.dt / 2.0)
+			self.posEnu = self.P0 + self.V3 * self.dt
+			self.velEnu = self.V0 + self.A3 * self.dt
+
+		elif self.PASS == 3:
+
+			# UPDATE PASS.
+			self.PASS = 0
+
+			# INTEGRATION.
+			self.V4     = copy.deepcopy(self.velEnu)
+			self.A4     = copy.deepcopy(self.accEnu)
+			self.posEnu = self.P0 + (self.V1 + self.V2 * 2 + self.V3 * 2 + self.V4)\
+				 * (self.dt / 6.0)
+			self.velEnu = self.V0 + (self.A1 + self.A2 * 2 + self.A3 * 2 + self.A4)\
+				 * (self.dt / 6.0)
 
 	def main(self):
 		print("FIVE DOF INTERCEPTOR")
@@ -369,11 +438,62 @@ class fiveDofInterceptor:
 
 if __name__ == "__main__":
 	x = fiveDofInterceptor(
-		targetPos   = npa([4000.0, 1000.0, 2000.0]),
+		targetPos   = npa([4000.0, 4000.0, 2000.0]),
 		targetVel   = npa([0.0, 0.0, 0.0]),
 		launchElDeg = 30.0,
-		launchAzDeg = 0.0,
+		launchAzDeg = 40.0,
 		launchSpeed = 55.0,
 		launchHgt   = 10.0
 	)
 	x.main()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
