@@ -186,10 +186,10 @@ def EULER_FROM_DCM(TM):
 	EULER[2] = PSI
 	return EULER
 
-e = npa([np.radians(45), np.radians(45), np.radians(45)])
-dcm = ORIENTATION_TO_LOCAL_TM(e[0], -e[1], e[2])
-print(e)
-print(EULER_FROM_DCM(dcm))
+# e = npa([np.radians(45), np.radians(45), np.radians(45)])
+# dcm = ORIENTATION_TO_LOCAL_TM(e[0], -e[1], e[2])
+# print(e)
+# print(EULER_FROM_DCM(dcm))
 
 # def PHYSICAL_GIMBAL_PITCH_AND_ROLL_TO_BODY_TM(THETA, PHI):
 # 	GH_TO_B_TM = npa(

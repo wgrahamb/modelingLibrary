@@ -9,7 +9,7 @@ np.set_printoptions(suppress=True, precision=2)
 from classes.SecondOrderActuator import SecondOrderActuator
 
 # Dynamics.
-import MockHellfireDYNAMICS5DOF as DYN
+import MockHellfireDynFiveDof as Dyn
 
 # MATH CONSTANTS
 MM_TO_M    = 1.0 / 1000.0
@@ -26,7 +26,7 @@ if __name__ == "__main__":
 	EL0  = 45 # Degrees.
 	SPD0 = 10
 	ID   = "MOCK_HELLFIRE5DOF"
-	MSL  = DYN.Construct5DOFMissile(POS0, AZ0, EL0, SPD0, ID)
+	MSL  = Dyn.construct_msl(POS0, AZ0, EL0, SPD0, ID)
 
 	# Components.
 	ACTUATORS = {
@@ -80,7 +80,7 @@ if __name__ == "__main__":
 		# Update dynamics.
 		TIME_INCREMENT = N - TOF
 		if TIME_INCREMENT > EPSILON:
-			MSL = DYN.Fly5DOF(
+			MSL = Dyn.fly_msl(
 				MISSILE_INPUT_DICT=MSL,
 				FLY_FOR_THIS_LONG=TIME_INCREMENT,
 				PITCH_FIN_DEFL_DEG_INPUT=ACTUATORS["PITCH_ACT"].DEFLECTION,

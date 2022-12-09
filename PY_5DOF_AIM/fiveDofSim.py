@@ -442,10 +442,10 @@ if __name__ == "__main__":
 		targetPos    = npa([4000.0, 4000.0, 3000.0]),
 		targetVel    = npa([0.0, 0.0, 0.0]),
 		launchElDeg  = 40.0,
-		launchAzDeg  = 40.0,
+		launchAzDeg  = 50.0,
 		launchSpeed  = 55.0,
 		launchHgt    = 10.0,
-		lineOfAttack = npa([0.8, 0.8, 0.3])
+		lineOfAttack = npa([0.7, 0.7, 0.3])
 	)
 	x.main()
 
