@@ -38,7 +38,8 @@ class fiveDofInterceptor:
 		launchElDeg,
 		launchAzDeg,
 		launchSpeed,
-		launchHgt
+		launchHgt,
+		lineOfAttack
 	):
 
 		############################################################################
@@ -139,7 +140,7 @@ class fiveDofInterceptor:
 
 		# GUIDANCE.
 		self.midGuideLimit  = 50.0 # m/s^2
-		self.lineOfAttack   = npa([0.7, 0.9, -0.2]) # nd
+		self.lineOfAttack   = lineOfAttack # nd
 		self.loaGain        = 1.5 # nd
 		self.termGuideLimit = 250.0 # m/s^2
 		self.proNavGain     = 4.0 # nd
@@ -438,12 +439,13 @@ class fiveDofInterceptor:
 
 if __name__ == "__main__":
 	x = fiveDofInterceptor(
-		targetPos   = npa([4000.0, 4000.0, 3000.0]),
-		targetVel   = npa([0.0, 0.0, 0.0]),
-		launchElDeg = 30.0,
-		launchAzDeg = 40.0,
-		launchSpeed = 55.0,
-		launchHgt   = 10.0
+		targetPos    = npa([4000.0, 4000.0, 3000.0]),
+		targetVel    = npa([0.0, 0.0, 0.0]),
+		launchElDeg  = 40.0,
+		launchAzDeg  = 40.0,
+		launchSpeed  = 55.0,
+		launchHgt    = 10.0,
+		lineOfAttack = npa([0.8, 0.8, 0.3])
 	)
 	x.main()
 
