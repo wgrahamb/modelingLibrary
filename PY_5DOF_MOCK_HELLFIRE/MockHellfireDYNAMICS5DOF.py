@@ -50,7 +50,7 @@ def Construct5DOFMissile(
 
 	# ATMOSPHERE. ###############################################################################
 	ATMOS = ATM1976()
-	ATMOS.update(INITIAL_POSITION[1], la.norm(INITIAL_AIRSPEED))
+	ATMOS.update(INITIAL_POSITION[2], la.norm(INITIAL_AIRSPEED))
 	RHO = ATMOS.rho # Kilograms per meter cubed.
 	Q = ATMOS.q # Pascals.
 	P = ATMOS.p # Pascals.

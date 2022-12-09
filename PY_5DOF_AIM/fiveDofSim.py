@@ -438,7 +438,7 @@ class fiveDofInterceptor:
 
 if __name__ == "__main__":
 	x = fiveDofInterceptor(
-		targetPos   = npa([4000.0, 4000.0, 2000.0]),
+		targetPos   = npa([4000.0, 4000.0, 3000.0]),
 		targetVel   = npa([0.0, 0.0, 0.0]),
 		launchElDeg = 30.0,
 		launchAzDeg = 40.0,

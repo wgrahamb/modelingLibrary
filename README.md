@@ -23,6 +23,7 @@ To Do:
 - CPP_6DOF_SAM
      - Start project. Reuse as much Zipfel code as possible.
 - PY_5DOF_MOCK_HELLFIRE
+     - Read and clean.
      - Directly integrating rates into euler angles, switch to quaternions.
      - Rotating elliptical earth.
      - INS from Zipfel CADAC_ADS6 project.
