@@ -445,7 +445,7 @@ if __name__ == "__main__":
 		launchAzDeg  = 50.0,
 		launchSpeed  = 55.0,
 		launchHgt    = 10.0,
-		lineOfAttack = npa([0.7, 0.7, 0.3])
+		lineOfAttack = npa([0.8, 0.85, 0.4])
 	)
 	x.main()
 
