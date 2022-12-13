@@ -1,12 +1,11 @@
 
 # Python libraries.
 import numpy as np
-from numpy import array as npa
-from numpy import linalg as la
 import pandas as pd
 import matplotlib.pyplot as plt
-from ambiance import Atmosphere as atm
 from classes.ATM1976 import ATM1976
+import matplotlib
+matplotlib.use("WebAgg")
 
 """
 

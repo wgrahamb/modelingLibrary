@@ -18,10 +18,8 @@ using namespace std;
 
 namespace
 {
-
 	struct atm1976_output
 	{
-
 		float rho; // kg per m^3
 		float p; // pascals
 		float a; // m/s
@@ -29,17 +27,13 @@ namespace
 		float q; // pascals
 		float tk; // Kelvin
 		float mach; // non dimensional
-
 	};
-
 }
 
 namespace atm1976_metric
 {
-
 	static inline atm1976_output update(float altitude, float speed) // m, m/s
 	{
-
 		const float R = 287.053; // air constant
 		const float G = 6.673e-11; // gravity constant
 		const float earthMass = 5.973e24; // kg
@@ -59,7 +53,6 @@ namespace atm1976_metric
 		{-6.5, 0.0, 1.0, 2.8, 0.0, -2.8, -2.0, 0.0};
 
 		atm1976_output ret;
-
 		float delta;
 		float alt = altitude / 1000.0;
 		float hgt = alt * rEarth / (alt + rEarth);
@@ -85,13 +78,11 @@ namespace atm1976_metric
 
 		if (alt < 84.852)
 		{
-
 			float tgrad = gtab[i];
 			float tbase = ttab[i];
 			float deltah = hgt - htab[i];
 			float tlocal = tbase + tgrad * deltah;
 			float theta = tlocal / ttab[0];
-
 			if (tgrad == 0)
 			{
 				delta = ptab[i] * exp(-1.0 * gmr * deltah / tbase);
@@ -100,21 +91,16 @@ namespace atm1976_metric
 			{
 				delta = ptab[i] * pow((tbase / tlocal), (gmr / tgrad));
 			}
-
 			float sigma = delta / theta;
-
 			ret.rho = rhosl * sigma;
 			ret.p = pressl * delta;
 			ret.tk = tempksl * theta;
-
 		}
 		else
 		{
-
 			ret.rho = 0.0;
 			ret.p = 0.0;
 			ret.tk = 186.946;
-
 		}
 
 		ret.a = sqrt(1.4 * R * ret.tk);
@@ -123,7 +109,5 @@ namespace atm1976_metric
 		float rad = (rEarth + alt) * 1000;
 		ret.g = G * earthMass / (rad * rad);
 		return ret;
-
 	};
-
 };

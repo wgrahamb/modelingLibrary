@@ -37,8 +37,9 @@ To Do:
      - Check alpha and beta calculations.
 - pythonFunctions
      - Finish working through filters.py
-     - need to derive a class from rocketPropulsionFinal.py called
+     - Need to derive a class from rocketPropulsionFinal.py called
      solidRocketBooster.py
+     - Port rocketPropulsionFinal.py to CPP and make it a main project.
 
 Folder Structure:
 
@@ -139,7 +140,7 @@ Folder Structure:
      PY_6DOF_70MM_ROCKET
 
      I found this paper early in my career. It was released by the
-     Government for public use. It gives enough data of a 70MM HYDRA rocket
+     government for public use. It gives enough data of a 70MM HYDRA rocket
      to model its dynamics. The paper and its transcribed data are included.
      It is a challenging model for a couple of reasons. First, the rocket
      is not ballistically stable and suffers wobble at the end of its flight.
