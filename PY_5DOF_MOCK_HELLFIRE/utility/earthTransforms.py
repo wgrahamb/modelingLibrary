@@ -157,3 +157,18 @@ def GEODETIC_GRAV(ECIPOS, TIME):
 	ECIGRAV[1] = 0.0
 	ECIGRAV[2] = DUM1 * (1.0 + (DUM2 / 2.0) * C20 * DUM3 * (3 * (np.sin(LLAREF[0] ** 2)) - 1.0))
 	return ECIGRAV
+
+def EULER_FROM_DCM(TM):
+	EULER = np.zeros(3)
+	R31 = TM[0, 2]
+	THETA = np.arcsin(R31)
+	R32 = TM[1, 2]
+	R33 = TM[2, 2]
+	PHI = np.arctan2((R32 / np.cos(THETA)), (R33 / np.cos(THETA)))
+	R21 = TM[0, 1]
+	R11 = TM[0, 0]
+	PSI = np.arctan2((R21 / np.cos(THETA)), (R11 / np.cos(THETA)))
+	EULER[0] = PHI
+	EULER[1] = THETA
+	EULER[2] = PSI
+	return EULER

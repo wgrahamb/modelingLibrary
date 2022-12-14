@@ -1,4 +1,3 @@
-
 # Python libraries.
 import time
 import copy
@@ -8,14 +7,15 @@ from numpy import linalg as la
 np.set_printoptions(suppress=True, precision=2)
 
 # Utility.
-from utility.returnAzAndElevation import returnAlphaAndBeta
-from utility.interpolationGivenTwoVectors import linearInterpolation
-import utility.coordinateTransformations as ct
-import utility.loggingFxns as lf
-import utility.earthTransforms as et
+from   utility.getAlphaAndBeta              import getAlphaAndBeta
+from   utility.interpolationGivenTwoVectors import linearInterpolation
+import utility.coordinateTransformations    as ct
+import utility.loggingFxns                  as lf
+import utility.earthTransforms              as et
+from   utility.earthTransforms              import *
 
 # Classes.
-from classes.ATM1976 import ATM1976
+from classes.ATM1976                  import ATM1976
 from classes.MockHellfireMassAndMotor import MockHellfireMassAndMotor
 
 """
@@ -41,7 +41,7 @@ UNCORRECTED_REFERENCE_LENGTH 1.85026 m
 """
 
 def construct_msl(
-	INITIAL_POSITION, # m
+	INITIAL_LLA, # m
 	INITIAL_AZIMUTH, # rad
 	INITIAL_ELEVATION, # rad
 	INITIAL_AIRSPEED, # m/s
@@ -50,7 +50,7 @@ def construct_msl(
 
 	# ATMOSPHERE. ##################################################################
 	ATMOS = ATM1976()
-	ATMOS.update(INITIAL_POSITION[2], la.norm(INITIAL_AIRSPEED))
+	ATMOS.update(INITIAL_LLA[2], la.norm(INITIAL_AIRSPEED))
 	RHO   = ATMOS.rho # kg/m^3
 	Q     = ATMOS.q # pa
 	P     = ATMOS.p # pa
@@ -75,24 +75,58 @@ def construct_msl(
 	INITIAL_AZ = np.radians(INITIAL_AZIMUTH) # rad
 	INITIAL_EL = np.radians(INITIAL_ELEVATION) # rad
 
-	# FRAME. #######################################################################
+	# FRAMES. ######################################################################
+	# LLA.
+	GEODETIC0 = npa(
+		[
+			np.radians(INITIAL_LLA[0]), # rad
+			np.radians(INITIAL_LLA[1]), # rad
+			INITIAL_LLA[2] # meters
+		]
+	)
+	GEODETIC = copy.deepcopy(GEODETIC0)
+
+	# ENU.
 	ENU_TO_FLU = ct.ORIENTATION_TO_LOCAL_TM(0.0, -INITIAL_EL, INITIAL_AZ) # nd
-	ENUPOS   = INITIAL_POSITION # m
-	ENUVEL   = INITIAL_AIRSPEED * (ENU_TO_FLU[0]) # m/s
-	ENUEULER = npa([0.0, INITIAL_EL, INITIAL_AZ]) # rad
+	ENUPOS     = np.zeros(3) # m
+	ENUVEL     = INITIAL_AIRSPEED * (ENU_TO_FLU[0]) # m/s
+	ENUEULER   = npa([0.0, INITIAL_EL, INITIAL_AZ]) # rad
+
+	# ECEF.
+	ECEFPOS     = et.LLA_TO_ECI(GEODETIC, 0.0) # m
+	ECEFPOS0    = copy.deepcopy(ECEFPOS) # m
+	ECEF_TO_ENU = ct.ORIENTATION_TO_LOCAL_TM(
+		0.0,
+		(np.pi / 2.0) + GEODETIC[0], # rad
+		GEODETIC[1] # rad
+	) # nd
+	ECEF_TO_FLU = ENU_TO_FLU @ ECEF_TO_ENU # nd
+	ECEFVEL     = (ENU_TO_FLU @ (INITIAL_AIRSPEED * (ENU_TO_FLU[0]))) @ \
+		ECEF_TO_FLU # m/s
+
+	# ECI.
+	ECIPOS                 = et.LLA_TO_ECI(GEODETIC, 0.0) # m
+	ECI_TO_ECEF            = et.ECI_TO_ECEF_TM(0.0) # nd
+	TEMP                   = ECI_TO_ECEF.transpose() @ ECEFVEL # m/s
+	OMEGA                  = npa([0.0, 0.0, WEII3]) # rad/s
+	ECIVEL_DUE_TO_ROTATION = np.cross(OMEGA, ECIPOS) # nd
+	ECIVEL                 = TEMP + ECIVEL_DUE_TO_ROTATION # m/s
+	ECI_TO_FLU             = ECEF_TO_FLU @ ECI_TO_ECEF # nd
 
 	# BODY. ########################################################################
-	TOF             = 0.0 # seconds
-	SPEED           = la.norm(INITIAL_AIRSPEED * (ENU_TO_FLU[0])) # m/s
-	VEL_B           = ENU_TO_FLU @ (INITIAL_AIRSPEED * (ENU_TO_FLU[0])) # m/s
-	ALPHA, SIDESLIP = returnAlphaAndBeta(VEL_B) # rad
-	SPECIFIC_FORCE  = np.zeros(3) # m/s^2
-	BODYRATE        = np.zeros(3) # rad/s
+	TOF            = 0.0 # seconds
+	SPEED          = la.norm(INITIAL_AIRSPEED * (ENU_TO_FLU[0])) # m/s
+	VEL_B          = ENU_TO_FLU @ (INITIAL_AIRSPEED * (ENU_TO_FLU[0])) # m/s
+	TEMP1, TEMP2   = getAlphaAndBeta(VEL_B) # rad
+	ALPHA          = -1.0 * TEMP1 # rad
+	SIDESLIP       = -1.0 * TEMP2 # rad
+	SPECIFIC_FORCE = np.zeros(3) # m/s^2
+	BODYRATE       = np.zeros(3) # rad/s
 
 	# DATA. ########################################################################
 	MISSILE = {
 		"IDENTITY": ID,
-		"LOGFILE": open(f"PY_5DOF_MOCK_HELLFIRE/output/{ID}.txt", "w"),
+		"LOGFILE": open(f"PY_5DOF_MOCK_HELLFIRE/data/{ID}.txt", "w"),
 		"LETHALITY": "FLYING",
 		"ATMOS": ATMOS,
 		"MASS_AND_MOTOR": MASS_AND_MOTOR,
@@ -121,6 +155,22 @@ def construct_msl(
 			"VDOT_0": SPECIFIC_FORCE[1], # m/s^2
 			"WDOT_0": SPECIFIC_FORCE[2], # m/s^2
 
+			"LAT0": GEODETIC0[0], # rad
+			"LON0": GEODETIC0[1], # rad
+			"ALT0": GEODETIC0[2], # meters
+			"LAT": GEODETIC[0], # rad
+			"LON": GEODETIC[1], # rad
+			"ALT": GEODETIC[2], # meters
+
+			"ENU_TO_FLU_XX": ENU_TO_FLU[0, 0], # nd
+			"ENU_TO_FLU_XY": ENU_TO_FLU[0, 1], # nd
+			"ENU_TO_FLU_XZ": ENU_TO_FLU[0, 2], # nd
+			"ENU_TO_FLU_YX": ENU_TO_FLU[1, 0], # nd
+			"ENU_TO_FLU_YY": ENU_TO_FLU[1, 1], # nd
+			"ENU_TO_FLU_YZ": ENU_TO_FLU[1, 2], # nd
+			"ENU_TO_FLU_ZX": ENU_TO_FLU[2, 0], # nd
+			"ENU_TO_FLU_ZY": ENU_TO_FLU[2, 1], # nd
+			"ENU_TO_FLU_ZZ": ENU_TO_FLU[2, 2], # nd
 			"ENUPOSX": ENUPOS[0], # m
 			"ENUPOSY": ENUPOS[1], # m
 			"ENUPOSZ": ENUPOS[2], # m
@@ -130,6 +180,34 @@ def construct_msl(
 			"ENUPHI": ENUEULER[0], # rad
 			"ENUTHT": ENUEULER[1], # rad
 			"ENUPSI": ENUEULER[2], # rad
+
+			"ECEFPOSY": ECEFPOS[0], # m
+			"ECEFPOSX": ECEFPOS[1], # m
+			"ECEFPOSZ": ECEFPOS[2], # m
+			"ECEFPOSY0": ECEFPOS0[0], # m
+			"ECEFPOSX0": ECEFPOS0[1], # m
+			"ECEFPOSZ0": ECEFPOS0[2], # m
+			"ECEF_TO_ENU_XX": ECEF_TO_ENU[0, 0], # nd
+			"ECEF_TO_ENU_XY": ECEF_TO_ENU[0, 1], # nd
+			"ECEF_TO_ENU_XZ": ECEF_TO_ENU[0, 2], # nd
+			"ECEF_TO_ENU_YX": ECEF_TO_ENU[1, 0], # nd
+			"ECEF_TO_ENU_YY": ECEF_TO_ENU[1, 1], # nd
+			"ECEF_TO_ENU_YZ": ECEF_TO_ENU[1, 2], # nd
+			"ECEF_TO_ENU_ZX": ECEF_TO_ENU[2, 0], # nd
+			"ECEF_TO_ENU_ZY": ECEF_TO_ENU[2, 1], # nd
+			"ECEF_TO_ENU_ZZ": ECEF_TO_ENU[2, 2], # nd
+			"ECEF_TO_FLU_XX": ECEF_TO_FLU[0, 0], # nd
+			"ECEF_TO_FLU_XY": ECEF_TO_FLU[0, 1], # nd
+			"ECEF_TO_FLU_XZ": ECEF_TO_FLU[0, 2], # nd
+			"ECEF_TO_FLU_YX": ECEF_TO_FLU[1, 0], # nd
+			"ECEF_TO_FLU_YY": ECEF_TO_FLU[1, 1], # nd
+			"ECEF_TO_FLU_YZ": ECEF_TO_FLU[1, 2], # nd
+			"ECEF_TO_FLU_ZX": ECEF_TO_FLU[2, 0], # nd
+			"ECEF_TO_FLU_ZY": ECEF_TO_FLU[2, 1], # nd
+			"ECEF_TO_FLU_ZZ": ECEF_TO_FLU[2, 2], # nd
+			"ECEFVELX": ECEFVEL[0], # m/s
+			"ECEFVELY": ECEFVEL[1], # m/s
+			"ECEFVELZ": ECEFVEL[2], # m/s
 		}
 	}
 
@@ -173,54 +251,106 @@ def fly_msl(
 	MACH = MSL["STATE"]["MACH"] # nd
 	BETA = MSL["STATE"]["BETA"] # nd
 
-	TOF               = MSL["STATE"]["TOF"] # seconds
-	SPEED             = MSL["STATE"]["SPEED"] # m/s
-	ALPHA             = MSL["STATE"]["ALPHA"] # rad
-	SIDESLIP          = MSL["STATE"]["SIDESLIP"] # rad
-	BODYRATE          = np.zeros(3) # rad/s
-	BODYRATE[0]       = MSL["STATE"]["PRATE"] # rad/s
-	BODYRATE[1]       = MSL["STATE"]["QRATE"] # rad/s
-	BODYRATE[2]       = MSL["STATE"]["RRATE"] # rad/s
-	SPECIFIC_FORCE    = np.zeros(3) # m/s^2
-	SPECIFIC_FORCE[0] = MSL["STATE"]["UDOT_0"] # m/s^2
-	SPECIFIC_FORCE[1] = MSL["STATE"]["VDOT_0"] # m/s^2
-	SPECIFIC_FORCE[2] = MSL["STATE"]["WDOT_0"] # m/s^2
+	TOF           = MSL["STATE"]["TOF"] # seconds
+	SPEED         = MSL["STATE"]["SPEED"] # m/s
+	ALPHA         = MSL["STATE"]["ALPHA"] # rad
+	SIDESLIP      = MSL["STATE"]["SIDESLIP"] # rad
+	BODYRATE      = np.zeros(3) # rad/s
+	BODYRATE[0]   = MSL["STATE"]["PRATE"] # rad/s
+	BODYRATE[1]   = MSL["STATE"]["QRATE"] # rad/s
+	BODYRATE[2]   = MSL["STATE"]["RRATE"] # rad/s
+	SPEC_FORCE    = np.zeros(3) # m/s^2
+	SPEC_FORCE[0] = MSL["STATE"]["UDOT_0"] # m/s^2
+	SPEC_FORCE[1] = MSL["STATE"]["VDOT_0"] # m/s^2
+	SPEC_FORCE[2] = MSL["STATE"]["WDOT_0"] # m/s^2
 
-	ENUPOS      = np.zeros(3) # m
-	ENUPOS[0]   = MSL["STATE"]["ENUPOSX"] # m
-	ENUPOS[1]   = MSL["STATE"]["ENUPOSY"] # m
-	ENUPOS[2]   = MSL["STATE"]["ENUPOSZ"] # m
-	ENUVEL      = np.zeros(3) # m/s
-	ENUVEL[0]   = MSL["STATE"]["ENUVELX"] # m/s
-	ENUVEL[1]   = MSL["STATE"]["ENUVELY"] # m/s
-	ENUVEL[2]   = MSL["STATE"]["ENUVELZ"] # m/s
-	ENUEULER    = np.zeros(3) # rad
-	ENUEULER[0] = MSL["STATE"]["ENUPHI"] # rad
-	ENUEULER[1] = MSL["STATE"]["ENUTHT"] # rad
-	ENUEULER[2] = MSL["STATE"]["ENUPSI"] # rad
+	GEODETIC0    = np.zeros(3) # lla
+	GEODETIC0[0] = MSL["STATE"]["LAT0"] # rad
+	GEODETIC0[1] = MSL["STATE"]["LON0"] # rad
+	GEODETIC0[2] = MSL["STATE"]["ALT0"] # m
+	GEODETIC     = np.zeros(3) # lla
+	GEODETIC[0]  = MSL["STATE"]["LAT"] # rad
+	GEODETIC[1]  = MSL["STATE"]["LON"] # rad
+	GEODETIC[2]  = MSL["STATE"]["ALT"] # m
+
+	ENU_TO_FLU       = np.zeros((3,3)) # nd
+	ENU_TO_FLU[0, 0] = MSL["STATE"]["ENU_TO_FLU_XX"] # nd
+	ENU_TO_FLU[0, 1] = MSL["STATE"]["ENU_TO_FLU_XY"] # nd
+	ENU_TO_FLU[0, 2] = MSL["STATE"]["ENU_TO_FLU_XZ"] # nd
+	ENU_TO_FLU[1, 0] = MSL["STATE"]["ENU_TO_FLU_YX"] # nd
+	ENU_TO_FLU[1, 1] = MSL["STATE"]["ENU_TO_FLU_YY"] # nd
+	ENU_TO_FLU[1, 2] = MSL["STATE"]["ENU_TO_FLU_YZ"] # nd
+	ENU_TO_FLU[2, 0] = MSL["STATE"]["ENU_TO_FLU_ZX"] # nd
+	ENU_TO_FLU[2, 1] = MSL["STATE"]["ENU_TO_FLU_ZY"] # nd
+	ENU_TO_FLU[2, 2] = MSL["STATE"]["ENU_TO_FLU_ZZ"] # nd
+	ENUPOS           = np.zeros(3) # m
+	ENUPOS[0]        = MSL["STATE"]["ENUPOSX"] # m
+	ENUPOS[1]        = MSL["STATE"]["ENUPOSY"] # m
+	ENUPOS[2]        = MSL["STATE"]["ENUPOSZ"] # m
+	ENUVEL           = np.zeros(3) # m/s
+	ENUVEL[0]        = MSL["STATE"]["ENUVELX"] # m/s
+	ENUVEL[1]        = MSL["STATE"]["ENUVELY"] # m/s
+	ENUVEL[2]        = MSL["STATE"]["ENUVELZ"] # m/s
+	ENUEULER         = np.zeros(3) # rad
+	ENUEULER[0]      = MSL["STATE"]["ENUPHI"] # rad
+	ENUEULER[1]      = MSL["STATE"]["ENUTHT"] # rad
+	ENUEULER[2]      = MSL["STATE"]["ENUPSI"] # rad
+
+	ECEFPOS           = np.zeros(3) # m
+	ECEFPOS[0]        = MSL["STATE"]["ECEFPOSX"] # m
+	ECEFPOS[1]        = MSL["STATE"]["ECEFPOSY"] # m
+	ECEFPOS[2]        = MSL["STATE"]["ECEFPOSZ"] # m
+	ECEFPOS0          = np.zeros(3) # m
+	ECEFPOS0[0]       = MSL["STATE"]["ECEFPOSX0"] # m
+	ECEFPOS0[1]       = MSL["STATE"]["ECEFPOSY0"] # m
+	ECEFPOS0[2]       = MSL["STATE"]["ECEFPOSZ0"] # m
+	ECEF_TO_ENU       = np.zeros((3,3)) # nd
+	ECEF_TO_ENU[0, 0] = MSL["STATE"]["ECEF_TO_ENU_XX"] # nd
+	ECEF_TO_ENU[0, 1] = MSL["STATE"]["ECEF_TO_ENU_XY"] # nd
+	ECEF_TO_ENU[0, 2] = MSL["STATE"]["ECEF_TO_ENU_XZ"] # nd
+	ECEF_TO_ENU[1, 0] = MSL["STATE"]["ECEF_TO_ENU_YX"] # nd
+	ECEF_TO_ENU[1, 1] = MSL["STATE"]["ECEF_TO_ENU_YY"] # nd
+	ECEF_TO_ENU[1, 2] = MSL["STATE"]["ECEF_TO_ENU_YZ"] # nd
+	ECEF_TO_ENU[2, 0] = MSL["STATE"]["ECEF_TO_ENU_ZX"] # nd
+	ECEF_TO_ENU[2, 1] = MSL["STATE"]["ECEF_TO_ENU_ZY"] # nd
+	ECEF_TO_ENU[2, 2] = MSL["STATE"]["ECEF_TO_ENU_ZZ"] # nd
+	ECEF_TO_FLU       = np.zeros((3,3)) # nd
+	ECEF_TO_FLU[0, 0] = MSL["STATE"]["ECEF_TO_FLU_XX"] # nd
+	ECEF_TO_FLU[0, 1] = MSL["STATE"]["ECEF_TO_FLU_XY"] # nd
+	ECEF_TO_FLU[0, 2] = MSL["STATE"]["ECEF_TO_FLU_XZ"] # nd
+	ECEF_TO_FLU[1, 0] = MSL["STATE"]["ECEF_TO_FLU_YX"] # nd
+	ECEF_TO_FLU[1, 1] = MSL["STATE"]["ECEF_TO_FLU_YY"] # nd
+	ECEF_TO_FLU[1, 2] = MSL["STATE"]["ECEF_TO_FLU_YZ"] # nd
+	ECEF_TO_FLU[2, 0] = MSL["STATE"]["ECEF_TO_FLU_ZX"] # nd
+	ECEF_TO_FLU[2, 1] = MSL["STATE"]["ECEF_TO_FLU_ZY"] # nd
+	ECEF_TO_FLU[2, 2] = MSL["STATE"]["ECEF_TO_FLU_ZZ"] # nd
+	ECEFVEL           = np.zeros(3) # m/s
+	ECEFVEL[0]        = MSL["STATE"]["ECEFVELX"] # m/s
+	ECEFVEL[1]        = MSL["STATE"]["ECEFVELY"] # m/s
+	ECEFVEL[2]        = MSL["STATE"]["ECEFVELZ"] # m/s
 
 	# INTEGRATION STATE. ###########################################################
 	INTEGRATION_PASS = 0
-	STATE_P0         = ENUPOS # m
-	STATE_V0         = ENUVEL # m/s
-	STATE_E0         = ENUEULER # rad/s
-	STATE_EDOT0      = BODYRATE # rad/s^2
-	V1               = np.zeros(3) # m/s
-	A1               = np.zeros(3) # m/s^2
-	EDOT1            = np.zeros(3) # rad/s
-	EDOTDOT1         = np.zeros(3) # rad/s^2
-	V2               = np.zeros(3) # m/s
-	A2               = np.zeros(3) # m/s^2
-	EDOT2            = np.zeros(3) # rad/s
-	EDOTDOT2         = np.zeros(3) # rad/s^2
-	V3               = np.zeros(3) # m/s
-	A3               = np.zeros(3) # m/s^2
-	EDOT3            = np.zeros(3) # rad/s
-	EDOTDOT3         = np.zeros(3) # rad/s^2
-	V4               = np.zeros(3) # m/s
-	A4               = np.zeros(3) # m/s^2
-	EDOT4            = np.zeros(3) # rad/s
-	EDOTDOT4         = np.zeros(3) # rad/s^2
+	STATE_P0 = ENUPOS # m
+	STATE_V0 = ENUVEL # m/s
+	STATE_E0 = ENUEULER # rad/s
+	STATE_W0 = BODYRATE # rad/s^2
+	V1       = np.zeros(3) # m/s
+	A1       = np.zeros(3) # m/s^2
+	W1       = np.zeros(3) # rad/s
+	WD1      = np.zeros(3) # rad/s^2
+	V2       = np.zeros(3) # m/s
+	A2       = np.zeros(3) # m/s^2
+	W2       = np.zeros(3) # rad/s
+	WD2      = np.zeros(3) # rad/s^2
+	V3       = np.zeros(3) # m/s
+	A3       = np.zeros(3) # m/s^2
+	W3       = np.zeros(3) # rad/s
+	WD3      = np.zeros(3) # rad/s^2
+	V4       = np.zeros(3) # m/s
+	A4       = np.zeros(3) # m/s^2
+	W4       = np.zeros(3) # rad/s
+	WD4      = np.zeros(3) # rad/s^2
 
 	# AIRFRAME. ####################################################################
 	CD_LOOKUP          = [0.1, 0.6] # nd
@@ -273,10 +403,26 @@ def fly_msl(
 			"PRATE": BODYRATE[0], # rad/s
 			"QRATE": BODYRATE[1], # rad/s
 			"RRATE": BODYRATE[2], # rad/s
-			"UDOT_0": SPECIFIC_FORCE[0], # m/s^2
-			"VDOT_0": SPECIFIC_FORCE[1], # m/s^2
-			"WDOT_0": SPECIFIC_FORCE[2], # m/s^2
+			"UDOT_0": SPEC_FORCE[0], # m/s^2
+			"VDOT_0": SPEC_FORCE[1], # m/s^2
+			"WDOT_0": SPEC_FORCE[2], # m/s^2
 
+			"LAT0": GEODETIC0[0], # rad
+			"LON0": GEODETIC0[1], # rad
+			"ALT0": GEODETIC0[2], # meters
+			"LAT": GEODETIC[0], # rad
+			"LON": GEODETIC[1], # rad
+			"ALT": GEODETIC[2], # meters
+
+			"ENU_TO_FLU_XX": ENU_TO_FLU[0, 0], # nd
+			"ENU_TO_FLU_XY": ENU_TO_FLU[0, 1], # nd
+			"ENU_TO_FLU_XZ": ENU_TO_FLU[0, 2], # nd
+			"ENU_TO_FLU_YX": ENU_TO_FLU[1, 0], # nd
+			"ENU_TO_FLU_YY": ENU_TO_FLU[1, 1], # nd
+			"ENU_TO_FLU_YZ": ENU_TO_FLU[1, 2], # nd
+			"ENU_TO_FLU_ZX": ENU_TO_FLU[2, 0], # nd
+			"ENU_TO_FLU_ZY": ENU_TO_FLU[2, 1], # nd
+			"ENU_TO_FLU_ZZ": ENU_TO_FLU[2, 2], # nd
 			"ENUPOSX": ENUPOS[0], # m
 			"ENUPOSY": ENUPOS[1], # m
 			"ENUPOSZ": ENUPOS[2], # m
@@ -286,6 +432,34 @@ def fly_msl(
 			"ENUPHI": ENUEULER[0], # rad
 			"ENUTHT": ENUEULER[1], # rad
 			"ENUPSI": ENUEULER[2], # rad
+
+			"ECEFPOSY": ECEFPOS[0], # m
+			"ECEFPOSX": ECEFPOS[1], # m
+			"ECEFPOSZ": ECEFPOS[2], # m
+			"ECEFPOSY0": ECEFPOS0[0], # m
+			"ECEFPOSX0": ECEFPOS0[1], # m
+			"ECEFPOSZ0": ECEFPOS0[2], # m
+			"ECEF_TO_ENU_XX": ECEF_TO_ENU[0, 0], # nd
+			"ECEF_TO_ENU_XY": ECEF_TO_ENU[0, 1], # nd
+			"ECEF_TO_ENU_XZ": ECEF_TO_ENU[0, 2], # nd
+			"ECEF_TO_ENU_YX": ECEF_TO_ENU[1, 0], # nd
+			"ECEF_TO_ENU_YY": ECEF_TO_ENU[1, 1], # nd
+			"ECEF_TO_ENU_YZ": ECEF_TO_ENU[1, 2], # nd
+			"ECEF_TO_ENU_ZX": ECEF_TO_ENU[2, 0], # nd
+			"ECEF_TO_ENU_ZY": ECEF_TO_ENU[2, 1], # nd
+			"ECEF_TO_ENU_ZZ": ECEF_TO_ENU[2, 2], # nd
+			"ECEF_TO_FLU_XX": ECEF_TO_FLU[0, 0], # nd
+			"ECEF_TO_FLU_XY": ECEF_TO_FLU[0, 1], # nd
+			"ECEF_TO_FLU_XZ": ECEF_TO_FLU[0, 2], # nd
+			"ECEF_TO_FLU_YX": ECEF_TO_FLU[1, 0], # nd
+			"ECEF_TO_FLU_YY": ECEF_TO_FLU[1, 1], # nd
+			"ECEF_TO_FLU_YZ": ECEF_TO_FLU[1, 2], # nd
+			"ECEF_TO_FLU_ZX": ECEF_TO_FLU[2, 0], # nd
+			"ECEF_TO_FLU_ZY": ECEF_TO_FLU[2, 1], # nd
+			"ECEF_TO_FLU_ZZ": ECEF_TO_FLU[2, 2], # nd
+			"ECEFVELX": ECEFVEL[0], # m/s
+			"ECEFVELY": ECEFVEL[1], # m/s
+			"ECEFVELZ": ECEFVEL[2], # m/s
 		}
 		return STATE
 
@@ -315,14 +489,14 @@ def fly_msl(
 		THRUST = MSL["MASS_AND_MOTOR"].THRUST # newtons
 
 		# ATTITUDE. ################################################################
-		ENU_TO_FLU = ct.ORIENTATION_TO_LOCAL_TM(
+		ENU_TO_FLU   = ct.ORIENTATION_TO_LOCAL_TM(
 			ENUEULER[0], -1.0 * ENUEULER[1], ENUEULER[2]) # nd
-		SPEED = la.norm(ENUVEL) # m/s
-		VEL_B = ENU_TO_FLU @ ENUVEL # m/s
-		TEMP1, TEMP2 = returnAlphaAndBeta(VEL_B) # rad
+		SPEED        = la.norm(ENUVEL) # m/s
+		VEL_B        = ENU_TO_FLU @ ENUVEL # m/s
+		TEMP1, TEMP2 = getAlphaAndBeta(VEL_B) # rad
 
 		# ALPHA AND BETA IN FORWARD, RIGHT, DOWN. ##################################
-		ALPHA = -1.0 * TEMP1 # rad
+		ALPHA    = -1.0 * TEMP1 # rad
 		SIDESLIP = -1.0 * TEMP2 # rad
 
 		# BASIC DRAG MODEL. ########################################################
@@ -331,10 +505,10 @@ def fly_msl(
 			CD = linearInterpolation(MACH, MACH_LOOKUP, CD_LOOKUP)
 		else:
 			CD = CD_LOOKUP[0]
-		DRAG_FORCE = CD * REF_AREA * Q # newtons
-		WIND_TO_BODY = ct.FLIGHTPATH_TO_LOCAL_TM(SIDESLIP, ALPHA) # nd
+		DRAG_FORCE      = CD * REF_AREA * Q # newtons
+		WIND_TO_BODY    = ct.FLIGHTPATH_TO_LOCAL_TM(SIDESLIP, ALPHA) # nd
 		WIND_DRAG_FORCE = npa([-DRAG_FORCE, 0.0, 0.0]) # newtons
-		BODY_DRAG = (WIND_TO_BODY @ WIND_DRAG_FORCE) / MASS # m/s^2
+		BODY_DRAG       = (WIND_TO_BODY @ WIND_DRAG_FORCE) / MASS # m/s^2
 
 		# AERODYNAMICS. ############################################################
 		CY = 2 * SIDESLIP + \
@@ -362,17 +536,17 @@ def fly_msl(
 			(BETA * REF_AREA)) * ((XCG - X_NOSETIP2XCD) / REF_DIAM) # nd
 
 		# DERIVATIVES. #############################################################
-		EDOTDOT_0         = np.zeros(3) # rad/s^2
-		EDOTDOT_0[0]      = 0.0 # rad/s^2
-		EDOTDOT_0[1]      = (Q * REF_AREA * REF_DIAM * CM) / TMOI # rad/s^2
-		EDOTDOT_0[2]      = (Q * REF_AREA * REF_DIAM * CN) / TMOI # rad/s^2
-		SPECIFIC_FORCE[0] = THRUST / MASS # m/s^2
-		SPECIFIC_FORCE[1] = (Q * REF_AREA * CY) / MASS # m/s^2
-		SPECIFIC_FORCE[2] = (Q * REF_AREA * CZ) / MASS # m/s^2
-		LOCAL_G           = npa([0.0, 0.0, -1.0 * G]) # m/s^2
-		BODY_G            = ENU_TO_FLU @ LOCAL_G # m/s^2
-		SPECIFIC_FORCE    += (BODY_G + BODY_DRAG) # m/s^2
-		ACC_0             = SPECIFIC_FORCE @ ENU_TO_FLU # m/s^2
+		WDOT_0        = np.zeros(3) # rad/s^2
+		WDOT_0[0]     = 0.0 # rad/s^2
+		WDOT_0[1]     = (Q * REF_AREA * REF_DIAM * CM) / TMOI # rad/s^2
+		WDOT_0[2]     = (Q * REF_AREA * REF_DIAM * CN) / TMOI # rad/s^2
+		SPEC_FORCE[0] = THRUST / MASS # m/s^2
+		SPEC_FORCE[1] = (Q * REF_AREA * CY) / MASS # m/s^2
+		SPEC_FORCE[2] = (Q * REF_AREA * CZ) / MASS # m/s^2
+		LOCAL_G       = npa([0.0, 0.0, -1.0 * G]) # m/s^2
+		BODY_G        = ENU_TO_FLU @ LOCAL_G # m/s^2
+		SPEC_FORCE    += (BODY_G + BODY_DRAG) # m/s^2
+		ACC_0         = SPEC_FORCE @ ENU_TO_FLU # m/s^2
 
 		# STATE. ###################################################################
 		if INTEGRATION_PASS == 0:
@@ -395,20 +569,20 @@ def fly_msl(
 				return MSL
 
 			# BEGIN INTEGRATION PASS. ##############################################
-			STATE_P0    = copy.deepcopy(ENUPOS) # m
-			STATE_V0    = copy.deepcopy(ENUVEL) # m/s
-			STATE_E0    = copy.deepcopy(ENUEULER) # rad/s
-			STATE_EDOT0 = copy.deepcopy(BODYRATE) # rad/s^2
+			STATE_P0 = copy.deepcopy(ENUPOS) # m
+			STATE_V0 = copy.deepcopy(ENUVEL) # m/s
+			STATE_E0 = copy.deepcopy(ENUEULER) # rad/s
+			STATE_W0 = copy.deepcopy(BODYRATE) # rad/s^2
 
-			V1       = ENUVEL # m/s
-			A1       = ACC_0 # m/s^2
-			EDOT1    = BODYRATE # rad/s
-			EDOTDOT1 = EDOTDOT_0 # rad/s^2
+			V1  = ENUVEL # m/s
+			A1  = ACC_0 # m/s^2
+			W1  = BODYRATE # rad/s
+			WD1 = WDOT_0 # rad/s^2
 
 			ENUPOS   = STATE_P0 + V1 * (TIME_STEP / 2.0) # m
 			ENUVEL   = STATE_V0 + A1 * (TIME_STEP / 2.0) # m/s
-			ENUEULER = STATE_E0 + EDOT1 * (TIME_STEP / 2.0) # rad
-			BODYRATE = STATE_EDOT0 + EDOTDOT1 * (TIME_STEP / 2.0) # rad/s
+			ENUEULER = STATE_E0 + W1 * (TIME_STEP / 2.0) # rad
+			BODYRATE = STATE_W0 + WD1 * (TIME_STEP / 2.0) # rad/s
 
 			TOF += (TIME_STEP / 2.0) # seconds
 
@@ -416,29 +590,29 @@ def fly_msl(
 
 		elif INTEGRATION_PASS == 1:
 
-			V2       = ENUVEL # m/s
-			A2       = ACC_0 # m/s^2
-			EDOT2    = BODYRATE # rad/s
-			EDOTDOT2 = EDOTDOT_0 # rad/s^2
+			V2  = ENUVEL # m/s
+			A2  = ACC_0 # m/s^2
+			W2  = BODYRATE # rad/s
+			WD2 = WDOT_0 # rad/s^2
 
 			ENUPOS   = STATE_P0 + V2 * (TIME_STEP / 2.0) # m
 			ENUVEL   = STATE_V0 + A2 * (TIME_STEP / 2.0) # m/s
-			ENUEULER = STATE_E0 + EDOT2 * (TIME_STEP / 2.0) # rad
-			BODYRATE = STATE_EDOT0 + EDOTDOT2 * (TIME_STEP / 2.0) # rad/s
+			ENUEULER = STATE_E0 + W2 * (TIME_STEP / 2.0) # rad
+			BODYRATE = STATE_W0 + WD2 * (TIME_STEP / 2.0) # rad/s
 
 			INTEGRATION_PASS += 1
 
 		elif INTEGRATION_PASS == 2:
 
-			V3       = ENUVEL # m/s
-			A3       = ACC_0 # m/s^2
-			EDOT3    = BODYRATE # rad/s
-			EDOTDOT3 = EDOTDOT_0 # rad/s^2
+			V3  = ENUVEL # m/s
+			A3  = ACC_0 # m/s^2
+			W3  = BODYRATE # rad/s
+			WD3 = WDOT_0 # rad/s^2
 
 			ENUPOS   = STATE_P0 + V3 * (TIME_STEP) # m
 			ENUVEL   = STATE_V0 + A3 * (TIME_STEP) # m/s
-			ENUEULER = STATE_E0 + EDOT3 * (TIME_STEP) # rad
-			BODYRATE = STATE_EDOT0 + EDOTDOT3 * (TIME_STEP) # rad/s
+			ENUEULER = STATE_E0 + W3 * (TIME_STEP) # rad
+			BODYRATE = STATE_W0 + WD3 * (TIME_STEP) # rad/s
 
 			TOF += (TIME_STEP / 2.0) # seconds
 
@@ -446,19 +620,19 @@ def fly_msl(
 
 		elif INTEGRATION_PASS == 3:
 
-			V4       = ENUVEL # m/s
-			A4       = ACC_0 # m/s^2
-			EDOT4    = BODYRATE # rad/s
-			EDOTDOT4 = EDOTDOT_0 # rad/s^2
+			V4  = ENUVEL # m/s
+			A4  = ACC_0 # m/s^2
+			W4  = BODYRATE # rad/s
+			WD4 = WDOT_0 # rad/s^2
 
 			ENUPOS   = STATE_P0 + (TIME_STEP / 6.0) * \
 				(V1 + 2 * V2 + 2 * V3 + V4) # m
 			ENUVEL   = STATE_V0 + (TIME_STEP / 6.0) * \
 				(A1 + 2 * A2 + 2 * A3 + A4) # m/s
 			ENUEULER = STATE_E0 + (TIME_STEP / 6.0) * \
-				(EDOT1 + 2 * EDOT2 + 2 * EDOT3 + EDOT4) # rad
-			BODYRATE = STATE_EDOT0 + (TIME_STEP / 6.0) * \
-				(EDOTDOT1 + 2 * EDOTDOT2 + 2 * EDOTDOT3 + EDOTDOT4) # rad/s
+				(W1 + 2 * W2 + 2 * W3 + W4) # rad
+			BODYRATE = STATE_W0 + (TIME_STEP / 6.0) * \
+				(WD1 + 2 * WD2 + 2 * WD3 + WD4) # rad/s
 
 			INTEGRATION_PASS = 0
 
@@ -468,11 +642,12 @@ if __name__ == "__main__":
 
 	wallClockStart = time.time()
 
-	POS0 = np.zeros(3)
+	LLA0 = npa([38.8719, 77.0563, 0.0])
 	AZ0  = 0
 	EL0  = 45
 	SPD0 = 10
-	MSL  = construct_msl(POS0, AZ0, EL0, SPD0, "MOCK_HELLFIRE5DOF")
+	ID   = "MOCK_HELLFIRE5DOF"
+	MSL  = construct_msl(LLA0, AZ0, EL0, SPD0, ID)
 	MSL  = fly_msl(MSL, 100, -4.0, 0.0)
 
 	wallClockEnd = time.time()

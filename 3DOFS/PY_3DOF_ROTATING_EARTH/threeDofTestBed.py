@@ -197,10 +197,10 @@ class threeDofSim:
 		
 		# Derivative calculated in ECI.
 		self.ECIACC = \
-		(self.SPECIFIC_FORCE @ self.ECI_TO_FLU) + \
-		ECIGRAV + \
-		CORIOLIS_FORCE + \
-		CENTRIFUGAL_FORCE
+			(self.SPECIFIC_FORCE @ self.ECI_TO_FLU) + \
+			ECIGRAV + \
+			CORIOLIS_FORCE + \
+			CENTRIFUGAL_FORCE
 
 	def ECIIntegrate(self):
 
@@ -339,7 +339,7 @@ if __name__ == "__main__":
 
 	x = threeDofSim(
 		ID = "ROTATING_EARTH",
-		INPUT_ENU_VEL=npa([150.0, 50.0, 300.0]),
+		INPUT_ENU_VEL=npa([7.07, 0.0, 7.07]),
 		INPUT_LLA0=npa([38.8719, 77.0563, 0.0]),
 		ROTATING_EARTH_FLAG=True
 	)
@@ -347,7 +347,7 @@ if __name__ == "__main__":
 
 	y = threeDofSim(
 		ID = "LOCAL_LEVEL_EARTH",
-		INPUT_ENU_VEL=npa([150.0, 50.0, 300.0]),
+		INPUT_ENU_VEL=npa([7.07, 0.0, 7.07]),
 		INPUT_LLA0=npa([38.8719, 77.0563, 0.0]),
 		ROTATING_EARTH_FLAG=False
 	)

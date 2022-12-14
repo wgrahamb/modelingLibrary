@@ -8,7 +8,7 @@ matplotlib.use('WebAgg')
 RAD_TO_DEG = 57.2957795130823
 
 # Setup.
-f1 = r"PY_5DOF_MOCK_HELLFIRE/output/MOCK_HELLFIRE5DOF.txt"
+f1 = r"PY_5DOF_MOCK_HELLFIRE/data/MOCK_HELLFIRE5DOF.txt"
 viewFile = f1
 df = pd.read_csv(open(f"{viewFile}"), delimiter=" ")
 for index, header in enumerate(df.columns):
@@ -76,8 +76,8 @@ fins = fig.add_subplot(224)
 fins.set_title("Fins")
 fins.set_xlabel("TOF")
 fins.set_ylabel("Degrees")
-pitchFinsDF = pd.read_csv(open(f"PY_5DOF_MOCK_HELLFIRE/output/PITCH_DEFL.txt"), delimiter=" ")
-yawFinsDF = pd.read_csv(open(f"PY_5DOF_MOCK_HELLFIRE/output/YAW_DEFL.txt"), delimiter=" ")
+pitchFinsDF = pd.read_csv(open(f"PY_5DOF_MOCK_HELLFIRE/data/PITCH_DEFL.txt"), delimiter=" ")
+yawFinsDF = pd.read_csv(open(f"PY_5DOF_MOCK_HELLFIRE/data/YAW_DEFL.txt"), delimiter=" ")
 fins.plot(pitchFinsDF.iloc[startIndex:stopIndex]["TIME"], pitchFinsDF.iloc[startIndex:stopIndex]["COMMAND"], label="Pitch Command", color=colors.pop(0))
 fins.plot(pitchFinsDF.iloc[startIndex:stopIndex]["TIME"], pitchFinsDF.iloc[startIndex:stopIndex]["DEFL"], label="Pitch Deflection", color=colors.pop(0))
 fins.plot(yawFinsDF.iloc[startIndex:stopIndex]["TIME"], yawFinsDF.iloc[startIndex:stopIndex]["COMMAND"], label="Yaw Command", color=colors.pop(0))

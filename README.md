@@ -13,27 +13,28 @@ Build scripts written in python are included.
 
 To Do:
 - CPP_6DOF_SRAAM_V2
-     - Need to be able to specify output path.
      - Update the readme to point out how my
      programming skills have changed from V1 to V2.
      - Add global position.
      - Add a getState method.
      - Add guidance modes to CPP_6DOF_SRAAM_V2. Initial turn, midcourse, terminal.
-     - Using Zarchan method, write a rate controller. Needs work.
+     - Using Zarchan method, write a rate controller. Needs work. If have trouble
+     try again with Zipfel's method.
 - CPP_6DOF_SAM
      - Start project. Reuse as much Zipfel code as possible.
 - PY_5DOF_MOCK_HELLFIRE
-     - Directly integrating rates into euler angles, switch to quaternions.
      - Rotating elliptical earth.
-     - INS from Zipfel CADAC_ADS6 project.
-     - Kalman Filter to pair with it after finished working through examples.
+          - Finish initialization and copying to state dictionary.
+     - Open the log file once, then append to it.
+     - Directly integrating rates into euler angles, switch to quaternions.
      - Line of attack into pronav.
      - Proportional controller, if not working well, rate controller.
+     - INS from Zipfel CADAC_ADS6 project.
+     - Kalman Filter to pair with it after finished working through examples.
+     - Use bookmarked article to model the drag.
      - Using final project from MAE540, design a real rocket motor.
-     - Model the moment due to drag.
 - PY_6DOF_70MM_ROCKET
      - The pitch and yaw aerodynamics do not yet line up with the flight data.
-     - Model the moment due to drag.
      - Check alpha and beta calculations.
 - pythonFunctions
      - Finish working through filters.py
@@ -128,15 +129,6 @@ Folder Structure:
      fin deflections as an input.
 
 
-     PY_6DOF_SRAAM
-
-     This is the python port of the CADAC_SIMULATIONS SRAAM6. I wrote this
-     sim before the CPP version. It has gone through a fair amount of revision
-     since its beginning. It uses the same motion model as CPP_6DOF_SRAAM_V1.
-     It runs pretty fast considering it is a good bit of code. It would be
-     very easy to integrate into other environments.
-
-
      PY_6DOF_70MM_ROCKET
 
      I found this paper early in my career. It was released by the
@@ -146,6 +138,15 @@ Folder Structure:
      is not ballistically stable and suffers wobble at the end of its flight.
      Second, the rocket motor and fins provide a rolling moment that changes
      characteristics, depending on the speed of the rocket.
+
+
+     PY_6DOF_SRAAM
+
+     This is the python port of the CADAC_SIMULATIONS SRAAM6. I wrote this
+     sim before the CPP version. It has gone through a fair amount of revision
+     since its beginning. It uses the same motion model as CPP_6DOF_SRAAM_V1.
+     It runs pretty fast considering it is a good bit of code. It would be
+     very easy to integrate into other environments.
 
 
      pythonFunctions
