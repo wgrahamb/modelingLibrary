@@ -25,6 +25,7 @@ To Do:
 - PY_5DOF_MOCK_HELLFIRE
      - Rotating elliptical earth.
           - Finish initialization and copying to state dictionary.
+     - Add enum end types.
      - Open the log file once, then append to it.
      - Directly integrating rates into euler angles, switch to quaternions.
      - Line of attack into pronav.

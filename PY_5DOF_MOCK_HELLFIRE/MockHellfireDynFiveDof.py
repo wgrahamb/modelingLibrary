@@ -42,10 +42,10 @@ UNCORRECTED_REFERENCE_LENGTH 1.85026 m
 
 def construct_msl(
 	INITIAL_LLA, # m
-	INITIAL_AZIMUTH, # rad
-	INITIAL_ELEVATION, # rad
+	INITIAL_AZIMUTH, # deg
+	INITIAL_ELEVATION, # deg
 	INITIAL_AIRSPEED, # m/s
-	ID # strings
+	ID # string
 ):
 
 	# ATMOSPHERE. ##################################################################
@@ -151,9 +151,9 @@ def construct_msl(
 			"PRATE": BODYRATE[0], # rad/s
 			"QRATE": BODYRATE[1], # rad/s
 			"RRATE": BODYRATE[2], # rad/s
-			"UDOT_0": SPECIFIC_FORCE[0], # m/s^2
-			"VDOT_0": SPECIFIC_FORCE[1], # m/s^2
-			"WDOT_0": SPECIFIC_FORCE[2], # m/s^2
+			"UDOT": SPECIFIC_FORCE[0], # m/s^2
+			"VDOT": SPECIFIC_FORCE[1], # m/s^2
+			"WDOT": SPECIFIC_FORCE[2], # m/s^2
 
 			"LAT0": GEODETIC0[0], # rad
 			"LON0": GEODETIC0[1], # rad
@@ -260,9 +260,9 @@ def fly_msl(
 	BODYRATE[1]   = MSL["STATE"]["QRATE"] # rad/s
 	BODYRATE[2]   = MSL["STATE"]["RRATE"] # rad/s
 	SPEC_FORCE    = np.zeros(3) # m/s^2
-	SPEC_FORCE[0] = MSL["STATE"]["UDOT_0"] # m/s^2
-	SPEC_FORCE[1] = MSL["STATE"]["VDOT_0"] # m/s^2
-	SPEC_FORCE[2] = MSL["STATE"]["WDOT_0"] # m/s^2
+	SPEC_FORCE[0] = MSL["STATE"]["UDOT"] # m/s^2
+	SPEC_FORCE[1] = MSL["STATE"]["VDOT"] # m/s^2
+	SPEC_FORCE[2] = MSL["STATE"]["WDOT"] # m/s^2
 
 	GEODETIC0    = np.zeros(3) # lla
 	GEODETIC0[0] = MSL["STATE"]["LAT0"] # rad
@@ -403,9 +403,9 @@ def fly_msl(
 			"PRATE": BODYRATE[0], # rad/s
 			"QRATE": BODYRATE[1], # rad/s
 			"RRATE": BODYRATE[2], # rad/s
-			"UDOT_0": SPEC_FORCE[0], # m/s^2
-			"VDOT_0": SPEC_FORCE[1], # m/s^2
-			"WDOT_0": SPEC_FORCE[2], # m/s^2
+			"UDOT": SPEC_FORCE[0], # m/s^2
+			"VDOT": SPEC_FORCE[1], # m/s^2
+			"WDOT": SPEC_FORCE[2], # m/s^2
 
 			"LAT0": GEODETIC0[0], # rad
 			"LON0": GEODETIC0[1], # rad
@@ -536,17 +536,17 @@ def fly_msl(
 			(BETA * REF_AREA)) * ((XCG - X_NOSETIP2XCD) / REF_DIAM) # nd
 
 		# DERIVATIVES. #############################################################
-		WDOT_0        = np.zeros(3) # rad/s^2
-		WDOT_0[0]     = 0.0 # rad/s^2
-		WDOT_0[1]     = (Q * REF_AREA * REF_DIAM * CM) / TMOI # rad/s^2
-		WDOT_0[2]     = (Q * REF_AREA * REF_DIAM * CN) / TMOI # rad/s^2
+		RATEDOT       = np.zeros(3) # rad/s^2
+		RATEDOT[0]    = 0.0 # rad/s^2
+		RATEDOT[1]    = (Q * REF_AREA * REF_DIAM * CM) / TMOI # rad/s^2
+		RATEDOT[2]    = (Q * REF_AREA * REF_DIAM * CN) / TMOI # rad/s^2
 		SPEC_FORCE[0] = THRUST / MASS # m/s^2
 		SPEC_FORCE[1] = (Q * REF_AREA * CY) / MASS # m/s^2
 		SPEC_FORCE[2] = (Q * REF_AREA * CZ) / MASS # m/s^2
 		LOCAL_G       = npa([0.0, 0.0, -1.0 * G]) # m/s^2
 		BODY_G        = ENU_TO_FLU @ LOCAL_G # m/s^2
 		SPEC_FORCE    += (BODY_G + BODY_DRAG) # m/s^2
-		ACC_0         = SPEC_FORCE @ ENU_TO_FLU # m/s^2
+		ACC           = SPEC_FORCE @ ENU_TO_FLU # m/s^2
 
 		# STATE. ###################################################################
 		if INTEGRATION_PASS == 0:
@@ -575,9 +575,9 @@ def fly_msl(
 			STATE_W0 = copy.deepcopy(BODYRATE) # rad/s^2
 
 			V1  = ENUVEL # m/s
-			A1  = ACC_0 # m/s^2
+			A1  = ACC # m/s^2
 			W1  = BODYRATE # rad/s
-			WD1 = WDOT_0 # rad/s^2
+			WD1 = RATEDOT # rad/s^2
 
 			ENUPOS   = STATE_P0 + V1 * (TIME_STEP / 2.0) # m
 			ENUVEL   = STATE_V0 + A1 * (TIME_STEP / 2.0) # m/s
@@ -591,9 +591,9 @@ def fly_msl(
 		elif INTEGRATION_PASS == 1:
 
 			V2  = ENUVEL # m/s
-			A2  = ACC_0 # m/s^2
+			A2  = ACC # m/s^2
 			W2  = BODYRATE # rad/s
-			WD2 = WDOT_0 # rad/s^2
+			WD2 = RATEDOT # rad/s^2
 
 			ENUPOS   = STATE_P0 + V2 * (TIME_STEP / 2.0) # m
 			ENUVEL   = STATE_V0 + A2 * (TIME_STEP / 2.0) # m/s
@@ -605,9 +605,9 @@ def fly_msl(
 		elif INTEGRATION_PASS == 2:
 
 			V3  = ENUVEL # m/s
-			A3  = ACC_0 # m/s^2
+			A3  = ACC # m/s^2
 			W3  = BODYRATE # rad/s
-			WD3 = WDOT_0 # rad/s^2
+			WD3 = RATEDOT # rad/s^2
 
 			ENUPOS   = STATE_P0 + V3 * (TIME_STEP) # m
 			ENUVEL   = STATE_V0 + A3 * (TIME_STEP) # m/s
@@ -621,9 +621,9 @@ def fly_msl(
 		elif INTEGRATION_PASS == 3:
 
 			V4  = ENUVEL # m/s
-			A4  = ACC_0 # m/s^2
+			A4  = ACC # m/s^2
 			W4  = BODYRATE # rad/s
-			WD4 = WDOT_0 # rad/s^2
+			WD4 = RATEDOT # rad/s^2
 
 			ENUPOS   = STATE_P0 + (TIME_STEP / 6.0) * \
 				(V1 + 2 * V2 + 2 * V3 + V4) # m
