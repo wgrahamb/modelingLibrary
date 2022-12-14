@@ -51,7 +51,7 @@ UNCORRECTED_REFERENCE_LENGTH 1.85026 m
 """
 
 def construct_msl(
-	INITIAL_LLA, # m
+	INITIAL_LLA, # geodetic
 	INITIAL_AZIMUTH, # deg
 	INITIAL_ELEVATION, # deg
 	INITIAL_AIRSPEED, # m/s

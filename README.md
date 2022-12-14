@@ -23,7 +23,8 @@ To Do:
 - CPP_6DOF_SAM
      - Start project. Reuse as much Zipfel code as possible.
 - PY_5DOF_MOCK_HELLFIRE
-     - Rotating elliptical earth. (Check eqns, specifically geodetic vs geocentric)
+     - Rotating elliptical earth. Check equations, specifically geodetic
+     vs geocentric. Only affected in the gravity calculation.
      - Directly integrating rates into euler angles, switch to quaternions.
      - Line of attack into pronav.
      - Proportional controller, if not working well, rate controller.
