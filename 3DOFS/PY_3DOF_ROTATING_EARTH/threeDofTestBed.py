@@ -186,21 +186,13 @@ class threeDofSim:
 		LLA_TO_ECI_TM = et.LLA_TO_ECI_TM(self.GEODETIC, self.TOF)
 		ECIGRAV = LLA_TO_ECI_TM.transpose() @ GEODETICGRAV
 		
-		# Pseudo forces. No Euler force because the rotation rate of earth is assumed to be constant.
-		CORIOLIS_FORCE = -2.0 * self.MASS * (np.cross(OMEGA, self.ECIVEL))
-		TEMP1 = -1.0 * self.MASS * OMEGA
-		TEMP2 = np.cross(OMEGA, self.ECIPOS)
-		CENTRIFUGAL_FORCE = np.cross(TEMP1, TEMP2)
-		
 		# Body acc.
 		self.SPECIFIC_FORCE = npa([0.0, self.SIDE_COMM, self.NORM_COMM]) # METERS PER SECOND^2
 		
 		# Derivative calculated in ECI.
 		self.ECIACC = \
 			(self.SPECIFIC_FORCE @ self.ECI_TO_FLU) + \
-			ECIGRAV + \
-			CORIOLIS_FORCE + \
-			CENTRIFUGAL_FORCE
+			ECIGRAV
 
 	def ECIIntegrate(self):
 
