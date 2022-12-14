@@ -23,10 +23,7 @@ To Do:
 - CPP_6DOF_SAM
      - Start project. Reuse as much Zipfel code as possible.
 - PY_5DOF_MOCK_HELLFIRE
-     - Rotating elliptical earth.
-          - Finish initialization and copying to state dictionary.
-     - Add enum end types.
-     - Open the log file once, then append to it.
+     - Rotating elliptical earth. (Check eqns, specifically geodetic vs geocentric)
      - Directly integrating rates into euler angles, switch to quaternions.
      - Line of attack into pronav.
      - Proportional controller, if not working well, rate controller.

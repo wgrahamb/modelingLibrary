@@ -10,6 +10,7 @@ from classes.SecondOrderActuator import SecondOrderActuator
 
 # Dynamics.
 import MockHellfireDynFiveDof as Dyn
+from MockHellfireDynFiveDof import endChecks
 
 # MATH CONSTANTS
 RAD_TO_DEG = 57.2957795130823
@@ -48,7 +49,7 @@ if __name__ == "__main__":
 	YAWCOMMAND3       = -3 # Degrees.
 
 	LAST_TIME = int(0)
-	while MSL["LETHALITY"] == "FLYING" or MSL["LETHALITY"] == "MAX_TIME":
+	while MSL["LETHALITY"] == endChecks.FLIGHT or MSL["LETHALITY"] == endChecks.TIME:
 
 		# Dynamics tof is driver.
 		TOF = MSL["STATE"]["TOF"]

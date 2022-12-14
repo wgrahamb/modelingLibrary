@@ -1,6 +1,7 @@
 # Python libraries.
 import time
 import copy
+from enum import Enum
 import numpy as np
 from numpy import array as npa
 from numpy import linalg as la
@@ -17,6 +18,15 @@ from   utility.earthTransforms              import *
 # Classes.
 from classes.ATM1976                  import ATM1976
 from classes.MockHellfireMassAndMotor import MockHellfireMassAndMotor
+
+# End checks.
+class endChecks(Enum):
+	HIT    = 1
+	FLIGHT = 0
+	GROUND = -1
+	POCA   = -2
+	NAN    = -3
+	TIME   = -4
 
 """
 
@@ -126,8 +136,8 @@ def construct_msl(
 	# DATA. ########################################################################
 	MISSILE = {
 		"IDENTITY": ID,
-		"LOGFILE": open(f"PY_5DOF_MOCK_HELLFIRE/data/{ID}.txt", "w"),
-		"LETHALITY": "FLYING",
+		"LOGFILE": f"PY_5DOF_MOCK_HELLFIRE/data/{ID}.txt",
+		"LETHALITY": endChecks.FLIGHT,
 		"ATMOS": ATMOS,
 		"MASS_AND_MOTOR": MASS_AND_MOTOR,
 		"STATE": {
@@ -208,11 +218,38 @@ def construct_msl(
 			"ECEFVELX": ECEFVEL[0], # m/s
 			"ECEFVELY": ECEFVEL[1], # m/s
 			"ECEFVELZ": ECEFVEL[2], # m/s
+
+			"ECIPOSX": ECIPOS[0], # m
+			"ECIPOSY": ECIPOS[1], # m
+			"ECIPOSZ": ECIPOS[2], # m
+			"ECI_TO_ECEF_XX": ECI_TO_ECEF[0, 0], # nd
+			"ECI_TO_ECEF_XY": ECI_TO_ECEF[0, 1], # nd
+			"ECI_TO_ECEF_XZ": ECI_TO_ECEF[0, 2], # nd
+			"ECI_TO_ECEF_YX": ECI_TO_ECEF[1, 0], # nd
+			"ECI_TO_ECEF_YY": ECI_TO_ECEF[1, 1], # nd
+			"ECI_TO_ECEF_YZ": ECI_TO_ECEF[1, 2], # nd
+			"ECI_TO_ECEF_ZX": ECI_TO_ECEF[2, 0], # nd
+			"ECI_TO_ECEF_ZY": ECI_TO_ECEF[2, 1], # nd
+			"ECI_TO_ECEF_ZZ": ECI_TO_ECEF[2, 2], # nd
+			"ECIVELX": ECIVEL[0], # m/s
+			"ECIVELY": ECIVEL[1], # m/s
+			"ECIVELZ": ECIVEL[2], # m/s
+			"ECI_TO_FLU_XX": ECI_TO_FLU[0, 0], # nd
+			"ECI_TO_FLU_XY": ECI_TO_FLU[0, 1], # nd
+			"ECI_TO_FLU_XZ": ECI_TO_FLU[0, 2], # nd
+			"ECI_TO_FLU_YX": ECI_TO_FLU[1, 0], # nd
+			"ECI_TO_FLU_YY": ECI_TO_FLU[1, 1], # nd
+			"ECI_TO_FLU_YZ": ECI_TO_FLU[1, 2], # nd
+			"ECI_TO_FLU_ZX": ECI_TO_FLU[2, 0], # nd
+			"ECI_TO_FLU_ZY": ECI_TO_FLU[2, 1], # nd
+			"ECI_TO_FLU_ZZ": ECI_TO_FLU[2, 2], # nd
 		}
 	}
 
-	lf.writeHeader(MISSILE["STATE"], MISSILE["LOGFILE"])
-	lf.writeData(MISSILE["STATE"], MISSILE["LOGFILE"])
+	LOGFILE = open(MISSILE["LOGFILE"], "w")
+	lf.writeHeader(MISSILE["STATE"], LOGFILE)
+	lf.writeData(MISSILE["STATE"], LOGFILE)
+	LOGFILE.close()
 
 	return MISSILE
 
@@ -224,7 +261,8 @@ def fly_msl(
 ):
 
 	# HANDLE INPUT. ################################################################
-	MSL = copy.copy(MISSILE_INPUT_DICT) # state
+	MSL     = copy.deepcopy(MISSILE_INPUT_DICT) # state
+	LOGFILE = open(MSL["LOGFILE"], "a")
 
 	# PROCESS INPUT. ###############################################################
 	PITCH_FIN_DEFL_DEG = PITCH_FIN_DEFL_DEG_INPUT # deg
@@ -328,6 +366,35 @@ def fly_msl(
 	ECEFVEL[0]        = MSL["STATE"]["ECEFVELX"] # m/s
 	ECEFVEL[1]        = MSL["STATE"]["ECEFVELY"] # m/s
 	ECEFVEL[2]        = MSL["STATE"]["ECEFVELZ"] # m/s
+
+	ECIPOS            = np.zeros(3) # m
+	ECIPOS[0]         = MSL["STATE"]["ECIPOSX"] # m
+	ECIPOS[1]         = MSL["STATE"]["ECIPOSY"] # m
+	ECIPOS[2]         = MSL["STATE"]["ECIPOSZ"] # m
+	ECI_TO_ECEF       = np.zeros((3, 3)) # nd
+	ECI_TO_ECEF[0, 0] = MSL["STATE"]["ECI_TO_ECEF_XX"] # nd
+	ECI_TO_ECEF[0, 1] = MSL["STATE"]["ECI_TO_ECEF_XY"] # nd
+	ECI_TO_ECEF[0, 2] = MSL["STATE"]["ECI_TO_ECEF_XZ"] # nd
+	ECI_TO_ECEF[1, 0] = MSL["STATE"]["ECI_TO_ECEF_YX"] # nd
+	ECI_TO_ECEF[1, 1] = MSL["STATE"]["ECI_TO_ECEF_YY"] # nd
+	ECI_TO_ECEF[1, 2] = MSL["STATE"]["ECI_TO_ECEF_YZ"] # nd
+	ECI_TO_ECEF[2, 0] = MSL["STATE"]["ECI_TO_ECEF_ZX"] # nd
+	ECI_TO_ECEF[2, 1] = MSL["STATE"]["ECI_TO_ECEF_ZY"] # nd
+	ECI_TO_ECEF[2, 2] = MSL["STATE"]["ECI_TO_ECEF_ZZ"] # nd
+	ECIVEL            = np.zeros(3) # m/s
+	ECIVEL[0]         = MSL["STATE"]["ECIVELX"] # m/s
+	ECIVEL[1]         = MSL["STATE"]["ECIVELY"] # m/s
+	ECIVEL[2]         = MSL["STATE"]["ECIVELZ"] # m/s
+	ECI_TO_FLU        = np.zeros((3, 3)) # nd
+	ECI_TO_FLU[0, 0]  = MSL["STATE"]["ECI_TO_FLU_XX"] # nd
+	ECI_TO_FLU[0, 1]  = MSL["STATE"]["ECI_TO_FLU_XY"] # nd
+	ECI_TO_FLU[0, 2]  = MSL["STATE"]["ECI_TO_FLU_XZ"] # nd
+	ECI_TO_FLU[1, 0]  = MSL["STATE"]["ECI_TO_FLU_YX"] # nd
+	ECI_TO_FLU[1, 1]  = MSL["STATE"]["ECI_TO_FLU_YY"] # nd
+	ECI_TO_FLU[1, 2]  = MSL["STATE"]["ECI_TO_FLU_YZ"] # nd
+	ECI_TO_FLU[2, 0]  = MSL["STATE"]["ECI_TO_FLU_ZX"] # nd
+	ECI_TO_FLU[2, 1]  = MSL["STATE"]["ECI_TO_FLU_ZY"] # nd
+	ECI_TO_FLU[2, 2]  = MSL["STATE"]["ECI_TO_FLU_ZZ"] # nd
 
 	# INTEGRATION STATE. ###########################################################
 	INTEGRATION_PASS = 0
@@ -460,6 +527,31 @@ def fly_msl(
 			"ECEFVELX": ECEFVEL[0], # m/s
 			"ECEFVELY": ECEFVEL[1], # m/s
 			"ECEFVELZ": ECEFVEL[2], # m/s
+
+			"ECIPOSX": ECIPOS[0], # m
+			"ECIPOSY": ECIPOS[1], # m
+			"ECIPOSZ": ECIPOS[2], # m
+			"ECI_TO_ECEF_XX": ECI_TO_ECEF[0, 0], # nd
+			"ECI_TO_ECEF_XY": ECI_TO_ECEF[0, 1], # nd
+			"ECI_TO_ECEF_XZ": ECI_TO_ECEF[0, 2], # nd
+			"ECI_TO_ECEF_YX": ECI_TO_ECEF[1, 0], # nd
+			"ECI_TO_ECEF_YY": ECI_TO_ECEF[1, 1], # nd
+			"ECI_TO_ECEF_YZ": ECI_TO_ECEF[1, 2], # nd
+			"ECI_TO_ECEF_ZX": ECI_TO_ECEF[2, 0], # nd
+			"ECI_TO_ECEF_ZY": ECI_TO_ECEF[2, 1], # nd
+			"ECI_TO_ECEF_ZZ": ECI_TO_ECEF[2, 2], # nd
+			"ECIVELX": ECIVEL[0], # m/s
+			"ECIVELY": ECIVEL[1], # m/s
+			"ECIVELZ": ECIVEL[2], # m/s
+			"ECI_TO_FLU_XX": ECI_TO_FLU[0, 0], # nd
+			"ECI_TO_FLU_XY": ECI_TO_FLU[0, 1], # nd
+			"ECI_TO_FLU_XZ": ECI_TO_FLU[0, 2], # nd
+			"ECI_TO_FLU_YX": ECI_TO_FLU[1, 0], # nd
+			"ECI_TO_FLU_YY": ECI_TO_FLU[1, 1], # nd
+			"ECI_TO_FLU_YZ": ECI_TO_FLU[1, 2], # nd
+			"ECI_TO_FLU_ZX": ECI_TO_FLU[2, 0], # nd
+			"ECI_TO_FLU_ZY": ECI_TO_FLU[2, 1], # nd
+			"ECI_TO_FLU_ZZ": ECI_TO_FLU[2, 2], # nd
 		}
 		return STATE
 
@@ -540,12 +632,15 @@ def fly_msl(
 		RATEDOT[0]    = 0.0 # rad/s^2
 		RATEDOT[1]    = (Q * REF_AREA * REF_DIAM * CM) / TMOI # rad/s^2
 		RATEDOT[2]    = (Q * REF_AREA * REF_DIAM * CN) / TMOI # rad/s^2
+
 		SPEC_FORCE[0] = THRUST / MASS # m/s^2
 		SPEC_FORCE[1] = (Q * REF_AREA * CY) / MASS # m/s^2
 		SPEC_FORCE[2] = (Q * REF_AREA * CZ) / MASS # m/s^2
+
 		LOCAL_G       = npa([0.0, 0.0, -1.0 * G]) # m/s^2
 		BODY_G        = ENU_TO_FLU @ LOCAL_G # m/s^2
 		SPEC_FORCE    += (BODY_G + BODY_DRAG) # m/s^2
+
 		ACC           = SPEC_FORCE @ ENU_TO_FLU # m/s^2
 
 		# STATE. ###################################################################
@@ -553,19 +648,22 @@ def fly_msl(
 
 			# LOG DATA. ############################################################
 			MSL["STATE"] = get_state()
-			lf.writeData(MSL["STATE"], MSL["LOGFILE"] )
+			lf.writeData(MSL["STATE"], LOGFILE)
 
 			# END CHECK. ###########################################################
 			if TOF > MAX_TIME:
-				MSL["LETHALITY"] = "MAX_TIME"
+				MSL["LETHALITY"] = endChecks.TIME
+				LOGFILE.close()
 				return MSL
 			if ENUPOS[2] < 0.0:
 				print(f"GROUND - TOF : {TOF:.2f}, ENU : {ENUPOS}, MACH : {MACH:.2f}")
-				MSL["LETHALITY"] = "GROUND"
+				MSL["LETHALITY"] = endChecks.GROUND
+				LOGFILE.close()
 				return MSL
 			if np.isnan(np.sum(ENUPOS)):
 				print(f"NAN - TOF : {TOF:.2f}, ENU : {ENUPOS}, MACH : {MACH:.2f}")
-				MSL["LETHALITY"] = "NAN"
+				MSL["LETHALITY"] = endChecks.NAN
+				LOGFILE.close()
 				return MSL
 
 			# BEGIN INTEGRATION PASS. ##############################################

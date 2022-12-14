@@ -20,6 +20,7 @@ def ECI_TO_ECEF_TM(TIME): # Seconds from launch.
 	TEI[1, 1] = CXI
 	return TEI
 
+# Returns geodetic lla.
 def ECI_TO_LLA(ECIPOS, TIME): # Inertial Pos - Meters, Time - Seconds from launch.
 	LLAREF = np.zeros(3)
 	GW_CLONG = 0.0 # Greenwich celestial longitude at start of flight. Radians.
@@ -67,6 +68,7 @@ def ECI_TO_LLA(ECIPOS, TIME): # Inertial Pos - Meters, Time - Seconds from launc
 		LLAREF[1] = TEMP
 	return LLAREF
 
+# Input geodetic lla and return eci.
 def LLA_TO_ECI(LLA, TIME):
 	GW_CLONG = 0.0 # Greenwich celestial longitude at start of flight. Radians.
 	WEII3 = 7.292115e-5 # Rotation speed of earth. Radians per second.
@@ -143,7 +145,7 @@ def LLA_TO_ECI_TM(LLA, TIME):
 
 	return TGI
 	
-def GEODETIC_GRAV(ECIPOS, TIME):
+def GEOCENTRIC_GRAV(ECIPOS, TIME):
 	GM = 398600440000000.0
 	SMAJOR_AXIS = 6378137.0 # Meters.
 	C20 = -1.0 * 0.0004841668499999999772

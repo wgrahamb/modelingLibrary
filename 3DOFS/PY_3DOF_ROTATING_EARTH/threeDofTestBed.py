@@ -182,9 +182,9 @@ class threeDofSim:
 		OMEGA = npa([0.0, 0.0, WEII3])
 
 		# Eci gravity.
-		GEODETICGRAV = et.GEODETIC_GRAV(self.ECIPOS, self.TOF)
+		GEOCENTRICGRAV = et.GEOCENTRIC_GRAV(self.ECIPOS, self.TOF)
 		LLA_TO_ECI_TM = et.LLA_TO_ECI_TM(self.GEODETIC, self.TOF)
-		ECIGRAV = LLA_TO_ECI_TM.transpose() @ GEODETICGRAV
+		ECIGRAV = LLA_TO_ECI_TM.transpose() @ GEOCENTRICGRAV
 		
 		# Body acc.
 		self.SPECIFIC_FORCE = npa([0.0, self.SIDE_COMM, self.NORM_COMM]) # METERS PER SECOND^2
