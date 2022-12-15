@@ -86,42 +86,11 @@ def construct_msl(
 	INITIAL_EL = np.radians(INITIAL_ELEVATION) # rad
 
 	# FRAMES. ######################################################################
-	# LLA.
-	GEODETIC0 = npa(
-		[
-			np.radians(INITIAL_LLA[0]), # rad
-			np.radians(INITIAL_LLA[1]), # rad
-			INITIAL_LLA[2] # meters
-		]
-	)
-	GEODETIC = copy.deepcopy(GEODETIC0)
-
 	# ENU.
 	ENU_TO_FLU = ct.ORIENTATION_TO_LOCAL_TM(0.0, -INITIAL_EL, INITIAL_AZ) # nd
 	ENUPOS     = np.zeros(3) # m
 	ENUVEL     = INITIAL_AIRSPEED * (ENU_TO_FLU[0]) # m/s
 	ENUEULER   = npa([0.0, INITIAL_EL, INITIAL_AZ]) # rad
-
-	# ECEF.
-	ECEFPOS     = et.LLA_TO_ECI(GEODETIC, 0.0) # m
-	ECEFPOS0    = copy.deepcopy(ECEFPOS) # m
-	ECEF_TO_ENU = ct.ORIENTATION_TO_LOCAL_TM(
-		0.0,
-		(np.pi / 2.0) + GEODETIC[0], # rad
-		GEODETIC[1] # rad
-	) # nd
-	ECEF_TO_FLU = ENU_TO_FLU @ ECEF_TO_ENU # nd
-	ECEFVEL     = (ENU_TO_FLU @ (INITIAL_AIRSPEED * (ENU_TO_FLU[0]))) @ \
-		ECEF_TO_FLU # m/s
-
-	# ECI.
-	ECIPOS                 = et.LLA_TO_ECI(GEODETIC, 0.0) # m
-	ECI_TO_ECEF            = et.ECI_TO_ECEF_TM(0.0) # nd
-	TEMP                   = ECI_TO_ECEF.transpose() @ ECEFVEL # m/s
-	OMEGA                  = npa([0.0, 0.0, WEII3]) # rad/s
-	ECIVEL_DUE_TO_ROTATION = np.cross(OMEGA, ECIPOS) # nd
-	ECIVEL                 = TEMP + ECIVEL_DUE_TO_ROTATION # m/s
-	ECI_TO_FLU             = ECEF_TO_FLU @ ECI_TO_ECEF # nd
 
 	# BODY. ########################################################################
 	TOF            = 0.0 # seconds
@@ -165,22 +134,6 @@ def construct_msl(
 			"VDOT": SPECIFIC_FORCE[1], # m/s^2
 			"WDOT": SPECIFIC_FORCE[2], # m/s^2
 
-			"LAT0": GEODETIC0[0], # rad
-			"LON0": GEODETIC0[1], # rad
-			"ALT0": GEODETIC0[2], # meters
-			"LAT": GEODETIC[0], # rad
-			"LON": GEODETIC[1], # rad
-			"ALT": GEODETIC[2], # meters
-
-			"ENU_TO_FLU_XX": ENU_TO_FLU[0, 0], # nd
-			"ENU_TO_FLU_XY": ENU_TO_FLU[0, 1], # nd
-			"ENU_TO_FLU_XZ": ENU_TO_FLU[0, 2], # nd
-			"ENU_TO_FLU_YX": ENU_TO_FLU[1, 0], # nd
-			"ENU_TO_FLU_YY": ENU_TO_FLU[1, 1], # nd
-			"ENU_TO_FLU_YZ": ENU_TO_FLU[1, 2], # nd
-			"ENU_TO_FLU_ZX": ENU_TO_FLU[2, 0], # nd
-			"ENU_TO_FLU_ZY": ENU_TO_FLU[2, 1], # nd
-			"ENU_TO_FLU_ZZ": ENU_TO_FLU[2, 2], # nd
 			"ENUPOSX": ENUPOS[0], # m
 			"ENUPOSY": ENUPOS[1], # m
 			"ENUPOSZ": ENUPOS[2], # m
@@ -190,59 +143,6 @@ def construct_msl(
 			"ENUPHI": ENUEULER[0], # rad
 			"ENUTHT": ENUEULER[1], # rad
 			"ENUPSI": ENUEULER[2], # rad
-
-			"ECEFPOSY": ECEFPOS[0], # m
-			"ECEFPOSX": ECEFPOS[1], # m
-			"ECEFPOSZ": ECEFPOS[2], # m
-			"ECEFPOSY0": ECEFPOS0[0], # m
-			"ECEFPOSX0": ECEFPOS0[1], # m
-			"ECEFPOSZ0": ECEFPOS0[2], # m
-			"ECEF_TO_ENU_XX": ECEF_TO_ENU[0, 0], # nd
-			"ECEF_TO_ENU_XY": ECEF_TO_ENU[0, 1], # nd
-			"ECEF_TO_ENU_XZ": ECEF_TO_ENU[0, 2], # nd
-			"ECEF_TO_ENU_YX": ECEF_TO_ENU[1, 0], # nd
-			"ECEF_TO_ENU_YY": ECEF_TO_ENU[1, 1], # nd
-			"ECEF_TO_ENU_YZ": ECEF_TO_ENU[1, 2], # nd
-			"ECEF_TO_ENU_ZX": ECEF_TO_ENU[2, 0], # nd
-			"ECEF_TO_ENU_ZY": ECEF_TO_ENU[2, 1], # nd
-			"ECEF_TO_ENU_ZZ": ECEF_TO_ENU[2, 2], # nd
-			"ECEF_TO_FLU_XX": ECEF_TO_FLU[0, 0], # nd
-			"ECEF_TO_FLU_XY": ECEF_TO_FLU[0, 1], # nd
-			"ECEF_TO_FLU_XZ": ECEF_TO_FLU[0, 2], # nd
-			"ECEF_TO_FLU_YX": ECEF_TO_FLU[1, 0], # nd
-			"ECEF_TO_FLU_YY": ECEF_TO_FLU[1, 1], # nd
-			"ECEF_TO_FLU_YZ": ECEF_TO_FLU[1, 2], # nd
-			"ECEF_TO_FLU_ZX": ECEF_TO_FLU[2, 0], # nd
-			"ECEF_TO_FLU_ZY": ECEF_TO_FLU[2, 1], # nd
-			"ECEF_TO_FLU_ZZ": ECEF_TO_FLU[2, 2], # nd
-			"ECEFVELX": ECEFVEL[0], # m/s
-			"ECEFVELY": ECEFVEL[1], # m/s
-			"ECEFVELZ": ECEFVEL[2], # m/s
-
-			"ECIPOSX": ECIPOS[0], # m
-			"ECIPOSY": ECIPOS[1], # m
-			"ECIPOSZ": ECIPOS[2], # m
-			"ECI_TO_ECEF_XX": ECI_TO_ECEF[0, 0], # nd
-			"ECI_TO_ECEF_XY": ECI_TO_ECEF[0, 1], # nd
-			"ECI_TO_ECEF_XZ": ECI_TO_ECEF[0, 2], # nd
-			"ECI_TO_ECEF_YX": ECI_TO_ECEF[1, 0], # nd
-			"ECI_TO_ECEF_YY": ECI_TO_ECEF[1, 1], # nd
-			"ECI_TO_ECEF_YZ": ECI_TO_ECEF[1, 2], # nd
-			"ECI_TO_ECEF_ZX": ECI_TO_ECEF[2, 0], # nd
-			"ECI_TO_ECEF_ZY": ECI_TO_ECEF[2, 1], # nd
-			"ECI_TO_ECEF_ZZ": ECI_TO_ECEF[2, 2], # nd
-			"ECIVELX": ECIVEL[0], # m/s
-			"ECIVELY": ECIVEL[1], # m/s
-			"ECIVELZ": ECIVEL[2], # m/s
-			"ECI_TO_FLU_XX": ECI_TO_FLU[0, 0], # nd
-			"ECI_TO_FLU_XY": ECI_TO_FLU[0, 1], # nd
-			"ECI_TO_FLU_XZ": ECI_TO_FLU[0, 2], # nd
-			"ECI_TO_FLU_YX": ECI_TO_FLU[1, 0], # nd
-			"ECI_TO_FLU_YY": ECI_TO_FLU[1, 1], # nd
-			"ECI_TO_FLU_YZ": ECI_TO_FLU[1, 2], # nd
-			"ECI_TO_FLU_ZX": ECI_TO_FLU[2, 0], # nd
-			"ECI_TO_FLU_ZY": ECI_TO_FLU[2, 1], # nd
-			"ECI_TO_FLU_ZZ": ECI_TO_FLU[2, 2], # nd
 		}
 	}
 
@@ -302,25 +202,6 @@ def fly_msl(
 	SPEC_FORCE[1] = MSL["STATE"]["VDOT"] # m/s^2
 	SPEC_FORCE[2] = MSL["STATE"]["WDOT"] # m/s^2
 
-	GEODETIC0    = np.zeros(3) # lla
-	GEODETIC0[0] = MSL["STATE"]["LAT0"] # rad
-	GEODETIC0[1] = MSL["STATE"]["LON0"] # rad
-	GEODETIC0[2] = MSL["STATE"]["ALT0"] # m
-	GEODETIC     = np.zeros(3) # lla
-	GEODETIC[0]  = MSL["STATE"]["LAT"] # rad
-	GEODETIC[1]  = MSL["STATE"]["LON"] # rad
-	GEODETIC[2]  = MSL["STATE"]["ALT"] # m
-
-	ENU_TO_FLU       = np.zeros((3,3)) # nd
-	ENU_TO_FLU[0, 0] = MSL["STATE"]["ENU_TO_FLU_XX"] # nd
-	ENU_TO_FLU[0, 1] = MSL["STATE"]["ENU_TO_FLU_XY"] # nd
-	ENU_TO_FLU[0, 2] = MSL["STATE"]["ENU_TO_FLU_XZ"] # nd
-	ENU_TO_FLU[1, 0] = MSL["STATE"]["ENU_TO_FLU_YX"] # nd
-	ENU_TO_FLU[1, 1] = MSL["STATE"]["ENU_TO_FLU_YY"] # nd
-	ENU_TO_FLU[1, 2] = MSL["STATE"]["ENU_TO_FLU_YZ"] # nd
-	ENU_TO_FLU[2, 0] = MSL["STATE"]["ENU_TO_FLU_ZX"] # nd
-	ENU_TO_FLU[2, 1] = MSL["STATE"]["ENU_TO_FLU_ZY"] # nd
-	ENU_TO_FLU[2, 2] = MSL["STATE"]["ENU_TO_FLU_ZZ"] # nd
 	ENUPOS           = np.zeros(3) # m
 	ENUPOS[0]        = MSL["STATE"]["ENUPOSX"] # m
 	ENUPOS[1]        = MSL["STATE"]["ENUPOSY"] # m
@@ -333,68 +214,6 @@ def fly_msl(
 	ENUEULER[0]      = MSL["STATE"]["ENUPHI"] # rad
 	ENUEULER[1]      = MSL["STATE"]["ENUTHT"] # rad
 	ENUEULER[2]      = MSL["STATE"]["ENUPSI"] # rad
-
-	ECEFPOS           = np.zeros(3) # m
-	ECEFPOS[0]        = MSL["STATE"]["ECEFPOSX"] # m
-	ECEFPOS[1]        = MSL["STATE"]["ECEFPOSY"] # m
-	ECEFPOS[2]        = MSL["STATE"]["ECEFPOSZ"] # m
-	ECEFPOS0          = np.zeros(3) # m
-	ECEFPOS0[0]       = MSL["STATE"]["ECEFPOSX0"] # m
-	ECEFPOS0[1]       = MSL["STATE"]["ECEFPOSY0"] # m
-	ECEFPOS0[2]       = MSL["STATE"]["ECEFPOSZ0"] # m
-	ECEF_TO_ENU       = np.zeros((3,3)) # nd
-	ECEF_TO_ENU[0, 0] = MSL["STATE"]["ECEF_TO_ENU_XX"] # nd
-	ECEF_TO_ENU[0, 1] = MSL["STATE"]["ECEF_TO_ENU_XY"] # nd
-	ECEF_TO_ENU[0, 2] = MSL["STATE"]["ECEF_TO_ENU_XZ"] # nd
-	ECEF_TO_ENU[1, 0] = MSL["STATE"]["ECEF_TO_ENU_YX"] # nd
-	ECEF_TO_ENU[1, 1] = MSL["STATE"]["ECEF_TO_ENU_YY"] # nd
-	ECEF_TO_ENU[1, 2] = MSL["STATE"]["ECEF_TO_ENU_YZ"] # nd
-	ECEF_TO_ENU[2, 0] = MSL["STATE"]["ECEF_TO_ENU_ZX"] # nd
-	ECEF_TO_ENU[2, 1] = MSL["STATE"]["ECEF_TO_ENU_ZY"] # nd
-	ECEF_TO_ENU[2, 2] = MSL["STATE"]["ECEF_TO_ENU_ZZ"] # nd
-	ECEF_TO_FLU       = np.zeros((3,3)) # nd
-	ECEF_TO_FLU[0, 0] = MSL["STATE"]["ECEF_TO_FLU_XX"] # nd
-	ECEF_TO_FLU[0, 1] = MSL["STATE"]["ECEF_TO_FLU_XY"] # nd
-	ECEF_TO_FLU[0, 2] = MSL["STATE"]["ECEF_TO_FLU_XZ"] # nd
-	ECEF_TO_FLU[1, 0] = MSL["STATE"]["ECEF_TO_FLU_YX"] # nd
-	ECEF_TO_FLU[1, 1] = MSL["STATE"]["ECEF_TO_FLU_YY"] # nd
-	ECEF_TO_FLU[1, 2] = MSL["STATE"]["ECEF_TO_FLU_YZ"] # nd
-	ECEF_TO_FLU[2, 0] = MSL["STATE"]["ECEF_TO_FLU_ZX"] # nd
-	ECEF_TO_FLU[2, 1] = MSL["STATE"]["ECEF_TO_FLU_ZY"] # nd
-	ECEF_TO_FLU[2, 2] = MSL["STATE"]["ECEF_TO_FLU_ZZ"] # nd
-	ECEFVEL           = np.zeros(3) # m/s
-	ECEFVEL[0]        = MSL["STATE"]["ECEFVELX"] # m/s
-	ECEFVEL[1]        = MSL["STATE"]["ECEFVELY"] # m/s
-	ECEFVEL[2]        = MSL["STATE"]["ECEFVELZ"] # m/s
-
-	ECIPOS            = np.zeros(3) # m
-	ECIPOS[0]         = MSL["STATE"]["ECIPOSX"] # m
-	ECIPOS[1]         = MSL["STATE"]["ECIPOSY"] # m
-	ECIPOS[2]         = MSL["STATE"]["ECIPOSZ"] # m
-	ECI_TO_ECEF       = np.zeros((3, 3)) # nd
-	ECI_TO_ECEF[0, 0] = MSL["STATE"]["ECI_TO_ECEF_XX"] # nd
-	ECI_TO_ECEF[0, 1] = MSL["STATE"]["ECI_TO_ECEF_XY"] # nd
-	ECI_TO_ECEF[0, 2] = MSL["STATE"]["ECI_TO_ECEF_XZ"] # nd
-	ECI_TO_ECEF[1, 0] = MSL["STATE"]["ECI_TO_ECEF_YX"] # nd
-	ECI_TO_ECEF[1, 1] = MSL["STATE"]["ECI_TO_ECEF_YY"] # nd
-	ECI_TO_ECEF[1, 2] = MSL["STATE"]["ECI_TO_ECEF_YZ"] # nd
-	ECI_TO_ECEF[2, 0] = MSL["STATE"]["ECI_TO_ECEF_ZX"] # nd
-	ECI_TO_ECEF[2, 1] = MSL["STATE"]["ECI_TO_ECEF_ZY"] # nd
-	ECI_TO_ECEF[2, 2] = MSL["STATE"]["ECI_TO_ECEF_ZZ"] # nd
-	ECIVEL            = np.zeros(3) # m/s
-	ECIVEL[0]         = MSL["STATE"]["ECIVELX"] # m/s
-	ECIVEL[1]         = MSL["STATE"]["ECIVELY"] # m/s
-	ECIVEL[2]         = MSL["STATE"]["ECIVELZ"] # m/s
-	ECI_TO_FLU        = np.zeros((3, 3)) # nd
-	ECI_TO_FLU[0, 0]  = MSL["STATE"]["ECI_TO_FLU_XX"] # nd
-	ECI_TO_FLU[0, 1]  = MSL["STATE"]["ECI_TO_FLU_XY"] # nd
-	ECI_TO_FLU[0, 2]  = MSL["STATE"]["ECI_TO_FLU_XZ"] # nd
-	ECI_TO_FLU[1, 0]  = MSL["STATE"]["ECI_TO_FLU_YX"] # nd
-	ECI_TO_FLU[1, 1]  = MSL["STATE"]["ECI_TO_FLU_YY"] # nd
-	ECI_TO_FLU[1, 2]  = MSL["STATE"]["ECI_TO_FLU_YZ"] # nd
-	ECI_TO_FLU[2, 0]  = MSL["STATE"]["ECI_TO_FLU_ZX"] # nd
-	ECI_TO_FLU[2, 1]  = MSL["STATE"]["ECI_TO_FLU_ZY"] # nd
-	ECI_TO_FLU[2, 2]  = MSL["STATE"]["ECI_TO_FLU_ZZ"] # nd
 
 	# INTEGRATION STATE. ###########################################################
 	INTEGRATION_PASS = 0
@@ -474,22 +293,6 @@ def fly_msl(
 			"VDOT": SPEC_FORCE[1], # m/s^2
 			"WDOT": SPEC_FORCE[2], # m/s^2
 
-			"LAT0": GEODETIC0[0], # rad
-			"LON0": GEODETIC0[1], # rad
-			"ALT0": GEODETIC0[2], # meters
-			"LAT": GEODETIC[0], # rad
-			"LON": GEODETIC[1], # rad
-			"ALT": GEODETIC[2], # meters
-
-			"ENU_TO_FLU_XX": ENU_TO_FLU[0, 0], # nd
-			"ENU_TO_FLU_XY": ENU_TO_FLU[0, 1], # nd
-			"ENU_TO_FLU_XZ": ENU_TO_FLU[0, 2], # nd
-			"ENU_TO_FLU_YX": ENU_TO_FLU[1, 0], # nd
-			"ENU_TO_FLU_YY": ENU_TO_FLU[1, 1], # nd
-			"ENU_TO_FLU_YZ": ENU_TO_FLU[1, 2], # nd
-			"ENU_TO_FLU_ZX": ENU_TO_FLU[2, 0], # nd
-			"ENU_TO_FLU_ZY": ENU_TO_FLU[2, 1], # nd
-			"ENU_TO_FLU_ZZ": ENU_TO_FLU[2, 2], # nd
 			"ENUPOSX": ENUPOS[0], # m
 			"ENUPOSY": ENUPOS[1], # m
 			"ENUPOSZ": ENUPOS[2], # m
@@ -499,59 +302,6 @@ def fly_msl(
 			"ENUPHI": ENUEULER[0], # rad
 			"ENUTHT": ENUEULER[1], # rad
 			"ENUPSI": ENUEULER[2], # rad
-
-			"ECEFPOSY": ECEFPOS[0], # m
-			"ECEFPOSX": ECEFPOS[1], # m
-			"ECEFPOSZ": ECEFPOS[2], # m
-			"ECEFPOSY0": ECEFPOS0[0], # m
-			"ECEFPOSX0": ECEFPOS0[1], # m
-			"ECEFPOSZ0": ECEFPOS0[2], # m
-			"ECEF_TO_ENU_XX": ECEF_TO_ENU[0, 0], # nd
-			"ECEF_TO_ENU_XY": ECEF_TO_ENU[0, 1], # nd
-			"ECEF_TO_ENU_XZ": ECEF_TO_ENU[0, 2], # nd
-			"ECEF_TO_ENU_YX": ECEF_TO_ENU[1, 0], # nd
-			"ECEF_TO_ENU_YY": ECEF_TO_ENU[1, 1], # nd
-			"ECEF_TO_ENU_YZ": ECEF_TO_ENU[1, 2], # nd
-			"ECEF_TO_ENU_ZX": ECEF_TO_ENU[2, 0], # nd
-			"ECEF_TO_ENU_ZY": ECEF_TO_ENU[2, 1], # nd
-			"ECEF_TO_ENU_ZZ": ECEF_TO_ENU[2, 2], # nd
-			"ECEF_TO_FLU_XX": ECEF_TO_FLU[0, 0], # nd
-			"ECEF_TO_FLU_XY": ECEF_TO_FLU[0, 1], # nd
-			"ECEF_TO_FLU_XZ": ECEF_TO_FLU[0, 2], # nd
-			"ECEF_TO_FLU_YX": ECEF_TO_FLU[1, 0], # nd
-			"ECEF_TO_FLU_YY": ECEF_TO_FLU[1, 1], # nd
-			"ECEF_TO_FLU_YZ": ECEF_TO_FLU[1, 2], # nd
-			"ECEF_TO_FLU_ZX": ECEF_TO_FLU[2, 0], # nd
-			"ECEF_TO_FLU_ZY": ECEF_TO_FLU[2, 1], # nd
-			"ECEF_TO_FLU_ZZ": ECEF_TO_FLU[2, 2], # nd
-			"ECEFVELX": ECEFVEL[0], # m/s
-			"ECEFVELY": ECEFVEL[1], # m/s
-			"ECEFVELZ": ECEFVEL[2], # m/s
-
-			"ECIPOSX": ECIPOS[0], # m
-			"ECIPOSY": ECIPOS[1], # m
-			"ECIPOSZ": ECIPOS[2], # m
-			"ECI_TO_ECEF_XX": ECI_TO_ECEF[0, 0], # nd
-			"ECI_TO_ECEF_XY": ECI_TO_ECEF[0, 1], # nd
-			"ECI_TO_ECEF_XZ": ECI_TO_ECEF[0, 2], # nd
-			"ECI_TO_ECEF_YX": ECI_TO_ECEF[1, 0], # nd
-			"ECI_TO_ECEF_YY": ECI_TO_ECEF[1, 1], # nd
-			"ECI_TO_ECEF_YZ": ECI_TO_ECEF[1, 2], # nd
-			"ECI_TO_ECEF_ZX": ECI_TO_ECEF[2, 0], # nd
-			"ECI_TO_ECEF_ZY": ECI_TO_ECEF[2, 1], # nd
-			"ECI_TO_ECEF_ZZ": ECI_TO_ECEF[2, 2], # nd
-			"ECIVELX": ECIVEL[0], # m/s
-			"ECIVELY": ECIVEL[1], # m/s
-			"ECIVELZ": ECIVEL[2], # m/s
-			"ECI_TO_FLU_XX": ECI_TO_FLU[0, 0], # nd
-			"ECI_TO_FLU_XY": ECI_TO_FLU[0, 1], # nd
-			"ECI_TO_FLU_XZ": ECI_TO_FLU[0, 2], # nd
-			"ECI_TO_FLU_YX": ECI_TO_FLU[1, 0], # nd
-			"ECI_TO_FLU_YY": ECI_TO_FLU[1, 1], # nd
-			"ECI_TO_FLU_YZ": ECI_TO_FLU[1, 2], # nd
-			"ECI_TO_FLU_ZX": ECI_TO_FLU[2, 0], # nd
-			"ECI_TO_FLU_ZY": ECI_TO_FLU[2, 1], # nd
-			"ECI_TO_FLU_ZZ": ECI_TO_FLU[2, 2], # nd
 		}
 		return STATE
 
@@ -636,10 +386,6 @@ def fly_msl(
 		SPEC_FORCE[0] = THRUST / MASS # m/s^2
 		SPEC_FORCE[1] = (Q * REF_AREA * CY) / MASS # m/s^2
 		SPEC_FORCE[2] = (Q * REF_AREA * CZ) / MASS # m/s^2
-
-		GEOCENTRICGRAV = et.GEOCENTRIC_GRAV(ECIPOS, TOF)
-		GEOC_LLA_TO_ECI_TM = et.GEOC_LLA_TO_ECI_TM(GEODETIC, TOF)
-		ECIGRAV = GEOC_LLA_TO_ECI_TM.transpose() @ GEOCENTRICGRAV
 
 		LOCAL_G       = npa([0.0, 0.0, -1.0 * G]) # m/s^2
 		BODY_G        = ENU_TO_FLU @ LOCAL_G # m/s^2
