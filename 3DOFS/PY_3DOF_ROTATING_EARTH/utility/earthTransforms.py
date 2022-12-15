@@ -100,7 +100,7 @@ def LLA_TO_ECI(LLA, TIME):
 
 # Takes geodetic LLA as an input.
 # Returns the TM of geographic (geocentric) with respect to inertial frame.
-def LLA_TO_ECI_TM(LLA, TIME):
+def GEOC_LLA_TO_ECI_TM(GEOD_LLA, TIME):
 	
 	GW_CLONG = 0.0 # Greenwich celestial longitude at start of flight. Radians.
 	WEII3 = 7.292115e-5 # Rotation speed of earth. Radians per second.
@@ -111,10 +111,10 @@ def LLA_TO_ECI_TM(LLA, TIME):
 	TGD = np.zeros((3, 3))
 	TGI = np.zeros((3, 3))
 
-	LON_CEL = GW_CLONG + WEII3 * TIME + LLA[1]
+	LON_CEL = GW_CLONG + WEII3 * TIME + GEOD_LLA[1]
 
-	TDI13 = np.cos(LLA[0])
-	TDI33 = -1.0 * np.sin(LLA[0])
+	TDI13 = np.cos(GEOD_LLA[0])
+	TDI33 = -1.0 * np.sin(GEOD_LLA[0])
 	TDI22 = np.cos(LON_CEL)
 	TDI21 = -1.0 * np.sin(LON_CEL)
 
@@ -130,10 +130,10 @@ def LLA_TO_ECI_TM(LLA, TIME):
 	R0 = SMAJOR_AXIS * \
 		(
 			1.0 - \
-			(FLATTENING * (1.0 - np.cos(2.0 * LLA[0])) / 2.0) + \
-			(5.0 * (FLATTENING ** 2) * (1.0 - np.cos(4 * LLA[0])) / 16.0)
+			(FLATTENING * (1.0 - np.cos(2.0 * GEOD_LLA[0])) / 2.0) + \
+			(5.0 * (FLATTENING ** 2) * (1.0 - np.cos(4 * GEOD_LLA[0])) / 16.0)
 		)
-	DD = FLATTENING * np.sin(2 * LLA[0]) * (1.0 - FLATTENING / 2.0 - LLA[2] / R0)
+	DD = FLATTENING * np.sin(2 * GEOD_LLA[0]) * (1.0 - FLATTENING / 2.0 - GEOD_LLA[2] / R0)
 
 	# TM of geocentric with respect to geodetic coordinates.
 	COSDD = np.cos(DD)
