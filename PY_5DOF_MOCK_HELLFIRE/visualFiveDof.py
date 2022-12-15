@@ -58,7 +58,7 @@ pitch.set_xlabel("TOF")
 pitch.plot(df.iloc[startIndex:stopIndex]["TOF"], df.iloc[startIndex:stopIndex]["ALPHA"] * RAD_TO_DEG, label="ALPHA - DEG", color=colors.pop(0))
 pitch.plot(df.iloc[startIndex:stopIndex]["TOF"], df.iloc[startIndex:stopIndex]["ENUTHT"] * RAD_TO_DEG, label="THETA - DEG", color=colors.pop(0))
 pitch.plot(df.iloc[startIndex:stopIndex]["TOF"], df.iloc[startIndex:stopIndex]["QRATE"] * RAD_TO_DEG, label="THETA DOT - DEG", color=colors.pop(0))
-pitch.plot(df.iloc[startIndex:stopIndex]["TOF"], df.iloc[startIndex:stopIndex]["WDOT_0"], label="NORMAL ACC - M/S^2", color=colors.pop(0))
+pitch.plot(df.iloc[startIndex:stopIndex]["TOF"], df.iloc[startIndex:stopIndex]["WDOT"], label="NORMAL ACC - M/S^2", color=colors.pop(0))
 pitch.legend(fontsize="small")
 
 # Yaw.
@@ -68,7 +68,7 @@ yaw.set_xlabel("TOF")
 yaw.plot(df.iloc[startIndex:stopIndex]["TOF"], df.iloc[startIndex:stopIndex]["SIDESLIP"] * RAD_TO_DEG, label="SIDESLIP - DEG", color=colors.pop(0))
 yaw.plot(df.iloc[startIndex:stopIndex]["TOF"], df.iloc[startIndex:stopIndex]["ENUPSI"] * RAD_TO_DEG, label="PSI - DEG", color=colors.pop(0))
 yaw.plot(df.iloc[startIndex:stopIndex]["TOF"], df.iloc[startIndex:stopIndex]["RRATE"] * RAD_TO_DEG, label="PSI DOT - DEG", color=colors.pop(0))
-yaw.plot(df.iloc[startIndex:stopIndex]["TOF"], df.iloc[startIndex:stopIndex]["VDOT_0"], label="SIDE ACC - M/S^2", color=colors.pop(0))
+yaw.plot(df.iloc[startIndex:stopIndex]["TOF"], df.iloc[startIndex:stopIndex]["VDOT"], label="SIDE ACC - M/S^2", color=colors.pop(0))
 yaw.legend(fontsize="small")
 
 # Fins

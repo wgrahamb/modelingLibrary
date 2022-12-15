@@ -637,6 +637,10 @@ def fly_msl(
 		SPEC_FORCE[1] = (Q * REF_AREA * CY) / MASS # m/s^2
 		SPEC_FORCE[2] = (Q * REF_AREA * CZ) / MASS # m/s^2
 
+		GEOCENTRICGRAV = et.GEOCENTRIC_GRAV(ECIPOS, TOF)
+		GEOC_LLA_TO_ECI_TM = et.GEOC_LLA_TO_ECI_TM(GEODETIC, TOF)
+		ECIGRAV = GEOC_LLA_TO_ECI_TM.transpose() @ GEOCENTRICGRAV
+
 		LOCAL_G       = npa([0.0, 0.0, -1.0 * G]) # m/s^2
 		BODY_G        = ENU_TO_FLU @ LOCAL_G # m/s^2
 		SPEC_FORCE    += (BODY_G + BODY_DRAG) # m/s^2

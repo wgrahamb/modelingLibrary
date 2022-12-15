@@ -41,12 +41,12 @@ if __name__ == "__main__":
 	MANEUVER2         = 30 # Seconds.
 	PITCH_FIN_COMMAND = None
 	YAW_FIN_COMMAND   = None
-	PITCHCOMMAND1     = -8 # Degrees.
+	PITCHCOMMAND1     = 0 # Degrees.
 	YAWCOMMAND1       = 0 # Degrees.
 	PITCHCOMMAND2     = 0 # Degrees.
 	YAWCOMMAND2       = 0 # Degrees.
 	PITCHCOMMAND3     = 0 # Degrees.
-	YAWCOMMAND3       = -3 # Degrees.
+	YAWCOMMAND3       = 0 # Degrees.
 
 	LAST_TIME = int(0)
 	while MSL["LETHALITY"] == endChecks.FLIGHT or MSL["LETHALITY"] == endChecks.TIME:

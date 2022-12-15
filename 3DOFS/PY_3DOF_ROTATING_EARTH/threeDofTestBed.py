@@ -178,9 +178,6 @@ class threeDofSim:
 
 	def ECIDerivative(self):
 
-		# Rotation rate of earth.
-		OMEGA = npa([0.0, 0.0, WEII3])
-
 		# Eci gravity.
 		GEOCENTRICGRAV = et.GEOCENTRIC_GRAV(self.ECIPOS, self.TOF)
 		GEOC_LLA_TO_ECI_TM = et.GEOC_LLA_TO_ECI_TM(self.GEODETIC, self.TOF)
