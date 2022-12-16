@@ -23,8 +23,11 @@ To Do:
 - CPP_6DOF_SAM
      - Start project. Reuse as much Zipfel code as possible.
 - PY_5DOF_MOCK_HELLFIRE
-     - Rotating elliptical earth. Check equations, specifically geodetic
-     vs geocentric. Only affected in the gravity calculation.
+     - Add earth centered earth fixed frame along with geodetic lla. With the way
+     the five dof is arranged, earth centered inertial frame does not work. Because
+     the earth is rotating underneath the rotating frame, and the enu frame is
+     dependent on the ecef frame, it creates a roll angle. This messes up the five 
+     dof.
      - Directly integrating rates into euler angles, switch to quaternions.
      - Line of attack into pronav.
      - Proportional controller, if not working well, rate controller.
