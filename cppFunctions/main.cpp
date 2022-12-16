@@ -31,19 +31,20 @@ using namespace std;
 int main()
 {
 
-    class x
-    {
-    public:
-        x() {};
-        double arr[3] = {0.0, 0.0, 0.0};
-    };
+    Matrix ecef(3, 1);
+    double lat;
+    double lon;
+    double alt;
 
-    x one = x{};
-    consolePrintArray("one", one.arr);
+    ecef.assign_loc(0, 0, 1113739.6669);
+    ecef.assign_loc(1, 0, 4845855.8020);
+    ecef.assign_loc(2, 0, 3981710.342);
 
-    x two = one;
-    two.arr[0] = 1.0;
-    consolePrintArray("two", two.arr);
+    cad_geo84_in(lat, lon, alt, ecef, 0.0);
+
+    cout << lat << "\n";
+    cout << lon << "\n";
+    cout << alt << "\n";
 
     return 0;
 

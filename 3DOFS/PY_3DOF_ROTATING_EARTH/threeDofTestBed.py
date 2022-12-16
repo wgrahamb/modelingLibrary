@@ -325,7 +325,7 @@ if __name__ == "__main__":
 
 	y = threeDofSim(
 		ID = "RUN_TWO",
-		INPUT_ENU_VEL=npa([100.0, -1000.0, 300.0]),
+		INPUT_ENU_VEL=npa([100.0, -100.0, 300.0]),
 		INPUT_LLA0=npa([38.8719, 77.0563, 0.0])
 	)
 	y.main()

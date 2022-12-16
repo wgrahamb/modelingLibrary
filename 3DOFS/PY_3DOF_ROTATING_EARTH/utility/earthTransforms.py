@@ -183,7 +183,7 @@ def ECEF_DISPLACEMENT_TO_ENU(RELPOS, LAT0, LON0):
 	return ENU
 
 # Spherical earth only (geocentric latitude).
-def LLA_TO_ECEF(LLA): # Lat - Rads, Lon - Rads, Alt - Meters.
+def GEOC_LLA_TO_ECEF(LLA): # Lat - Rads, Lon - Rads, Alt - Meters.
 
 	REARTH    = 6370987.308 # Meters.
 	ECEF      = np.zeros(3)

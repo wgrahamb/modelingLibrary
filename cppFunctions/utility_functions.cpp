@@ -1521,7 +1521,7 @@ Matrix cad_in_geo84(const double lon,const double lat,const double alt
           SBID.assign_loc(2,0,-dbi*cos(dd));
 
           //celestial longitude of vehicle at simulation 'time' 
-         double lon_cel=GW_CLONG+WEII3*time+lon;
+          double lon_cel=GW_CLONG+WEII3*time+lon;
           
           //vehicle's displacement vector in inertial coord. SBII(3x1)=TID(3x3)xSBID(3x3)
           double slat=sin(lat);

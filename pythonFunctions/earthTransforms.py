@@ -1,16 +1,21 @@
 import numpy as np
 from numpy import linalg as la
 from numpy import array as npa
+import pymap3d
 
 # CONSTANTS.
-WEII3 = 7.292115e-5 # Rotation speed of earth. Radians per second.
-REARTH = 6370987.308 # Meters.
-SMALL = 9.999999999999999547e-08
-DEG_TO_RAD = 0.01745329251994319833
+WEII3       = 7.292115e-5 # Rotation speed of earth. Radians per second.
+REARTH      = 6370987.308 # Meters.
+SMALL       = 9.999999999999999547e-08
+DEG_TO_RAD  = 0.01745329251994319833
+RAD_TO_DEG  = 1.0 / DEG_TO_RAD
+SMAJOR_AXIS = 6378137.0 # Meters.
+FLATTENING  = 0.00333528106000000003
+GM          = 398600440000000.0
+C20         = -1.0 * 0.0004841668499999999772
 
 def ECI_TO_ECEF_TM(TIME): # Seconds from launch.
 	GW_CLONG = 0.0 # Greenwich celestial longitude at start of flight. Radians.
-	WEII3 = 7.292115e-5 # Rotation speed of earth. Radians per second.
 	TEI = np.eye(3) # TM
 	XI = WEII3 * TIME + GW_CLONG
 	SXI = np.sin(XI)
@@ -21,12 +26,16 @@ def ECI_TO_ECEF_TM(TIME): # Seconds from launch.
 	TEI[1, 1] = CXI
 	return TEI
 
-def ECI_TO_LLA(ECIPOS, TIME): # Inertial Pos - Meters, Time - Seconds from launch.
+def ECI_TO_LLA(
+	ECIPOS, 
+	TIME: float = None
+): # Inertial Pos - Meters, Time - Seconds from launch.
+
+	if TIME == None:
+		TIME = 0.0
+
 	LLAREF = np.zeros(3)
 	GW_CLONG = 0.0 # Greenwich celestial longitude at start of flight. Radians.
-	WEII3 = 7.292115e-5 # Rotation speed of earth. Radians per second.
-	SMAJOR_AXIS = 6378137.0 # Meters.
-	FLATTENING = 0.00333528106000000003
 	COUNT = 0
 	LAT0 = 0.0
 	ALAMDA = 0.0
@@ -68,11 +77,15 @@ def ECI_TO_LLA(ECIPOS, TIME): # Inertial Pos - Meters, Time - Seconds from launc
 		LLAREF[1] = TEMP
 	return LLAREF
 
-def LLA_TO_ECI(LLA, TIME):
+def LLA_TO_ECI(
+	LLA,
+	TIME: float = None
+):
+
+	if TIME == None:
+		TIME = 0.0
+
 	GW_CLONG = 0.0 # Greenwich celestial longitude at start of flight. Radians.
-	WEII3 = 7.292115e-5 # Rotation speed of earth. Radians per second.
-	SMAJOR_AXIS = 6378137.0 # Meters.
-	FLATTENING = 0.00333528106000000003
 	SBII = np.zeros(3)
 	SBID = np.zeros(3)
 	R0 = SMAJOR_AXIS * \
@@ -97,11 +110,8 @@ def LLA_TO_ECI(LLA, TIME):
 	return SBII
 
 def GEOC_LLA_TO_ECI_TM(LLA, TIME):
-	
+
 	GW_CLONG = 0.0 # Greenwich celestial longitude at start of flight. Radians.
-	WEII3 = 7.292115e-5 # Rotation speed of earth. Radians per second.
-	SMAJOR_AXIS = 6378137.0 # Meters.
-	FLATTENING = 0.00333528106000000003
 
 	TDI = np.zeros((3, 3))
 	TGD = np.zeros((3, 3))
@@ -145,9 +155,6 @@ def GEOC_LLA_TO_ECI_TM(LLA, TIME):
 	return TGI
 	
 def GEOCENTRIC_GRAV(ECIPOS, TIME):
-	GM = 398600440000000.0
-	SMAJOR_AXIS = 6378137.0 # Meters.
-	C20 = -1.0 * 0.0004841668499999999772
 	ECIGRAV = np.zeros(3)
 	LLAREF = ECI_TO_LLA(ECIPOS, TIME)
 	DBI = la.norm(ECIPOS)
@@ -182,10 +189,17 @@ def ECEF_DISPLACEMENT_TO_ENU(RELPOS, LAT0, LON0):
 	ENU = npa([E, N, U])
 	return ENU
 
-# Spherical earth only (geocentric latitude).
-def LLA_TO_ECEF(LLA): # Lat - Rads, Lon - Rads, Alt - Meters.
+"""
+https://www.oc.nps.edu/oc2902w/coord/coordcvt.pdf
+https://www.mathworks.com/help/aeroblks/geodetictogeocentriclatitude.html
+https://www.mathworks.com/help/aeroblks/geocentrictogeodeticlatitude.html
+https://www.unoosa.org/pdf/icg/2012/template/WGS_84.pdf
 
-	REARTH    = 6370987.308 # Meters.
+"""
+
+# Spherical earth only (geocentric latitude).
+def GEOC_LLA_TO_ECEF(LLA): # Lat - Rads, Lon - Rads, Alt - Meters.
+
 	ECEF      = np.zeros(3)
 	RADIUS    = -1.0 * (LLA[2] + REARTH)
 
@@ -207,3 +221,59 @@ def LLA_TO_ECEF(LLA): # Lat - Rads, Lon - Rads, Alt - Meters.
 	ECEF      = TGE.transpose() @ npa([0.0, 0.0, RADIUS])
 
 	return ECEF
+
+if __name__ == "__main__":
+
+	lla = npa([np.radians(38.8719), np.radians(77.0563), 0.0])
+
+	one = pymap3d.geodetic2ecef(np.degrees(lla[0]), np.degrees(lla[1]), lla[2])
+
+	two = LLA_TO_ECI(lla)
+
+	print(f"PYMAP3D X: {one[0]:.4f}; ZIPFEL X: {two[0]:.4f}; DIFF: {(np.abs(one[0]-two[0])):.4f}")
+	print(f"PYMAP3D Y: {one[1]:.4f}; ZIPFEL Y: {two[1]:.4f}; DIFF: {(np.abs(one[1]-two[1])):.4f}")
+	print(f"PYMAP3D Z: {one[2]:.4f}; ZIPFEL Z: {two[2]:.4f}; DIFF: {(np.abs(one[2]-two[2])):.4f}")
+
+	ecef = npa([1113739.6669, 4845855.8020, 3981410.342])
+
+	three = pymap3d.ecef2geodetic(ecef[0], ecef[1], ecef[2])
+
+	four = ECI_TO_LLA(ecef)
+	four[1] *= RAD_TO_DEG
+	four[0] *= RAD_TO_DEG
+
+	print()
+	print(f"PYMAP3D LAT: {three[0]:.4f}; ZIPFEL LAT: {four[0]:.4f}; DIFF: {(np.abs(three[0]-four[0])):.4f}")
+	print(f"PYMAP3D LON: {three[1]:.4f}; ZIPFEL LON: {four[1]:.4f}; DIFF: {(np.abs(three[1]-four[1])):.4f}")
+	print(f"PYMAP3D ALT: {three[2]:.4f}; ZIPFEL ALT: {four[2]:.4f}; DIFF: {(np.abs(three[2]-four[2])):.4f}")
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
