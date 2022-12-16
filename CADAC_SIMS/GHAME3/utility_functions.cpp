@@ -1207,23 +1207,28 @@ Matrix cadsph(Matrix SBIE)
 	{
 		alamda=dum4;		   //quadrant I
 	}
+
 	if((x<0)&&(y>=0))
 	{
 		alamda=180*RAD-dum4;   //quadrant II
 	}
+
 	if((x<0)&&(y<0))
 	{
 		alamda=180*RAD-dum4;  //quadrant III
 	}
+
 	if((x>=0)&&(y<0))
 	{
 		alamda=360*RAD+dum4;  //quadrant IV
 	}
+
 	lon=alamda;
 	if(lon>180*RAD)
 	{
 		lon= -(360*RAD-lon);  //east positive, west negative
 	}
+
 	RESULT.assign_loc(0,0,lon);
 	RESULT.assign_loc(1,0,lat);
 	RESULT.assign_loc(2,0,alt);
