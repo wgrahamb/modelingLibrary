@@ -96,7 +96,7 @@ def LLA_TO_ECI(LLA, TIME):
 	SBII[2] = CLAT * SBID[0] - SLAT * SBID[2]
 	return SBII
 
-def LLA_TO_ECI_TM(LLA, TIME):
+def GEOC_LLA_TO_ECI_TM(LLA, TIME):
 	
 	GW_CLONG = 0.0 # Greenwich celestial longitude at start of flight. Radians.
 	WEII3 = 7.292115e-5 # Rotation speed of earth. Radians per second.
@@ -159,6 +159,21 @@ def GEOCENTRIC_GRAV(ECIPOS, TIME):
 	ECIGRAV[2] = DUM1 * (1.0 + (DUM2 / 2.0) * C20 * DUM3 * (3 * (np.sin(LLAREF[0] ** 2)) - 1.0))
 	return ECIGRAV
 
+def EULER_FROM_DCM(TM):
+	EULER = np.zeros(3)
+	R31 = TM[0, 2]
+	THETA = np.arcsin(R31)
+	R32 = TM[1, 2]
+	R33 = TM[2, 2]
+	PHI = np.arctan2((R32 / np.cos(THETA)), (R33 / np.cos(THETA)))
+	R21 = TM[0, 1]
+	R11 = TM[0, 0]
+	PSI = np.arctan2((R21 / np.cos(THETA)), (R11 / np.cos(THETA)))
+	EULER[0] = PHI
+	EULER[1] = THETA
+	EULER[2] = PSI
+	return EULER
+
 def ECEF_DISPLACEMENT_TO_ENU(RELPOS, LAT0, LON0):
 	TEMP = np.cos(LON0) * RELPOS[0] + np.sin(LON0) * RELPOS[1]
 	E = -1.0 * np.sin(LON0) * RELPOS[0] + np.cos(LON0) * RELPOS[1]
@@ -167,15 +182,18 @@ def ECEF_DISPLACEMENT_TO_ENU(RELPOS, LAT0, LON0):
 	ENU = npa([E, N, U])
 	return ENU
 
+# Spherical earth only (geocentric latitude).
 def LLA_TO_ECEF(LLA): # Lat - Rads, Lon - Rads, Alt - Meters.
-	REARTH = 6370987.308 # Meters.
-	ECEF = np.zeros(3)
-	RADIUS = -1.0 * (LLA[2] + REARTH)
-	TGE = np.zeros((3, 3))
-	CLON = np.cos(LLA[1])
-	SLON = np.sin(LLA[1])
-	CLAT = np.cos(LLA[0])
-	SLAT = np.sin(LLA[0])
+
+	REARTH    = 6370987.308 # Meters.
+	ECEF      = np.zeros(3)
+	RADIUS    = -1.0 * (LLA[2] + REARTH)
+
+	TGE       = np.zeros((3, 3))
+	CLON      = np.cos(LLA[1])
+	SLON      = np.sin(LLA[1])
+	CLAT      = np.cos(LLA[0])
+	SLAT      = np.sin(LLA[0])
 	TGE[0, 0] = -1.0 * SLAT * CLON
 	TGE[0, 1] = -1.0 * SLAT * SLON
 	TGE[0, 2] = CLAT
@@ -185,5 +203,7 @@ def LLA_TO_ECEF(LLA): # Lat - Rads, Lon - Rads, Alt - Meters.
 	TGE[2, 0] = -1.0 * CLAT * CLON
 	TGE[2, 1] = -1.0 * CLAT * SLON
 	TGE[2, 2] = -1.0 * SLAT
-	ECEF = TGE.transpose() @ npa([0.0, 0.0, RADIUS])
+
+	ECEF      = TGE.transpose() @ npa([0.0, 0.0, RADIUS])
+
 	return ECEF

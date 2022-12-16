@@ -7,7 +7,9 @@ import matplotlib.pyplot as plt
 import numpy as np
 from numpy import array as npa
 from numpy import linalg as la
-import pandas as pd
+import matplotlib.pyplot as plt
+import matplotlib
+matplotlib.use("WebAgg")
 
 # GRAHAM'S FUNCTIONS
 from coordinateTransformations import FLIGHTPATH_TO_LOCAL_TM
@@ -56,17 +58,17 @@ class threeDofSim:
 		# SIM CONTROL
 		self.wallClockStart = time.time()
 		self.go = True
-		self.timeStep = 0.001 # SECONDS
-		self.maxTime = 40 # SECONDS
+		self.timeStep = 0.01 # SECONDS
+		self.maxTime = 400 # SECONDS
 		
 		# PREDICTED INTERCEPT POINT
-		self.pip = npa([3000.0, 0.0, 3000.0]) # METERS
+		self.pip = npa([30000.0, 0.0, 30000.0]) # METERS
 
 		# MISSILE
 		self.mslTof = 0.0 # SECONDS
 		self.lethality = endChecks.flying # ND
 		self.mslPos = np.zeros(3) # METERS
-		self.mslVel = npa([200.0, 0.0, 200.0]) # METERS PER SECOND
+		self.mslVel = npa([100.0, 1000.0, 300.0]) # METERS PER SECOND
 		mslAz, mslEl = returnAzAndElevation(self.mslVel) # RADIANS
 		self.mslLocalOrient = FLIGHTPATH_TO_LOCAL_TM(mslAz, -mslEl) # ND
 		self.mslBodyVel = self.mslLocalOrient @ self.mslVel # METERS PER SECOND
@@ -75,6 +77,9 @@ class threeDofSim:
 		self.sideCommand = 0.0 # METERS PER SECOND^2
 		self.mslAcc = np.zeros(3) # METERS PER SECOND^2
 		self.mslBodyAcc = np.zeros(3) # METERS PER SECOND^2
+
+		# DATA
+		self.data = {"E": [], "N": [], "U": [], "T_E": [], "T_N": [], "T_U": []}
 
 	def timeOfFlight(self):
 		self.mslTof += self.timeStep
@@ -88,13 +93,13 @@ class threeDofSim:
 		TEMP1 = np.cross(self.forwardLeftUpMslToInterceptRelPos, closingVel)
 		TEMP2 = np.dot( self.forwardLeftUpMslToInterceptRelPos, self.forwardLeftUpMslToInterceptRelPos)
 		lineOfSightRate = TEMP1 / TEMP2 # RADIANS PER SECOND
-		command = np.cross(-1 * 4 * closingVelMag * forwardLeftUpMslToInterceptRelPosU, lineOfSightRate) # METERS PER SECOND^2
+		command = np.cross(-1 * 6 * closingVelMag * forwardLeftUpMslToInterceptRelPosU, lineOfSightRate) # METERS PER SECOND^2
 		self.normCommand = command[2] # METERS PER SECOND^2
 		self.sideCommand = command[1] # METERS PER SECOND^2
 		accMag = la.norm(npa([self.sideCommand, self.normCommand])) # METER PER SECOND^2
 		trigonometricRatio = np.arctan2(self.normCommand, self.sideCommand) # ND
-		if accMag > 50:
-			accMag = 50# METERS PER SECOND^2
+		if accMag > 1000:
+			accMag = 1000 # METERS PER SECOND^2
 		self.sideCommand = accMag * np.cos(trigonometricRatio) # METERS PER SECOND^2
 		self.normCommand = accMag * np.sin(trigonometricRatio) # METERS PER SECOND^2
 
@@ -140,6 +145,13 @@ class threeDofSim:
 		self.intercept()
 		self.endCheck()
 
+		self.data["E"].append(self.mslPos[0])
+		self.data["N"].append(self.mslPos[1])
+		self.data["U"].append(self.mslPos[2])
+		self.data["T_E"].append(self.pip[0])
+		self.data["T_N"].append(self.pip[1])
+		self.data["T_U"].append(self.pip[2])
+
 	def main(self):
 		while self.go:
 			self.fly()
@@ -149,6 +161,12 @@ class threeDofSim:
 		print(f"TIME {self.mslTof:.3f} : EAST {self.mslPos[0]:.2f}, NORTH {self.mslPos[1]:.2f}, UP {self.mslPos[2]:.2f}, BODY ACC {self.mslBodyAcc}")
 		print(f"SIMULATION RESULT : {self.lethality.name}, MISS DISTANCE : {self.missDistance:.4f} {self.forwardLeftUpMslToInterceptRelPos} METERS")
 		print(f"SIMULATION RUN TIME : {wallClockEnd - self.wallClockStart} SECONDS")
+
+		fig = plt.figure()
+		ax  = fig.add_subplot(111, projection="3d")
+		ax.plot(self.data["E"], self.data["N"], self.data["U"])
+		ax.scatter(self.data["T_E"][-1], self.data["T_N"][-1], self.data["T_U"][-1])
+		plt.show()
 
 
 

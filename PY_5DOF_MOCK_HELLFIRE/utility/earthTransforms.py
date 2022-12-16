@@ -1,5 +1,6 @@
 import numpy as np
 from numpy import linalg as la
+from numpy import array as npa
 
 # CONSTANTS.
 WEII3 = 7.292115e-5 # Rotation speed of earth. Radians per second.
@@ -7,7 +8,6 @@ REARTH = 6370987.308 # Meters.
 SMALL = 9.999999999999999547e-08
 DEG_TO_RAD = 0.01745329251994319833
 
-# TM of inertial earth frame to fixed earth frame.
 def ECI_TO_ECEF_TM(TIME): # Seconds from launch.
 	GW_CLONG = 0.0 # Greenwich celestial longitude at start of flight. Radians.
 	WEII3 = 7.292115e-5 # Rotation speed of earth. Radians per second.
@@ -21,7 +21,6 @@ def ECI_TO_ECEF_TM(TIME): # Seconds from launch.
 	TEI[1, 1] = CXI
 	return TEI
 
-# Takes inertial coordinates and system time as an input and returns geodetic LLA.
 def ECI_TO_LLA(ECIPOS, TIME): # Inertial Pos - Meters, Time - Seconds from launch.
 	LLAREF = np.zeros(3)
 	GW_CLONG = 0.0 # Greenwich celestial longitude at start of flight. Radians.
@@ -69,7 +68,6 @@ def ECI_TO_LLA(ECIPOS, TIME): # Inertial Pos - Meters, Time - Seconds from launc
 		LLAREF[1] = TEMP
 	return LLAREF
 
-# Takes geodetic LLA as an input and returns inertial coordinates.
 def LLA_TO_ECI(LLA, TIME):
 	GW_CLONG = 0.0 # Greenwich celestial longitude at start of flight. Radians.
 	WEII3 = 7.292115e-5 # Rotation speed of earth. Radians per second.
@@ -98,9 +96,7 @@ def LLA_TO_ECI(LLA, TIME):
 	SBII[2] = CLAT * SBID[0] - SLAT * SBID[2]
 	return SBII
 
-# Takes geodetic LLA as an input.
-# Returns the TM of geographic (geocentric) with respect to inertial frame.
-def GEOC_LLA_TO_ECI_TM(GEOD_LLA, TIME):
+def GEOC_LLA_TO_ECI_TM(LLA, TIME):
 	
 	GW_CLONG = 0.0 # Greenwich celestial longitude at start of flight. Radians.
 	WEII3 = 7.292115e-5 # Rotation speed of earth. Radians per second.
@@ -111,10 +107,10 @@ def GEOC_LLA_TO_ECI_TM(GEOD_LLA, TIME):
 	TGD = np.zeros((3, 3))
 	TGI = np.zeros((3, 3))
 
-	LON_CEL = GW_CLONG + WEII3 * TIME + GEOD_LLA[1]
+	LON_CEL = GW_CLONG + WEII3 * TIME + LLA[1]
 
-	TDI13 = np.cos(GEOD_LLA[0])
-	TDI33 = -1.0 * np.sin(GEOD_LLA[0])
+	TDI13 = np.cos(LLA[0])
+	TDI33 = -1.0 * np.sin(LLA[0])
 	TDI22 = np.cos(LON_CEL)
 	TDI21 = -1.0 * np.sin(LON_CEL)
 
@@ -130,14 +126,14 @@ def GEOC_LLA_TO_ECI_TM(GEOD_LLA, TIME):
 	R0 = SMAJOR_AXIS * \
 		(
 			1.0 - \
-			(FLATTENING * (1.0 - np.cos(2.0 * GEOD_LLA[0])) / 2.0) + \
-			(5.0 * (FLATTENING ** 2) * (1.0 - np.cos(4 * GEOD_LLA[0])) / 16.0)
+			(FLATTENING * (1.0 - np.cos(2.0 * LLA[0])) / 2.0) + \
+			(5.0 * (FLATTENING ** 2) * (1.0 - np.cos(4 * LLA[0])) / 16.0)
 		)
-	DD = FLATTENING * np.sin(2 * GEOD_LLA[0]) * (1.0 - FLATTENING / 2.0 - GEOD_LLA[2] / R0)
+	DD = FLATTENING * np.sin(2 * LLA[0]) * (1.0 - FLATTENING / 2.0 - LLA[2] / R0)
 
-	# TM of geocentric with respect to geodetic coordinates.
 	COSDD = np.cos(DD)
 	SINDD = np.sin(DD)
+
 	TGD[0, 0] = COSDD
 	TGD[2, 2] = COSDD
 	TGD[1, 1] = 1.0
@@ -147,22 +143,21 @@ def GEOC_LLA_TO_ECI_TM(GEOD_LLA, TIME):
 	TGI = TGD @ TDI
 
 	return TGI
-
-# Returns the value of gravity in geocentric coordinates.
+	
 def GEOCENTRIC_GRAV(ECIPOS, TIME):
 	GM = 398600440000000.0
 	SMAJOR_AXIS = 6378137.0 # Meters.
 	C20 = -1.0 * 0.0004841668499999999772
-	GEOC_GRAV = np.zeros(3)
+	ECIGRAV = np.zeros(3)
 	LLAREF = ECI_TO_LLA(ECIPOS, TIME)
 	DBI = la.norm(ECIPOS)
 	DUM1 = GM / (DBI ** 2)
 	DUM2 = 3.0 * np.sqrt(5.0)
 	DUM3 = (SMAJOR_AXIS / DBI) ** 2
-	GEOC_GRAV[0] = -1.0 * DUM1 * DUM2 * C20 * DUM3 * np.sin(LLAREF[0]) * np.cos(LLAREF[0])
-	GEOC_GRAV[1] = 0.0
-	GEOC_GRAV[2] = DUM1 * (1.0 + (DUM2 / 2.0) * C20 * DUM3 * (3 * (np.sin(LLAREF[0] ** 2)) - 1.0))
-	return GEOC_GRAV
+	ECIGRAV[0] = -1.0 * DUM1 * DUM2 * C20 * DUM3 * np.sin(LLAREF[0]) * np.cos(LLAREF[0])
+	ECIGRAV[1] = 0.0
+	ECIGRAV[2] = DUM1 * (1.0 + (DUM2 / 2.0) * C20 * DUM3 * (3 * (np.sin(LLAREF[0] ** 2)) - 1.0))
+	return ECIGRAV
 
 def EULER_FROM_DCM(TM):
 	EULER = np.zeros(3)
@@ -178,3 +173,37 @@ def EULER_FROM_DCM(TM):
 	EULER[1] = THETA
 	EULER[2] = PSI
 	return EULER
+
+def ECEF_DISPLACEMENT_TO_ENU(RELPOS, LAT0, LON0):
+	TEMP = np.cos(LON0) * RELPOS[0] + np.sin(LON0) * RELPOS[1]
+	E = -1.0 * np.sin(LON0) * RELPOS[0] + np.cos(LON0) * RELPOS[1]
+	N = np.cos(LAT0) * TEMP + np.sin(LAT0) * RELPOS[2]
+	U = -1.0 * np.sin(LAT0) * TEMP + np.cos(LAT0) * RELPOS[2]
+	ENU = npa([E, N, U])
+	return ENU
+
+# Spherical earth only (geocentric latitude).
+def LLA_TO_ECEF(LLA): # Lat - Rads, Lon - Rads, Alt - Meters.
+
+	REARTH    = 6370987.308 # Meters.
+	ECEF      = np.zeros(3)
+	RADIUS    = -1.0 * (LLA[2] + REARTH)
+
+	TGE       = np.zeros((3, 3))
+	CLON      = np.cos(LLA[1])
+	SLON      = np.sin(LLA[1])
+	CLAT      = np.cos(LLA[0])
+	SLAT      = np.sin(LLA[0])
+	TGE[0, 0] = -1.0 * SLAT * CLON
+	TGE[0, 1] = -1.0 * SLAT * SLON
+	TGE[0, 2] = CLAT
+	TGE[1, 0] = -1.0 * SLON
+	TGE[1, 1] = CLON
+	TGE[1, 2] = 0.0
+	TGE[2, 0] = -1.0 * CLAT * CLON
+	TGE[2, 1] = -1.0 * CLAT * SLON
+	TGE[2, 2] = -1.0 * SLAT
+
+	ECEF      = TGE.transpose() @ npa([0.0, 0.0, RADIUS])
+
+	return ECEF

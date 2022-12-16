@@ -32,7 +32,7 @@ class endChecks(Enum):
 
 class threeDofSim:
 
-	def __init__(self, ID, INPUT_ENU_VEL, INPUT_LLA0, ROTATING_EARTH_FLAG):
+	def __init__(self, ID, INPUT_ENU_VEL, INPUT_LLA0):
 
 		########################################################################################################################
 		#
@@ -64,13 +64,12 @@ class threeDofSim:
 		self.WALL_CLOCK_START = time.time()
 		self.GO = True
 		self.DT = 0.01 # SECONDS
-		self.MAX_T = 40 # SECONDS
+		self.MAX_T = 400 # SECONDS
 
 		# WAYPOINT IN ENU.
-		self.WAYPOINT = npa([3000.0, 0.0, 3000.0]) # METERS
+		self.WAYPOINT = npa([30000.0, 0.0, 30000.0]) # METERS
 
 		# ROTATING EARTH #####################################################
-		self.ROTATING_EARTH = ROTATING_EARTH_FLAG
 		print(ID)
 
 		# STATE.
@@ -149,9 +148,29 @@ class threeDofSim:
 			"E": self.ENUPOS[0],
 			"N": self.ENUPOS[1],
 			"U": self.ENUPOS[2],
+			"EV": self.ENUVEL[0],
+			"NV": self.ENUVEL[1],
+			"UV": self.ENUVEL[2],
+			"SPEC_FRCE_X": self.SPECIFIC_FORCE[0],
+			"SPEC_FRCE_Y": self.SPECIFIC_FORCE[1],
+			"SPEC_FRCE_Z": self.SPECIFIC_FORCE[2],
+			"ENU_TO_FLU_XX": self.ENU_TO_FLU[0, 0],
+			"ENU_TO_FLU_XY": self.ENU_TO_FLU[0, 1],
+			"ENU_TO_FLU_XZ": self.ENU_TO_FLU[0, 2],
+			"ENU_TO_FLU_YX": self.ENU_TO_FLU[1, 0],
+			"ENU_TO_FLU_YY": self.ENU_TO_FLU[1, 1],
+			"ENU_TO_FLU_YZ": self.ENU_TO_FLU[1, 2],
+			"ENU_TO_FLU_ZX": self.ENU_TO_FLU[2, 0],
+			"ENU_TO_FLU_ZY": self.ENU_TO_FLU[2, 1],
+			"ENU_TO_FLU_ZZ": self.ENU_TO_FLU[2, 2],
+			"SIDE_COMM": self.SIDE_COMM,
+			"NORM_COMM": self.NORM_COMM,
 			"TGT_E": self.WAYPOINT[0],
 			"TGT_N": self.WAYPOINT[1],
 			"TGT_U": self.WAYPOINT[2],
+			"FLU_TO_WP_X": self.FLU_REL_POS[0],
+			"FLU_TO_WP_Y": self.FLU_REL_POS[1],
+			"FLU_TO_WP_Z": self.FLU_REL_POS[2]
 		}
 		return STATE
 
@@ -159,22 +178,22 @@ class threeDofSim:
 
 		# PROPORTIONAL GUIDANCE
 		self.FLU_REL_POS = self.ENU_TO_FLU @ (self.WAYPOINT - self.ENUPOS) # METERS
-		FLU_REL_POS_U = unitvector(self.FLU_REL_POS) # ND
-		CLOSING_VEL = -1 * self.VEL_B # METERS PER SECOND
-		CLOSING_SPEED = la.norm(CLOSING_VEL) # METERS PER SECOND
-		TEMP1 = np.cross(self.FLU_REL_POS, CLOSING_VEL)
-		TEMP2 = np.dot( self.FLU_REL_POS, self.FLU_REL_POS)
-		LOS_RATE = TEMP1 / TEMP2 # RADIANS PER SECOND
-		COMMAND = np.cross(-1 * 4 * CLOSING_SPEED * FLU_REL_POS_U, LOS_RATE) # METERS PER SECOND^2
-		self.NORM_COMM = COMMAND[2] # METERS PER SECOND^2
-		self.SIDE_COMM = COMMAND[1] # METERS PER SECOND^2
-		ACC_MAG = la.norm(npa([self.SIDE_COMM, self.NORM_COMM])) # METER PER SECOND^2
-		TRIG_RATIO = np.arctan2(self.NORM_COMM, self.SIDE_COMM) # ND
-		MANEUVER_LIMIT = 50 # METERS PER SECOND^2
+		FLU_REL_POS_U    = unitvector(self.FLU_REL_POS) # ND
+		CLOSING_VEL      = -1 * self.VEL_B # METERS PER SECOND
+		CLOSING_SPEED    = la.norm(CLOSING_VEL) # METERS PER SECOND
+		TEMP1            = np.cross(self.FLU_REL_POS, CLOSING_VEL)
+		TEMP2            = np.dot(self.FLU_REL_POS, self.FLU_REL_POS)
+		LOS_RATE         = TEMP1 / TEMP2 # RADIANS PER SECOND
+		COMMAND          = np.cross(-1 * 4 * CLOSING_SPEED * FLU_REL_POS_U, LOS_RATE) # METERS PER SECOND^2
+		self.NORM_COMM   = COMMAND[2] # METERS PER SECOND^2
+		self.SIDE_COMM   = COMMAND[1] # METERS PER SECOND^2
+		ACC_MAG          = la.norm(npa([self.SIDE_COMM, self.NORM_COMM])) # METER PER SECOND^2
+		TRIG_RATIO       = np.arctan2(self.NORM_COMM, self.SIDE_COMM) # ND
+		MANEUVER_LIMIT   = 500 # METERS PER SECOND^2
 		if ACC_MAG > MANEUVER_LIMIT:
-			ACC_MAG = MANEUVER_LIMIT # METERS PER SECOND^2
-		self.SIDE_COMM = ACC_MAG * np.cos(TRIG_RATIO) # METERS PER SECOND^2
-		self.NORM_COMM = ACC_MAG * np.sin(TRIG_RATIO) # METERS PER SECOND^2
+			ACC_MAG      = MANEUVER_LIMIT # METERS PER SECOND^2
+		self.SIDE_COMM   = ACC_MAG * np.cos(TRIG_RATIO) # METERS PER SECOND^2
+		self.NORM_COMM   = ACC_MAG * np.sin(TRIG_RATIO) # METERS PER SECOND^2
 
 	def ECIDerivative(self):
 
@@ -235,7 +254,7 @@ class threeDofSim:
 			self.GEODETIC[1]
 		)
 
-		# ENU STATE AND ENU TO BODY MATRIX..
+		# ENU STATE AND ENU TO BODY MATRIX.
 		self.ENUPOS = self.ECEF_TO_ENU @ (self.ECEFPOS - self.ECEFPOS0)
 		self.ENUVEL = self.ECEF_TO_ENU @ self.ECEFVEL
 		ENU_AZ, ENU_EL = returnAzAndElevation(self.ENUVEL)
@@ -247,30 +266,6 @@ class threeDofSim:
 
 		# ECI TO BODY MATRIX.
 		self.ECI_TO_FLU = self.ECEF_TO_FLU @ self.ECI_TO_ECEF
-
-	def ENUDerivative(self):
-
-		# Derivative calculated in ENU.
-		ENUGRAV = npa([0.0, 0.0, -1.0 * 9.81])
-		BODYGRAV = self.ENU_TO_FLU @ ENUGRAV
-		self.SPECIFIC_FORCE = npa([0.0, self.SIDE_COMM, self.NORM_COMM]) + BODYGRAV # METERS PER SECOND^2
-		self.ENUACC = (self.SPECIFIC_FORCE @ self.ENU_TO_FLU) # METERS PER SECOND^2
-
-	def ENUIntegrate(self):
-
-		# Euler Integration.
-		DELTA_POS = self.ENUVEL * self.DT # METERS
-		self.ENUPOS += DELTA_POS # METERS
-		DELTA_VEL = self.ENUACC * self.DT # METERS PER SECOND
-		self.ENUVEL += DELTA_VEL # METERS PER SECOND
-		self.TOF += self.DT # SECONDS.
-
-	def ENUAttitude(self):
-
-		# Attitude.
-		ENU_AZ, ENU_EL = returnAzAndElevation(self.ENUVEL) # RADIANS
-		self.ENU_TO_FLU = FLIGHTPATH_TO_LOCAL_TM(ENU_AZ, -ENU_EL) # ND
-		self.VEL_B = self.ENU_TO_FLU @ self.ENUVEL
 
 	def endCheck(self):
 
@@ -296,14 +291,9 @@ class threeDofSim:
 
 	def fly(self):
 		self.guidance()
-		if self.ROTATING_EARTH:
-			self.ECIDerivative()
-			self.ECIIntegrate()
-			self.ECIAttitude()
-		else:
-			self.ENUDerivative()
-			self.ENUIntegrate()
-			self.ENUAttitude()
+		self.ECIDerivative()
+		self.ECIIntegrate()
+		self.ECIAttitude()
 		self.endCheck()
 		self.STATE = self.populateState()
 		lf.writeData(self.STATE, self.LOGFILE)
@@ -327,20 +317,16 @@ if __name__ == "__main__":
 	np.set_printoptions(suppress=True, precision=2)
 
 	x = threeDofSim(
-		ID = "ROTATING_EARTH",
-		# INPUT_ENU_VEL=npa([7.07, 0.0, 7.07]),
-		INPUT_ENU_VEL=npa([300.0, 150.0, 300.0]),
-		INPUT_LLA0=npa([38.8719, 77.0563, 0.0]),
-		ROTATING_EARTH_FLAG=True
+		ID = "RUN_ONE",
+		INPUT_ENU_VEL=npa([100.0, 1000.0, 300.0]),
+		INPUT_LLA0=npa([38.8719, 77.0563, 0.0])
 	)
 	x.main()
 
 	y = threeDofSim(
-		ID = "LOCAL_LEVEL_EARTH",
-		# INPUT_ENU_VEL=npa([7.07, 0.0, 7.07]),
-		INPUT_ENU_VEL=npa([300.0, 150.0, 300.0]),
-		INPUT_LLA0=npa([38.8719, 77.0563, 0.0]),
-		ROTATING_EARTH_FLAG=False
+		ID = "RUN_TWO",
+		INPUT_ENU_VEL=npa([100.0, -1000.0, 300.0]),
+		INPUT_LLA0=npa([38.8719, 77.0563, 0.0])
 	)
 	y.main()
 

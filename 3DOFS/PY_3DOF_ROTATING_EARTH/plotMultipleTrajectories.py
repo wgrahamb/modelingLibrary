@@ -10,7 +10,7 @@ directory = "3DOFS/PY_3DOF_ROTATING_EARTH/output"
 dfs = []
 
 for f in os.listdir(directory):
-	if f == ".gitignore":
+	if f == ".gitignore" or f == "report.pdf":
 		pass
 	else:
 		path = f"{directory}/{f}"
