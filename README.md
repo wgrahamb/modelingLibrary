@@ -15,7 +15,7 @@ To Do:
 - CPP_6DOF_SRAAM_V2
      - Update the readme to point out how my
      programming skills have changed from V1 to V2.
-     - Add global position.
+     - Add a rotating elliptical earth.
      - Add a getState method.
      - Add guidance modes to CPP_6DOF_SRAAM_V2. Initial turn, midcourse, terminal.
      - Using Zarchan method, write a rate controller. Needs work. If have trouble
