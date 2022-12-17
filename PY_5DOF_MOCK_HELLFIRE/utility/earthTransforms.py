@@ -337,6 +337,8 @@ def ECEF_TO_GEOC_LLA(ECEF):
 
 if __name__ == "__main__":
 
+	pymap3d.enu2ecef()
+
 	# LLA example.
 	lla        = npa([np.radians(38.8719), np.radians(77.0563), 0.0])
 	pyMapEcef  = pymap3d.geodetic2ecef(np.degrees(lla[0]),

@@ -46,7 +46,7 @@ if __name__ == "__main__":
 	PITCHCOMMAND2     = 0 # Degrees.
 	YAWCOMMAND2       = 0 # Degrees.
 	PITCHCOMMAND3     = 0 # Degrees.
-	YAWCOMMAND3       = 0 # Degrees.
+	YAWCOMMAND3       = 5 # Degrees.
 
 	LAST_TIME = int(0)
 	while MSL["LETHALITY"] == endChecks.FLIGHT or MSL["LETHALITY"] == endChecks.TIME:

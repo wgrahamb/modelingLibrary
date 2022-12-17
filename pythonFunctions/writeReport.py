@@ -110,9 +110,9 @@ if __name__ == "__main__":
 	print("WRITING REPORTS")
 
 	compareTwoFiles(
-		reportRelPath="3DOFS/PY_3DOF_ROTATING_EARTH/output/report.pdf",
-		refFileRelPath="3DOFS/PY_3DOF_ROTATING_EARTH/output/LOCAL_LEVEL_EARTH.txt",
-		newFileRelPath="3DOFS/PY_3DOF_ROTATING_EARTH/output/ROTATING_EARTH.txt",
+		reportRelPath="PY_5DOF_MOCK_HELLFIRE/data/report.pdf",
+		refFileRelPath="PY_5DOF_MOCK_HELLFIRE/data/MOCK_HELLFIRE5DOF.txt",
+		newFileRelPath="PY_5DOF_MOCK_HELLFIRE/data/MOCK_HELLFIRE5DOF.txt",
 		xAxisKey="TOF"
 	)
 

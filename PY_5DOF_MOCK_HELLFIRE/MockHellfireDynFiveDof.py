@@ -13,7 +13,6 @@ from   utility.interpolationGivenTwoVectors import linearInterpolation
 import utility.coordinateTransformations    as ct
 import utility.loggingFxns                  as lf
 import utility.earthTransforms              as et
-from   utility.earthTransforms              import *
 
 # Classes.
 from classes.ATM1976                  import ATM1976
@@ -87,10 +86,18 @@ def construct_msl(
 
 	# FRAMES. ######################################################################
 	# ENU.
-	ENU_TO_FLU = ct.ORIENTATION_TO_LOCAL_TM(0.0, -INITIAL_EL, INITIAL_AZ) # nd
+	ENU_TO_FLU = ct.FLIGHTPATH_TO_LOCAL_TM(INITIAL_AZ, -1.0 * INITIAL_EL) # nd
 	ENUPOS     = np.zeros(3) # m
 	ENUVEL     = INITIAL_AIRSPEED * (ENU_TO_FLU[0]) # m/s
-	ENUEULER   = npa([0.0, INITIAL_EL, INITIAL_AZ]) # rad
+	ENUTHT     = INITIAL_EL
+	ENUPSI     = INITIAL_AZ
+
+	GEODETIC0 = npa([np.radians(INITIAL_LLA[0]), np.radians(INITIAL_LLA[1]),
+		INITIAL_LLA[2]])
+	GEODETIC  = copy.deepcopy(GEODETIC0)
+
+	ECEF0 = et.LLA_TO_ECI(GEODETIC0)
+	ECEF  = copy.deepcopy(ECEF0)
 
 	# BODY. ########################################################################
 	TOF            = 0.0 # seconds
@@ -100,7 +107,8 @@ def construct_msl(
 	ALPHA          = -1.0 * TEMP1 # rad
 	SIDESLIP       = -1.0 * TEMP2 # rad
 	SPECIFIC_FORCE = np.zeros(3) # m/s^2
-	BODYRATE       = np.zeros(3) # rad/s
+	QRATE          = 0.0 # rad/s
+	RRATE          = 0.0 # rad/s
 
 	# DATA. ########################################################################
 	MISSILE = {
@@ -127,9 +135,8 @@ def construct_msl(
 			"SPEED": SPEED, # m/s
 			"ALPHA": ALPHA, # rad
 			"SIDESLIP": SIDESLIP, # rad
-			"PRATE": BODYRATE[0], # rad/s
-			"QRATE": BODYRATE[1], # rad/s
-			"RRATE": BODYRATE[2], # rad/s
+			"QRATE": QRATE, # rad/s
+			"RRATE": RRATE, # rad/s
 			"UDOT": SPECIFIC_FORCE[0], # m/s^2
 			"VDOT": SPECIFIC_FORCE[1], # m/s^2
 			"WDOT": SPECIFIC_FORCE[2], # m/s^2
@@ -140,9 +147,22 @@ def construct_msl(
 			"ENUVELX": ENUVEL[0], # m/s
 			"ENUVELY": ENUVEL[1], # m/s
 			"ENUVELZ": ENUVEL[2], # m/s
-			"ENUPHI": ENUEULER[0], # rad
-			"ENUTHT": ENUEULER[1], # rad
-			"ENUPSI": ENUEULER[2], # rad
+			"ENUTHT": ENUTHT, # rad
+			"ENUPSI": ENUPSI, # rad
+
+			"LAT0": GEODETIC0[0], # rad
+			"LON0": GEODETIC0[1], # rad
+			"ALT0": GEODETIC0[2], # m
+			"LAT": GEODETIC[0], # rad
+			"LON": GEODETIC[1], # rad
+			"ALT": GEODETIC[2], # m
+
+			"ECEF_X0": ECEF0[0], # m
+			"ECEF_Y0": ECEF0[1], # m
+			"ECEF_Z0": ECEF0[2], # m
+			"ECEF_X": ECEF[0], # m
+			"ECEF_Y": ECEF[1], # m
+			"ECEF_Z": ECEF[2] # m
 		}
 	}
 
@@ -193,10 +213,8 @@ def fly_msl(
 	SPEED         = MSL["STATE"]["SPEED"] # m/s
 	ALPHA         = MSL["STATE"]["ALPHA"] # rad
 	SIDESLIP      = MSL["STATE"]["SIDESLIP"] # rad
-	BODYRATE      = np.zeros(3) # rad/s
-	BODYRATE[0]   = MSL["STATE"]["PRATE"] # rad/s
-	BODYRATE[1]   = MSL["STATE"]["QRATE"] # rad/s
-	BODYRATE[2]   = MSL["STATE"]["RRATE"] # rad/s
+	QRATE         = MSL["STATE"]["QRATE"] # rad/s
+	RRATE         = MSL["STATE"]["RRATE"] # rad/s
 	SPEC_FORCE    = np.zeros(3) # m/s^2
 	SPEC_FORCE[0] = MSL["STATE"]["UDOT"] # m/s^2
 	SPEC_FORCE[1] = MSL["STATE"]["VDOT"] # m/s^2
@@ -210,33 +228,63 @@ def fly_msl(
 	ENUVEL[0]        = MSL["STATE"]["ENUVELX"] # m/s
 	ENUVEL[1]        = MSL["STATE"]["ENUVELY"] # m/s
 	ENUVEL[2]        = MSL["STATE"]["ENUVELZ"] # m/s
-	ENUEULER         = np.zeros(3) # rad
-	ENUEULER[0]      = MSL["STATE"]["ENUPHI"] # rad
-	ENUEULER[1]      = MSL["STATE"]["ENUTHT"] # rad
-	ENUEULER[2]      = MSL["STATE"]["ENUPSI"] # rad
+	ENUTHT           = MSL["STATE"]["ENUTHT"] # rad
+	ENUPSI           = MSL["STATE"]["ENUPSI"] # rad
+
+	GEODETIC0    = np.zeros(3)
+	GEODETIC0[0] = MSL["STATE"]["LAT0"]
+	GEODETIC0[1] = MSL["STATE"]["LON0"]
+	GEODETIC0[2] = MSL["STATE"]["ALT0"]
+	GEODETIC     = np.zeros(3)
+	GEODETIC[0]  = MSL["STATE"]["LAT"]
+	GEODETIC[1]  = MSL["STATE"]["LON"]
+	GEODETIC[2]  = MSL["STATE"]["ALT"]
+
+	ECEF0    = np.zeros(3)
+	ECEF0[0] = MSL["STATE"]["ECEF_X0"]
+	ECEF0[1] = MSL["STATE"]["ECEF_Y0"]
+	ECEF0[2] = MSL["STATE"]["ECEF_Z0"]
+	ECEF     = np.zeros(3)
+	ECEF[0]  = MSL["STATE"]["ECEF_X"]
+	ECEF[1]  = MSL["STATE"]["ECEF_Y"]
+	ECEF[2]  = MSL["STATE"]["ECEF_Z"]
 
 	# INTEGRATION STATE. ###########################################################
 	INTEGRATION_PASS = 0
-	STATE_P0 = ENUPOS # m
-	STATE_V0 = ENUVEL # m/s
-	STATE_E0 = ENUEULER # rad/s
-	STATE_W0 = BODYRATE # rad/s^2
-	V1       = np.zeros(3) # m/s
-	A1       = np.zeros(3) # m/s^2
-	W1       = np.zeros(3) # rad/s
-	WD1      = np.zeros(3) # rad/s^2
-	V2       = np.zeros(3) # m/s
-	A2       = np.zeros(3) # m/s^2
-	W2       = np.zeros(3) # rad/s
-	WD2      = np.zeros(3) # rad/s^2
-	V3       = np.zeros(3) # m/s
-	A3       = np.zeros(3) # m/s^2
-	W3       = np.zeros(3) # rad/s
-	WD3      = np.zeros(3) # rad/s^2
-	V4       = np.zeros(3) # m/s
-	A4       = np.zeros(3) # m/s^2
-	W4       = np.zeros(3) # rad/s
-	WD4      = np.zeros(3) # rad/s^2
+	STATE_P0   = ENUPOS # m
+	STATE_V0   = ENUVEL # m/s
+	STATE_THT0 = ENUTHT # rad
+	STATE_PSI0 = ENUPSI # rad
+	STATE_Q0   = QRATE # rad/s
+	STATE_R0   = RRATE # rad/s
+
+	V1         = np.zeros(3) # m/s
+	A1         = np.zeros(3) # m/s^2
+	Q1         = 0.0 # rad/s
+	R1         = 0.0 # rad/s
+	QD1        = 0.0 # rad/s^2
+	RD1        = 0.0 # rad/s^2
+
+	V2         = np.zeros(3) # m/s
+	A2         = np.zeros(3) # m/s^2
+	Q2         = 0.0 # rad/s
+	R2         = 0.0 # rad/s
+	QD2        = 0.0 # rad/s^2
+	RD2        = 0.0 # rad/s^2
+
+	V3         = np.zeros(3) # m/s
+	A3         = np.zeros(3) # m/s^2
+	Q3         = 0.0 # rad/s
+	R3         = 0.0 # rad/s
+	QD3        = 0.0 # rad/s^2
+	RD3        = 0.0 # rad/s^2
+
+	V4         = np.zeros(3) # m/s
+	A4         = np.zeros(3) # m/s^2
+	Q4         = 0.0 # rad/s
+	R4         = 0.0 # rad/s
+	QD4        = 0.0 # rad/s^2
+	RD4        = 0.0 # rad/s^2
 
 	# AIRFRAME. ####################################################################
 	CD_LOOKUP          = [0.1, 0.6] # nd
@@ -286,9 +334,8 @@ def fly_msl(
 			"SPEED": SPEED, # m/s
 			"ALPHA": ALPHA, # rad
 			"SIDESLIP": SIDESLIP, # rad
-			"PRATE": BODYRATE[0], # rad/s
-			"QRATE": BODYRATE[1], # rad/s
-			"RRATE": BODYRATE[2], # rad/s
+			"QRATE": QRATE, # rad/s
+			"RRATE": RRATE, # rad/s
 			"UDOT": SPEC_FORCE[0], # m/s^2
 			"VDOT": SPEC_FORCE[1], # m/s^2
 			"WDOT": SPEC_FORCE[2], # m/s^2
@@ -299,9 +346,22 @@ def fly_msl(
 			"ENUVELX": ENUVEL[0], # m/s
 			"ENUVELY": ENUVEL[1], # m/s
 			"ENUVELZ": ENUVEL[2], # m/s
-			"ENUPHI": ENUEULER[0], # rad
-			"ENUTHT": ENUEULER[1], # rad
-			"ENUPSI": ENUEULER[2], # rad
+			"ENUTHT": ENUTHT, # rad
+			"ENUPSI": ENUPSI, # rad
+
+			"LAT0": GEODETIC0[0], # rad
+			"LON0": GEODETIC0[1], # rad
+			"ALT0": GEODETIC0[2], # m
+			"LAT": GEODETIC[0], # rad
+			"LON": GEODETIC[1], # rad
+			"ALT": GEODETIC[2], # m
+
+			"ECEF_X0": ECEF0[0], # m
+			"ECEF_Y0": ECEF0[1], # m
+			"ECEF_Z0": ECEF0[2], # m
+			"ECEF_X": ECEF[0], # m
+			"ECEF_Y": ECEF[1], # m
+			"ECEF_Z": ECEF[2] # m
 		}
 		return STATE
 
@@ -331,8 +391,7 @@ def fly_msl(
 		THRUST = MSL["MASS_AND_MOTOR"].THRUST # newtons
 
 		# ATTITUDE. ################################################################
-		ENU_TO_FLU   = ct.ORIENTATION_TO_LOCAL_TM(
-			ENUEULER[0], -1.0 * ENUEULER[1], ENUEULER[2]) # nd
+		ENU_TO_FLU   = ct.FLIGHTPATH_TO_LOCAL_TM(ENUPSI, -1.0 * ENUTHT) # nd
 		SPEED        = la.norm(ENUVEL) # m/s
 		VEL_B        = ENU_TO_FLU @ ENUVEL # m/s
 		TEMP1, TEMP2 = getAlphaAndBeta(VEL_B) # rad
@@ -378,10 +437,8 @@ def fly_msl(
 			(BETA * REF_AREA)) * ((XCG - X_NOSETIP2XCD) / REF_DIAM) # nd
 
 		# DERIVATIVES. #############################################################
-		RATEDOT       = np.zeros(3) # rad/s^2
-		RATEDOT[0]    = 0.0 # rad/s^2
-		RATEDOT[1]    = (Q * REF_AREA * REF_DIAM * CM) / TMOI # rad/s^2
-		RATEDOT[2]    = (Q * REF_AREA * REF_DIAM * CN) / TMOI # rad/s^2
+		QDOT = (Q * REF_AREA * REF_DIAM * CM) / TMOI # rad/s^2
+		RDOT = (Q * REF_AREA * REF_DIAM * CN) / TMOI # rad/s^2
 
 		SPEC_FORCE[0] = THRUST / MASS # m/s^2
 		SPEC_FORCE[1] = (Q * REF_AREA * CY) / MASS # m/s^2
@@ -392,6 +449,15 @@ def fly_msl(
 		SPEC_FORCE    += (BODY_G + BODY_DRAG) # m/s^2
 
 		ACC           = SPEC_FORCE @ ENU_TO_FLU # m/s^2
+
+		# GEOMETRY #################################################################
+		T1 = np.cos(GEODETIC0[0]) * ENUPOS[2] - np.sin(GEODETIC0[0]) * ENUPOS[1]
+		T2 = np.sin(GEODETIC0[0]) * ENUPOS[2] + np.cos(GEODETIC0[0]) * ENUPOS[1]
+		T3 = np.cos(GEODETIC0[1]) * T1 - np.sin(GEODETIC0[1]) * ENUPOS[0]
+		T4 = np.sin(GEODETIC0[1]) * T1 + np.cos(GEODETIC0[1]) * ENUPOS[0]
+		ECEF = ECEF0 + npa([T3, T4, T2])
+
+		GEODETIC = et.ECI_TO_LLA(ECEF)
 
 		# STATE. ###################################################################
 		if INTEGRATION_PASS == 0:
@@ -419,18 +485,24 @@ def fly_msl(
 			# BEGIN INTEGRATION PASS. ##############################################
 			STATE_P0 = copy.deepcopy(ENUPOS) # m
 			STATE_V0 = copy.deepcopy(ENUVEL) # m/s
-			STATE_E0 = copy.deepcopy(ENUEULER) # rad/s
-			STATE_W0 = copy.deepcopy(BODYRATE) # rad/s^2
+			STATE_THT0 = copy.deepcopy(ENUTHT) # rad
+			STATE_PSI0 = copy.deepcopy(ENUPSI) # rad
+			STATE_Q0 = copy.deepcopy(QRATE) # rad/s
+			STATE_R0 = copy.deepcopy(RRATE) # rad/s
 
 			V1  = ENUVEL # m/s
 			A1  = ACC # m/s^2
-			W1  = BODYRATE # rad/s
-			WD1 = RATEDOT # rad/s^2
+			Q1  = QRATE # rad/s
+			R1  = RRATE # rad/s
+			QD1 = QDOT # rad/s^2
+			RD1 = RDOT # rad/s^2
 
-			ENUPOS   = STATE_P0 + V1 * (TIME_STEP / 2.0) # m
-			ENUVEL   = STATE_V0 + A1 * (TIME_STEP / 2.0) # m/s
-			ENUEULER = STATE_E0 + W1 * (TIME_STEP / 2.0) # rad
-			BODYRATE = STATE_W0 + WD1 * (TIME_STEP / 2.0) # rad/s
+			ENUPOS = STATE_P0 + V1 * (TIME_STEP / 2.0) # m
+			ENUVEL = STATE_V0 + A1 * (TIME_STEP / 2.0) # m/s
+			ENUTHT = STATE_THT0 + Q1 * (TIME_STEP / 2.0) # rad
+			ENUPSI = STATE_PSI0 + R1 * (TIME_STEP / 2.0) # rad
+			QRATE  = STATE_Q0 + QD1 * (TIME_STEP / 2.0) # rad/s
+			RRATE  = STATE_R0 + RD1 * (TIME_STEP / 2.0) # rad/s
 
 			TOF += (TIME_STEP / 2.0) # seconds
 
@@ -440,13 +512,17 @@ def fly_msl(
 
 			V2  = ENUVEL # m/s
 			A2  = ACC # m/s^2
-			W2  = BODYRATE # rad/s
-			WD2 = RATEDOT # rad/s^2
+			Q2  = QRATE # rad/s
+			R2  = RRATE # rad/s
+			QD2 = QDOT # rad/s^2
+			RD2 = RDOT # rad/s^2
 
-			ENUPOS   = STATE_P0 + V2 * (TIME_STEP / 2.0) # m
-			ENUVEL   = STATE_V0 + A2 * (TIME_STEP / 2.0) # m/s
-			ENUEULER = STATE_E0 + W2 * (TIME_STEP / 2.0) # rad
-			BODYRATE = STATE_W0 + WD2 * (TIME_STEP / 2.0) # rad/s
+			ENUPOS = STATE_P0 + V2 * (TIME_STEP / 2.0) # m
+			ENUVEL = STATE_V0 + A2 * (TIME_STEP / 2.0) # m/s
+			ENUTHT = STATE_THT0 + Q2 * (TIME_STEP / 2.0) # rad
+			ENUPSI = STATE_PSI0 + R2 * (TIME_STEP / 2.0) # rad
+			QRATE  = STATE_Q0 + QD2 * (TIME_STEP / 2.0) # rad/s^2
+			RRATE  = STATE_R0 + RD2 * (TIME_STEP / 2.0) # rad/s^2
 
 			INTEGRATION_PASS += 1
 
@@ -454,13 +530,17 @@ def fly_msl(
 
 			V3  = ENUVEL # m/s
 			A3  = ACC # m/s^2
-			W3  = BODYRATE # rad/s
-			WD3 = RATEDOT # rad/s^2
+			Q3  = QRATE # rad/s
+			R3  = RRATE # rad/s
+			QD3 = QDOT # rad/s^2
+			RD3 = RDOT # rad/s^2
 
-			ENUPOS   = STATE_P0 + V3 * (TIME_STEP) # m
-			ENUVEL   = STATE_V0 + A3 * (TIME_STEP) # m/s
-			ENUEULER = STATE_E0 + W3 * (TIME_STEP) # rad
-			BODYRATE = STATE_W0 + WD3 * (TIME_STEP) # rad/s
+			ENUPOS = STATE_P0 + V3 * (TIME_STEP) # m
+			ENUVEL = STATE_V0 + A3 * (TIME_STEP) # m/s
+			ENUTHT = STATE_THT0 + Q3 * (TIME_STEP) # rad
+			ENUPSI = STATE_PSI0 + R3 * (TIME_STEP) # rad
+			QRATE  = STATE_Q0 + QD3 * (TIME_STEP) # rad/s^2
+			RRATE  = STATE_R0 + RD3 * (TIME_STEP) # rad/s^2
 
 			TOF += (TIME_STEP / 2.0) # seconds
 
@@ -470,17 +550,23 @@ def fly_msl(
 
 			V4  = ENUVEL # m/s
 			A4  = ACC # m/s^2
-			W4  = BODYRATE # rad/s
-			WD4 = RATEDOT # rad/s^2
+			Q4  = QRATE # rad/s
+			R4  = RRATE # rad/s
+			QD4 = QDOT # rad/s^2
+			RD4 = RDOT # rad/s^2
 
 			ENUPOS   = STATE_P0 + (TIME_STEP / 6.0) * \
 				(V1 + 2 * V2 + 2 * V3 + V4) # m
 			ENUVEL   = STATE_V0 + (TIME_STEP / 6.0) * \
 				(A1 + 2 * A2 + 2 * A3 + A4) # m/s
-			ENUEULER = STATE_E0 + (TIME_STEP / 6.0) * \
-				(W1 + 2 * W2 + 2 * W3 + W4) # rad
-			BODYRATE = STATE_W0 + (TIME_STEP / 6.0) * \
-				(WD1 + 2 * WD2 + 2 * WD3 + WD4) # rad/s
+			ENUTHT = STATE_THT0 + (TIME_STEP / 6.0) * \
+				(Q1 + 2 * Q2 + 2 * Q3 + Q4) # rad
+			ENUPSI = STATE_PSI0 + (TIME_STEP / 6.0) * \
+				(R1 + 2 * R2 + 2 * R3 + R4) # rad/s
+			QRATE = STATE_Q0 + (TIME_STEP / 6.0) * \
+				(QD1 + 2 * QD2 + 2 * QD3 + QD4)
+			RRATE = STATE_R0 + (TIME_STEP / 6.0) * \
+				(RD1 + 2 * RD2 + 2 * RD3 + RD4)
 
 			INTEGRATION_PASS = 0
 

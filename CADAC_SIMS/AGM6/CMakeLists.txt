@@ -1,4 +1,8 @@
 cmake_minimum_required (VERSION 2.8.11)
+if (APPLE)
+	set(CMAKE_C_COMPILER "/opt/homebrew/bin/gcc-11")
+	set(CMAKE_CXX_COMPILER "/opt/homebrew/bin/g++-11")
+endif()
 project (AGM6)
 set(CMAKE_BUILD_TYPE Debug)
 add_definitions(-w)
