@@ -7,6 +7,7 @@ np.set_printoptions(suppress=True, precision=2)
 
 # Components.
 from classes.SecondOrderActuator import SecondOrderActuator
+from classes.MockHellfireControl import MockHellfireControl
 
 # Dynamics.
 import MockHellfireDynFiveDof as Dyn
@@ -31,6 +32,7 @@ if __name__ == "__main__":
 	COMPONENTS = {
 		"PITCH_ACT": SecondOrderActuator("PITCH_DEFL"),
 		"YAW_ACT": SecondOrderActuator("YAW_DEFL"),
+		"CONTROL": MockHellfireControl()
 	}
 
 	# Sim control.
@@ -46,7 +48,7 @@ if __name__ == "__main__":
 	PITCHCOMMAND2     = 0 # Degrees.
 	YAWCOMMAND2       = 0 # Degrees.
 	PITCHCOMMAND3     = 0 # Degrees.
-	YAWCOMMAND3       = 5 # Degrees.
+	YAWCOMMAND3       = 8 # Degrees.
 
 	LAST_TIME = int(0)
 	while MSL["LETHALITY"] == endChecks.FLIGHT or MSL["LETHALITY"] == endChecks.TIME:
@@ -91,6 +93,14 @@ if __name__ == "__main__":
 			COMPONENTS["PITCH_ACT"].update(PITCH_FIN_COMMAND)
 		elif N_ID == "YAW_ACT":
 			COMPONENTS["YAW_ACT"].update(YAW_FIN_COMMAND)
+		elif N_ID == "CONTROL":
+			COMPONENTS["CONTROL"].update(
+				0.0,
+				0.0,
+				MSL["STATE"]["QRATE"],
+				MSL["STATE"]["RRATE"],
+				MSL["STATE"]["SPEED"]
+			)
 
 		# Console report.
 		if np.floor(TOF) == LAST_TIME:
