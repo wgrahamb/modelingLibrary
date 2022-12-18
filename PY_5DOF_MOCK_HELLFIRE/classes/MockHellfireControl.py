@@ -1,12 +1,14 @@
 import numpy as np
+import utility.loggingFxns as lf
 
 STD_GRAV = 9.81 # m/s^2
 
 class MockHellfireControl:
 
-    def __init__(self):
+    def __init__(self, ID):
+
         self.TIME             = 0.0 # s
-        self.TIME_STEP        = (1 / 100.0) # s
+        self.TIME_STEP        = (1 / 600.0) # s
         self.NEXT_UPDATE_TIME = self.TIME + self.TIME_STEP
         self.PITCH_RATE_LIM   = 10.0 # rad/s
         self.PITCH_PROP_GAIN  = 0.25 # 1/s
@@ -14,6 +16,19 @@ class MockHellfireControl:
         self.YAW_PROP_GAIN    = 0.25 # 1/s
         self.PITCH_FIN_COMM   = 0.0 # rad
         self.YAW_FIN_COMM     = 0.0 # rad
+
+        self.LOGFILE = open(f"PY_5DOF_MOCK_HELLFIRE/data/{ID}.txt", "w")
+
+        self.STATE = {
+            "TIME": self.TIME,
+            "PITCH_FIN_COMM_RAD": self.PITCH_FIN_COMM,
+            "YAW_FIN_COMM_RAD": self.YAW_FIN_COMM,
+        }
+
+        lf.writeHeader(self.STATE, self.LOGFILE)
+        lf.writeData(self.STATE, self.LOGFILE)
+
+        print("MOCK HELLFIRE CONTROL LOADED")
 
     def update(
         self,
@@ -47,4 +62,10 @@ class MockHellfireControl:
         self.TIME             += self.TIME_STEP
         self.NEXT_UPDATE_TIME = self.TIME + self.TIME_STEP
 
+        self.STATE = {
+            "TIME": self.TIME,
+            "PITCH_FIN_COMM_RAD": self.PITCH_FIN_COMM,
+            "YAW_FIN_COMM_RAD": self.YAW_FIN_COMM,
+        }
 
+        lf.writeData(self.STATE, self.LOGFILE)

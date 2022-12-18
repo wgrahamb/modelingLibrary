@@ -26,13 +26,13 @@ if __name__ == "__main__":
 	EL0  = 45 # Degrees.
 	SPD0 = 10
 	ID   = "MOCK_HELLFIRE5DOF"
-	MSL  = Dyn.construct_msl(LLA0, AZ0, EL0, SPD0, ID)
+	DYN  = Dyn.construct_msl(LLA0, AZ0, EL0, SPD0, ID)
 
 	# Components.
 	COMPONENTS = {
 		"PITCH_ACT": SecondOrderActuator("PITCH_DEFL"),
 		"YAW_ACT": SecondOrderActuator("YAW_DEFL"),
-		"CONTROL": MockHellfireControl()
+		"CONTROL": MockHellfireControl("CONTROL")
 	}
 
 	# Sim control.
@@ -40,10 +40,10 @@ if __name__ == "__main__":
 	MAXT           = 15
 
 	LAST_TIME = int(0)
-	while MSL["LETHALITY"] == endChecks.FLIGHT or MSL["LETHALITY"] == endChecks.TIME:
+	while DYN["LETHALITY"] == endChecks.FLIGHT or DYN["LETHALITY"] == endChecks.TIME:
 
 		# Dynamics tof is driver.
-		TOF = MSL["STATE"]["TOF"]
+		TOF = DYN["STATE"]["TOF"]
 
 		# Get next update time.
 		N    = 0.0
@@ -59,14 +59,14 @@ if __name__ == "__main__":
 		# Update dynamics.
 		TIME_INCREMENT = N - TOF
 		if TIME_INCREMENT > EPSILON:
-			MSL = Dyn.fly_msl(
-				MISSILE_INPUT_DICT=MSL,
+			DYN = Dyn.fly_msl(
+				MISSILE_INPUT_DICT=DYN,
 				FLY_FOR_THIS_LONG=TIME_INCREMENT,
 				PITCH_FIN_DEFL_DEG_INPUT=COMPONENTS["PITCH_ACT"].DEFLECTION,
 				YAW_FIN_DEFL_DEG_INPUT=COMPONENTS["YAW_ACT"].DEFLECTION
 			)
 
-		# Update components. Would like to make this bit more terse.
+		# Update components.
 		if N_ID == "PITCH_ACT":
 			COMPONENTS["PITCH_ACT"].update(np.degrees(COMPONENTS['CONTROL'].PITCH_FIN_COMM))
 		elif N_ID == "YAW_ACT":
@@ -75,25 +75,25 @@ if __name__ == "__main__":
 			COMPONENTS["CONTROL"].update(
 				-5.0,
 				5.0,
-				MSL["STATE"]["QRATE"],
-				MSL["STATE"]["RRATE"],
-				MSL["STATE"]["SPEED"]
+				DYN["STATE"]["QRATE"],
+				DYN["STATE"]["RRATE"],
+				DYN["STATE"]["SPEED"]
 			)
 
 		# Console report.
 		if np.floor(TOF) == LAST_TIME:
-			X         = MSL["STATE"]["ENUPOSX"]
-			Y         = MSL["STATE"]["ENUPOSY"]
-			Z         = MSL["STATE"]["ENUPOSZ"]
-			MACH      = MSL["STATE"]["MACH"]
+			X         = DYN["STATE"]["ENUPOSX"]
+			Y         = DYN["STATE"]["ENUPOSY"]
+			Z         = DYN["STATE"]["ENUPOSZ"]
+			MACH      = DYN["STATE"]["MACH"]
 			print(f"TOF {TOF:.0f} ENU {X:.2f} {Y:.2f} {Z:.2f} MACH {MACH:.2f}")
 			LAST_TIME += 1
 
 		# Console report.
 		if TOF > MAXT:
-			X         = MSL["STATE"]["ENUPOSX"]
-			Y         = MSL["STATE"]["ENUPOSY"]
-			Z         = MSL["STATE"]["ENUPOSZ"]
-			MACH      = MSL["STATE"]["MACH"]
+			X         = DYN["STATE"]["ENUPOSX"]
+			Y         = DYN["STATE"]["ENUPOSY"]
+			Z         = DYN["STATE"]["ENUPOSZ"]
+			MACH      = DYN["STATE"]["MACH"]
 			print(f"TOF {TOF:.4f} ENU {X:.2f} {Y:.2f} {Z:.2f} MACH {MACH:.2f}")
 			break

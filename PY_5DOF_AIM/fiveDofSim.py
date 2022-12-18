@@ -243,7 +243,7 @@ class fiveDofInterceptor:
 		else:
 			losVel        = projection(fluMslToTgtU, closingVel) # m/s
 			loaVel        = projection(self.lineOfAttack, closingVel) # m/s
-			G = 1 - np.exp(-0.001 * fluMslToTgtM) # nd
+			G             = 1 - np.exp(-0.001 * fluMslToTgtM) # nd
 			self.normComm = self.loaGain * (losVel[2] + G * loaVel[2]) # m/s^2
 			self.sideComm = self.loaGain * (losVel[1] + G * loaVel[1]) # m/s^2
 			aMag          = np.sqrt(self.normComm ** 2 + self.sideComm ** 2) # m/s^2

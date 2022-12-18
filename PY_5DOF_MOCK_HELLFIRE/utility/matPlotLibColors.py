@@ -3,9 +3,9 @@ def matPlotLibColors():
 
 		"g","mediumpurple","orange","red","royalblue",
 		"darkgreen","coral","deeppink","cadetblue","blue",
-		"seagreen","blue","cyan","limegreen","y",
+		"seagreen","purple","cyan","limegreen","y",
+		"mediumspringgreen", "plum", "grey", "olive", "mediumaquamarine",
 
-		"mediumspringgreen",
 		"lightseagreen",
 		"paleturquoise",
 		"darkcyan",
@@ -16,11 +16,11 @@ def matPlotLibColors():
 		"navy",
 		"darkorchid",
 		"k",
-		"plum",
+		
 		"m",
 		"mediumvioletred",
 		"palevioletred",
-		"grey",
+		
 		"lightgray",
 		"w",
 		"lightcoral",
@@ -33,13 +33,13 @@ def matPlotLibColors():
 		"darkgoldenrod",
 		"lemonchiffon",
 		"ivory",
-		"olive",
+		
 		"yellowgreen",
 		"lawngreen",
 		"lightgreen",
 		"palegreen",
 		"mediumseagreen",
-		"mediumaquamarine",
+		
 		"mediumturquoise",
 		"darkslategray",
 		"c",
@@ -88,7 +88,7 @@ def matPlotLibColors():
 		"darkslateblue",
 		"blueviolet",
 		"mediumorchid",
-		"purple",
+		
 		"magenta",
 		"hotpink",
 		"pink",

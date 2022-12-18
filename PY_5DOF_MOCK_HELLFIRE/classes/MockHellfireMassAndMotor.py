@@ -56,8 +56,8 @@ class MockHellfireMassAndMotor:
 			vacuumThrust = self.CALCULATED_THRUST
 			self.THRUST = vacuumThrust + \
 				(pressure - self.SEA_LEVEL_PRESSURE) * self.NOZZLE_EXIT_AREA
-			self.XCG = \
-				linearInterpolation(timeOfFlight, self.CG_TIME_VALUES, self.CG_VALUES)
+			self.XCG = linearInterpolation(timeOfFlight,
+				self.CG_TIME_VALUES, self.CG_VALUES)
 			self.TRANSVERSE_MOI = \
 				(self.MASS * (3 * ((0.5 * self.REFERENCE_DIAMETER) ** 2) + \
 				self.REFERENCE_LENGTH ** 2)) / (12) # Kilograms times meters squared.

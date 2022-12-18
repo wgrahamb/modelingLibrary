@@ -25,6 +25,7 @@ To Do:
 - PY_5DOF_MOCK_HELLFIRE
      - Line of attack into pronav.
      - If the current controls are not adequate, write a PID controller.
+     - Implement abstract base classes into components.
      - INS from Zipfel CADAC_ADS6 project.
      - Kalman Filter to pair with it after finished working through examples.
      - Use bookmarked article to model the drag.
