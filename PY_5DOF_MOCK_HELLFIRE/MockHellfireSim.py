@@ -37,35 +37,13 @@ if __name__ == "__main__":
 
 	# Sim control.
 	TIME_INCREMENT = None
-
-	# Simple Guidance and Control.
-	MANEUVER1         = 3 # Seconds.
-	MANEUVER2         = 30 # Seconds.
-	PITCH_FIN_COMMAND = None
-	YAW_FIN_COMMAND   = None
-	PITCHCOMMAND1     = 0 # Degrees.
-	YAWCOMMAND1       = 0 # Degrees.
-	PITCHCOMMAND2     = 0 # Degrees.
-	YAWCOMMAND2       = 0 # Degrees.
-	PITCHCOMMAND3     = 0 # Degrees.
-	YAWCOMMAND3       = 8 # Degrees.
+	MAXT           = 15
 
 	LAST_TIME = int(0)
 	while MSL["LETHALITY"] == endChecks.FLIGHT or MSL["LETHALITY"] == endChecks.TIME:
 
 		# Dynamics tof is driver.
 		TOF = MSL["STATE"]["TOF"]
-
-		# Basic guidance and control.
-		if TOF < MANEUVER1:
-			PITCH_FIN_COMMAND = PITCHCOMMAND1
-			YAW_FIN_COMMAND   = YAWCOMMAND1
-		elif TOF < MANEUVER2:
-			PITCH_FIN_COMMAND = PITCHCOMMAND2
-			YAW_FIN_COMMAND   = YAWCOMMAND2
-		else:
-			PITCH_FIN_COMMAND = PITCHCOMMAND3
-			YAW_FIN_COMMAND   = YAWCOMMAND3
 
 		# Get next update time.
 		N    = 0.0
@@ -90,13 +68,13 @@ if __name__ == "__main__":
 
 		# Update components. Would like to make this bit more terse.
 		if N_ID == "PITCH_ACT":
-			COMPONENTS["PITCH_ACT"].update(PITCH_FIN_COMMAND)
+			COMPONENTS["PITCH_ACT"].update(np.degrees(COMPONENTS['CONTROL'].PITCH_FIN_COMM))
 		elif N_ID == "YAW_ACT":
-			COMPONENTS["YAW_ACT"].update(YAW_FIN_COMMAND)
+			COMPONENTS["YAW_ACT"].update(np.degrees(COMPONENTS['CONTROL'].YAW_FIN_COMM))
 		elif N_ID == "CONTROL":
 			COMPONENTS["CONTROL"].update(
-				0.0,
-				0.0,
+				-5.0,
+				5.0,
 				MSL["STATE"]["QRATE"],
 				MSL["STATE"]["RRATE"],
 				MSL["STATE"]["SPEED"]
@@ -111,3 +89,11 @@ if __name__ == "__main__":
 			print(f"TOF {TOF:.0f} ENU {X:.2f} {Y:.2f} {Z:.2f} MACH {MACH:.2f}")
 			LAST_TIME += 1
 
+		# Console report.
+		if TOF > MAXT:
+			X         = MSL["STATE"]["ENUPOSX"]
+			Y         = MSL["STATE"]["ENUPOSY"]
+			Z         = MSL["STATE"]["ENUPOSZ"]
+			MACH      = MSL["STATE"]["MACH"]
+			print(f"TOF {TOF:.4f} ENU {X:.2f} {Y:.2f} {Z:.2f} MACH {MACH:.2f}")
+			break
