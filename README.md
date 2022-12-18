@@ -23,8 +23,8 @@ To Do:
 - CPP_6DOF_SAM
      - Start project. Reuse as much Zipfel code as possible.
 - PY_5DOF_MOCK_HELLFIRE
-     - Proportional controller, if not working well, rate controller.
      - Line of attack into pronav.
+     - If the current controls are not adequate, write a PID controller.
      - INS from Zipfel CADAC_ADS6 project.
      - Kalman Filter to pair with it after finished working through examples.
      - Use bookmarked article to model the drag.
