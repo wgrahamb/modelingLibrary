@@ -378,10 +378,11 @@ def fly_msl(
 		G    = MSL["ATMOS"].g # m/s^2
 		MACH = MSL["ATMOS"].mach # nd
 		BETA = None # "Normalized Speed" - Zarchan. nd
-		if MACH > 1:
-			BETA = np.sqrt(MACH ** 2 - 1)
-		else:
-			BETA = MACH
+		# if MACH > 1:
+		# 	BETA = np.sqrt(MACH ** 2 - 1)
+		# else:
+		# 	BETA = np.sqrt(MACH)
+		BETA = np.sqrt(MACH)
 
 		# MASS AND MOTOR PROPERTIES. ###############################################
 		MSL["MASS_AND_MOTOR"].update(TOF, P)

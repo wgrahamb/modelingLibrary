@@ -33,9 +33,7 @@ if __name__ == "__main__":
 	# Components.
 	COMPONENTS = {
 		"PITCH_ACT": SecondOrderActuator("PITCH_DEFL"),
-		"YAW_ACT": SecondOrderActuator("YAW_DEFL"),
-		"CONTROL": MockHellfireControl("CONTROL"),
-		"GUIDANCE": MockHellfireGuidance("GUIDANCE", npa([0.8, 0.8, -0.1]))
+		"YAW_ACT": SecondOrderActuator("YAW_DEFL")
 	}
 
 	# Target.
@@ -75,44 +73,9 @@ if __name__ == "__main__":
 
 		# Update components.
 		if N_ID == "PITCH_ACT":
-			COMPONENTS["PITCH_ACT"].update(np.degrees(COMPONENTS["CONTROL"].PITCH_FIN_COMM))
+			COMPONENTS["PITCH_ACT"].update(0.0)
 		elif N_ID == "YAW_ACT":
-			COMPONENTS["YAW_ACT"].update(np.degrees(COMPONENTS["CONTROL"].YAW_FIN_COMM))
-		elif N_ID == "CONTROL":
-			COMPONENTS["CONTROL"].update(
-				None,
-				3.0,
-				DYN["STATE"]["QRATE"],
-				DYN["STATE"]["RRATE"],
-				DYN["STATE"]["VDOT"],
-				DYN["STATE"]["SPEED"]
-			)
-		elif N_ID == "GUIDANCE":
-			ENU_TO_FLU = ct.FLIGHTPATH_TO_LOCAL_TM(
-				DYN["STATE"]["ENUPSI"],
-				-1.0 * DYN["STATE"]["ENUTHT"]
-			)
-			ENUPOS = npa(
-				[
-					DYN["STATE"]["ENUPOSX"],
-					DYN["STATE"]["ENUPOSY"],
-					DYN["STATE"]["ENUPOSZ"]
-				]
-			)
-			ENUVEL = npa(
-				[
-					DYN["STATE"]["ENUVELX"],
-					DYN["STATE"]["ENUVELY"],
-					DYN["STATE"]["ENUVELZ"]
-				]
-			)
-			COMPONENTS["GUIDANCE"].update(
-				ENU_TO_FLU,
-				ENUPOS,
-				ENUVEL,
-				TGT_POS,
-				TGT_VEL
-			)
+			COMPONENTS["YAW_ACT"].update(0.0)
 
 		# Console report.
 		if np.floor(TOF) == LAST_TIME:

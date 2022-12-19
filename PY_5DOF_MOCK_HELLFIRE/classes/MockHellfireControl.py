@@ -10,12 +10,19 @@ class MockHellfireControl:
         self.TIME             = 0.0 # s
         self.TIME_STEP        = (1 / 600.0) # s
         self.NEXT_UPDATE_TIME = self.TIME + self.TIME_STEP
+
         self.PITCH_RATE_LIM   = 10.0 # rad/s
         self.PITCH_PROP_GAIN  = 0.25 # 1/s
-        self.YAW_RATE_LIM     = 10.0 # rad/s
-        self.YAW_PROP_GAIN    = 0.1 # 1/s
         self.PITCH_FIN_COMM   = 0.0 # rad
-        self.YAW_FIN_COMM     = 0.0 # rad
+
+        self.LAT_ACC_LIM       = 10.0 # m/s^2
+        self.YAW_PROP_GAIN     = 0.1 # 1/s
+        self.YAW_INT_GAIN      = 0.002
+        self.YAW_DER_GAIN      = 0.0004
+        self.YAW_INT_ERR       = 0.0
+        self.LAST_YAW_PROP_ERR = 0.0
+        self.YAW_PROP_ERR      = 0.0
+        self.YAW_FIN_COMM      = 0.0 # rad
 
         self.LOGFILE = open(f"PY_5DOF_MOCK_HELLFIRE/data/{ID}.txt", "w")
 
@@ -35,7 +42,6 @@ class MockHellfireControl:
         NORM_COMM,
         SIDE_COMM,
         PITCH_RATE,
-        YAW_RATE,
         V_DOT,
         SPD
     ):
@@ -56,14 +62,17 @@ class MockHellfireControl:
         if SIDE_COMM == None or SIDE_COMM == 0.0:
             YAW_FIN_COMM = 0.0
         else:
-            # YAW_RATE_COMM      = -1.0 * SIDE_COMM * 8 / SPD
-            # SIGN_YAW_RATE_COMM = np.sign(YAW_RATE_COMM)
-            # if np.abs(YAW_RATE_COMM) > self.YAW_RATE_LIM:
-            #     YAW_RATE_COMM  = SIGN_YAW_RATE_COMM * self.YAW_RATE_LIM
-            # YAW_PROP_ERR       = YAW_RATE_COMM - YAW_RATE
-
-            YAW_PROP_ERR       = SIDE_COMM - V_DOT
-            YAW_FIN_COMM       = self.YAW_PROP_GAIN * YAW_PROP_ERR
+            if np.abs(SIDE_COMM) > self.LAT_ACC_LIM:
+                TEMP = np.sign(SIDE_COMM) * self.LAT_ACC_LIM
+                SIDE_COMM = TEMP
+            self.LAST_YAW_PROP_ERR = self.YAW_PROP_ERR
+            self.YAW_PROP_ERR      = SIDE_COMM - V_DOT
+            YAW_DER_ERR            = (self.YAW_PROP_ERR - self.LAST_YAW_PROP_ERR) / self.TIME_STEP
+            self.YAW_INT_ERR       += (self.YAW_PROP_ERR * self.TIME_STEP)
+            YAW_FIN_COMM           = \
+                self.YAW_PROP_GAIN * self.YAW_PROP_ERR + \
+                self.YAW_DER_GAIN * YAW_DER_ERR + \
+                self.YAW_INT_GAIN * self.YAW_INT_ERR
 
         self.PITCH_FIN_COMM = PITCH_FIN_COMM
         self.YAW_FIN_COMM   = YAW_FIN_COMM
