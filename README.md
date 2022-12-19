@@ -23,8 +23,8 @@ To Do:
 - CPP_6DOF_SAM
      - Start project. Reuse as much Zipfel code as possible.
 - PY_5DOF_MOCK_HELLFIRE
-     - Line of attack into pronav.
-     - If the current controls are not adequate, write a PID controller.
+     - Try controlling specific force instead of rate and write a PID controller,
+     not just a proportional controller.
      - Implement abstract base classes into components.
      - INS from Zipfel CADAC_ADS6 project.
      - Kalman Filter to pair with it after finished working through examples.

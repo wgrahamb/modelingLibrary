@@ -4,10 +4,12 @@ from numpy import array as npa
 np.set_printoptions(suppress=True, precision=2)
 
 # Utility.
+from utility import coordinateTransformations as ct
 
 # Components.
 from classes.SecondOrderActuator import SecondOrderActuator
 from classes.MockHellfireControl import MockHellfireControl
+from classes.MockHellfireGuidance import MockHellfireGuidance
 
 # Dynamics.
 import MockHellfireDynFiveDof as Dyn
@@ -32,12 +34,17 @@ if __name__ == "__main__":
 	COMPONENTS = {
 		"PITCH_ACT": SecondOrderActuator("PITCH_DEFL"),
 		"YAW_ACT": SecondOrderActuator("YAW_DEFL"),
-		"CONTROL": MockHellfireControl("CONTROL")
+		"CONTROL": MockHellfireControl("CONTROL"),
+		"GUIDANCE": MockHellfireGuidance("GUIDANCE", npa([0.8, 0.8, -0.1]))
 	}
+
+	# Target.
+	TGT_POS = npa([7000.0, 0.0, 500.0])
+	TGT_VEL = np.zeros(3)
 
 	# Sim control.
 	TIME_INCREMENT = None
-	MAXT           = 15
+	MAXT           = 150
 
 	LAST_TIME = int(0)
 	while DYN["LETHALITY"] == endChecks.FLIGHT or DYN["LETHALITY"] == endChecks.TIME:
@@ -46,8 +53,8 @@ if __name__ == "__main__":
 		TOF = DYN["STATE"]["TOF"]
 
 		# Get next update time.
-		N    = 0.0
-		N_ID = ""
+		N    = None
+		N_ID = None
 		for index, key in enumerate(COMPONENTS.keys()):
 			if index == 0:
 				N    = COMPONENTS[f"{key}"].NEXT_UPDATE_TIME
@@ -68,16 +75,43 @@ if __name__ == "__main__":
 
 		# Update components.
 		if N_ID == "PITCH_ACT":
-			COMPONENTS["PITCH_ACT"].update(np.degrees(COMPONENTS['CONTROL'].PITCH_FIN_COMM))
+			COMPONENTS["PITCH_ACT"].update(np.degrees(COMPONENTS["CONTROL"].PITCH_FIN_COMM))
 		elif N_ID == "YAW_ACT":
-			COMPONENTS["YAW_ACT"].update(np.degrees(COMPONENTS['CONTROL'].YAW_FIN_COMM))
+			COMPONENTS["YAW_ACT"].update(np.degrees(COMPONENTS["CONTROL"].YAW_FIN_COMM))
 		elif N_ID == "CONTROL":
 			COMPONENTS["CONTROL"].update(
-				-5.0,
-				5.0,
+				None,
+				3.0,
 				DYN["STATE"]["QRATE"],
 				DYN["STATE"]["RRATE"],
+				DYN["STATE"]["VDOT"],
 				DYN["STATE"]["SPEED"]
+			)
+		elif N_ID == "GUIDANCE":
+			ENU_TO_FLU = ct.FLIGHTPATH_TO_LOCAL_TM(
+				DYN["STATE"]["ENUPSI"],
+				-1.0 * DYN["STATE"]["ENUTHT"]
+			)
+			ENUPOS = npa(
+				[
+					DYN["STATE"]["ENUPOSX"],
+					DYN["STATE"]["ENUPOSY"],
+					DYN["STATE"]["ENUPOSZ"]
+				]
+			)
+			ENUVEL = npa(
+				[
+					DYN["STATE"]["ENUVELX"],
+					DYN["STATE"]["ENUVELY"],
+					DYN["STATE"]["ENUVELZ"]
+				]
+			)
+			COMPONENTS["GUIDANCE"].update(
+				ENU_TO_FLU,
+				ENUPOS,
+				ENUVEL,
+				TGT_POS,
+				TGT_VEL
 			)
 
 		# Console report.
@@ -91,9 +125,9 @@ if __name__ == "__main__":
 
 		# Console report.
 		if TOF > MAXT:
-			X         = DYN["STATE"]["ENUPOSX"]
-			Y         = DYN["STATE"]["ENUPOSY"]
-			Z         = DYN["STATE"]["ENUPOSZ"]
-			MACH      = DYN["STATE"]["MACH"]
+			X    = DYN["STATE"]["ENUPOSX"]
+			Y    = DYN["STATE"]["ENUPOSY"]
+			Z    = DYN["STATE"]["ENUPOSZ"]
+			MACH = DYN["STATE"]["MACH"]
 			print(f"TOF {TOF:.4f} ENU {X:.2f} {Y:.2f} {Z:.2f} MACH {MACH:.2f}")
 			break

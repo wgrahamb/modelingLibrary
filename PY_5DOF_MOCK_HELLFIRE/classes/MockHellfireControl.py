@@ -13,7 +13,7 @@ class MockHellfireControl:
         self.PITCH_RATE_LIM   = 10.0 # rad/s
         self.PITCH_PROP_GAIN  = 0.25 # 1/s
         self.YAW_RATE_LIM     = 10.0 # rad/s
-        self.YAW_PROP_GAIN    = 0.25 # 1/s
+        self.YAW_PROP_GAIN    = 0.1 # 1/s
         self.PITCH_FIN_COMM   = 0.0 # rad
         self.YAW_FIN_COMM     = 0.0 # rad
 
@@ -36,25 +36,34 @@ class MockHellfireControl:
         SIDE_COMM,
         PITCH_RATE,
         YAW_RATE,
+        V_DOT,
         SPD
     ):
 
         PITCH_FIN_COMM = None
         YAW_FIN_COMM   = None
 
-        PITCH_RATE_COMM      = -1.0 * NORM_COMM * 8 / SPD
-        SIGN_PITCH_RATE_COMM = np.sign(PITCH_RATE_COMM)
-        if np.abs(PITCH_RATE_COMM) > self.PITCH_RATE_LIM:
-            PITCH_RATE_COMM  = SIGN_PITCH_RATE_COMM * self.PITCH_RATE_LIM
-        PITCH_PROP_ERR       = PITCH_RATE_COMM - PITCH_RATE + (STD_GRAV/SPD)
-        PITCH_FIN_COMM       = self.PITCH_PROP_GAIN * PITCH_PROP_ERR
+        if NORM_COMM == None or NORM_COMM == 0.0:
+            PITCH_FIN_COMM = 0.0
+        else:
+            PITCH_RATE_COMM      = -1.0 * NORM_COMM * 8 / SPD
+            SIGN_PITCH_RATE_COMM = np.sign(PITCH_RATE_COMM)
+            if np.abs(PITCH_RATE_COMM) > self.PITCH_RATE_LIM:
+                PITCH_RATE_COMM  = SIGN_PITCH_RATE_COMM * self.PITCH_RATE_LIM
+            PITCH_PROP_ERR       = PITCH_RATE_COMM - PITCH_RATE + (STD_GRAV/SPD)
+            PITCH_FIN_COMM       = self.PITCH_PROP_GAIN * PITCH_PROP_ERR
 
-        YAW_RATE_COMM      = -1.0 * SIDE_COMM * 8 / SPD
-        SIGN_YAW_RATE_COMM = np.sign(YAW_RATE_COMM)
-        if np.abs(YAW_RATE_COMM) > self.YAW_RATE_LIM:
-            YAW_RATE_COMM  = SIGN_YAW_RATE_COMM * self.YAW_RATE_LIM
-        YAW_PROP_ERR       = YAW_RATE_COMM - YAW_RATE
-        YAW_FIN_COMM       = self.YAW_PROP_GAIN * YAW_PROP_ERR
+        if SIDE_COMM == None or SIDE_COMM == 0.0:
+            YAW_FIN_COMM = 0.0
+        else:
+            # YAW_RATE_COMM      = -1.0 * SIDE_COMM * 8 / SPD
+            # SIGN_YAW_RATE_COMM = np.sign(YAW_RATE_COMM)
+            # if np.abs(YAW_RATE_COMM) > self.YAW_RATE_LIM:
+            #     YAW_RATE_COMM  = SIGN_YAW_RATE_COMM * self.YAW_RATE_LIM
+            # YAW_PROP_ERR       = YAW_RATE_COMM - YAW_RATE
+
+            YAW_PROP_ERR       = SIDE_COMM - V_DOT
+            YAW_FIN_COMM       = self.YAW_PROP_GAIN * YAW_PROP_ERR
 
         self.PITCH_FIN_COMM = PITCH_FIN_COMM
         self.YAW_FIN_COMM   = YAW_FIN_COMM
