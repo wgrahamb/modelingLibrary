@@ -23,9 +23,7 @@ To Do:
 - CPP_6DOF_SAM
      - Start project. Reuse as much Zipfel code as possible.
 - PY_5DOF_MOCK_HELLFIRE
-     - Get estimates of CMA, CMD, CNA, and CND for a very simple Mock Hellfire
-     aerodynamics. Use the differential airframe simulation to do so.
-     - Then controls should become very easy.
+     - Using aerodynamic derivatives write in Zarchan's rate controller.
      - Implement abstract base classes into components.
      - INS from Zipfel CADAC_ADS6 project.
      - Kalman Filter to pair with it after finished working through examples.

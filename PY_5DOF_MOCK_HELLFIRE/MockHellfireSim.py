@@ -1,6 +1,7 @@
 # Python libraries.
 import numpy as np
 from numpy import array as npa
+import pandas as pd
 np.set_printoptions(suppress=True, precision=2)
 
 # Utility.
@@ -44,6 +45,11 @@ if __name__ == "__main__":
 	TIME_INCREMENT = None
 	MAXT           = 150
 
+	# Yaw Control Test.
+	LAST_YAW_PROP_ERR = 0.0
+	YAW_PROP_ERR      = 0.0
+	YAW_INT_ERR       = 0.0
+
 	LAST_TIME = int(0)
 	while DYN["LETHALITY"] == endChecks.FLIGHT or DYN["LETHALITY"] == endChecks.TIME:
 
@@ -75,7 +81,27 @@ if __name__ == "__main__":
 		if N_ID == "PITCH_ACT":
 			COMPONENTS["PITCH_ACT"].update(0.0)
 		elif N_ID == "YAW_ACT":
-			COMPONENTS["YAW_ACT"].update(0.0)
+
+			YAW_FIN_COMM = 0.0
+
+			# # Yaw Control Test.
+			# YAW_RATE_COMM     = np.radians(5.0)
+			# LAST_YAW_PROP_ERR = YAW_PROP_ERR
+			# YAW_PROP_ERR      = DYN["STATE"]["RRATE"] - YAW_RATE_COMM
+			# YAW_INT_ERR       += (YAW_PROP_ERR * COMPONENTS["YAW_ACT"].TIME_STEP)
+			# YAW_DER_ERR       = (YAW_PROP_ERR - LAST_YAW_PROP_ERR) / COMPONENTS["YAW_ACT"].TIME_STEP
+			# KU                = 0.9
+			# TU                = (28.684-28.455)
+			# KP                = 0.6 * KU
+			# KI                = 1.2 * KU / TU
+			# KD                = 3 * KU * TU / 40
+			# YAW_FIN_COMM      = np.degrees(
+			# 	KP * YAW_PROP_ERR  + \
+			# 	KI * YAW_INT_ERR + \
+			# 	KD * YAW_DER_ERR
+			# )
+
+			COMPONENTS["YAW_ACT"].update(YAW_FIN_COMM)
 
 		# Console report.
 		if np.floor(TOF) == LAST_TIME:
@@ -94,3 +120,15 @@ if __name__ == "__main__":
 			MACH = DYN["STATE"]["MACH"]
 			print(f"TOF {TOF:.4f} ENU {X:.2f} {Y:.2f} {Z:.2f} MACH {MACH:.2f}")
 			break
+
+# f1 = r"PY_5DOF_MOCK_HELLFIRE/data/MOCK_HELLFIRE5DOF.txt"
+# viewFile = f1
+# df = pd.read_csv(open(f"{viewFile}"), delimiter=" ")
+
+# MAX = max(df.iloc[:]["RRATE"]) * RAD_TO_DEG
+# MIN = min(df.iloc[:]["RRATE"]) * RAD_TO_DEG
+
+# print((MAX+MIN)/2)
+
+
+

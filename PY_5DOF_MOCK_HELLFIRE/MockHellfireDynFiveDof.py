@@ -66,11 +66,7 @@ def construct_msl(
 	A     = ATMOS.a # m/s
 	G     = ATMOS.g # m/s^2
 	MACH  = ATMOS.mach # nd
-	BETA  = None # "Normalized Speed" - Zarchan. nd
-	if MACH > 1:
-		BETA = np.sqrt(MACH ** 2 - 1)
-	else:
-		BETA = MACH
+	BETA  = np.sqrt(MACH) # "Normalized Speed" - Zarchan. nd
 
 	# MASS AND MOTOR PROPERTIES. ###################################################
 	MASS_AND_MOTOR = MockHellfireMassAndMotor()
@@ -130,6 +126,15 @@ def construct_msl(
 			"G": G, # m/s^2
 			"MACH": MACH, # nd
 			"BETA": BETA, # nd
+
+			"CZA": 0.0,
+			"CZD": 0.0,
+			"CMA": 0.0,
+			"CMD": 0.0,
+			"CYB": 0.0,
+			"CYD": 0.0,
+			"CNB": 0.0,
+			"CND": 0.0,
 
 			"TOF": TOF, # seconds
 			"SPEED": SPEED, # m/s
@@ -208,6 +213,15 @@ def fly_msl(
 	G    = MSL["STATE"]["G"] # m/s^2
 	MACH = MSL["STATE"]["MACH"] # nd
 	BETA = MSL["STATE"]["BETA"] # nd
+
+	CZA = MSL["STATE"]["CZA"]
+	CZD = MSL["STATE"]["CZD"]
+	CMA = MSL["STATE"]["CMA"]
+	CMD = MSL["STATE"]["CMD"]
+	CYB = MSL["STATE"]["CYB"]
+	CYD = MSL["STATE"]["CYD"]
+	CNB = MSL["STATE"]["CNB"]
+	CND = MSL["STATE"]["CND"]
 
 	TOF           = MSL["STATE"]["TOF"] # seconds
 	SPEED         = MSL["STATE"]["SPEED"] # m/s
@@ -303,7 +317,7 @@ def fly_msl(
 	TAIL_AREA          = 0.5 * TAIL_HLF_SPN * (TAIL_TIP_CHRD + TAIL_ROOT_CHRD) # m^2
 	NOSE_LNGTH         = 0.249733 # m
 	X_BASENOSE2WINGTIP = 0.323925 # m
-	X_NOSETIP2XCD      = 1.8059 - NOSE_LNGTH # m
+	XHL                = 1.8059 - NOSE_LNGTH # m
 	PLANFORM_AREA      = (REF_LNGTH - NOSE_LNGTH) \
 		* REF_DIAM + 0.667 * NOSE_LNGTH * REF_DIAM # m^2
 	XCP_NOSE           = 0.67 * NOSE_LNGTH # m
@@ -329,6 +343,15 @@ def fly_msl(
 			"G": G, # m/s^2
 			"MACH": MACH, # nd
 			"BETA": BETA, # nd
+
+			"CZA": CZA,
+			"CZD": CZD,
+			"CMA": CMA,
+			"CMD": CMD,
+			"CYB": CYB,
+			"CYD": CYD,
+			"CNB": CNB,
+			"CND": CND,
 
 			"TOF": TOF, # seconds
 			"SPEED": SPEED, # m/s
@@ -377,12 +400,7 @@ def fly_msl(
 		A    = MSL["ATMOS"].a # m/s
 		G    = MSL["ATMOS"].g # m/s^2
 		MACH = MSL["ATMOS"].mach # nd
-		BETA = None # "Normalized Speed" - Zarchan. nd
-		# if MACH > 1:
-		# 	BETA = np.sqrt(MACH ** 2 - 1)
-		# else:
-		# 	BETA = np.sqrt(MACH)
-		BETA = np.sqrt(MACH)
+		BETA = np.sqrt(MACH) # "Normalized Speed" - Zarchan. nd
 
 		# MASS AND MOTOR PROPERTIES. ###############################################
 		MSL["MASS_AND_MOTOR"].update(TOF, P)
@@ -413,18 +431,6 @@ def fly_msl(
 		BODY_DRAG       = (WIND_TO_BODY @ WIND_DRAG_FORCE) / MASS # m/s^2
 
 		# AERODYNAMICS. ############################################################
-		CY = 2 * SIDESLIP + \
-			(1.5 * PLANFORM_AREA * SIDESLIP * SIDESLIP) / REF_AREA + \
-			(8 * WNG_AREA * SIDESLIP) / (BETA * REF_AREA) + \
-			(8 * TAIL_AREA * (SIDESLIP + YAW_FIN_DEFL_RAD)) / (BETA * REF_AREA) # nd
-		CN = 2 * SIDESLIP * ((XCG - XCP_NOSE) / REF_DIAM) + \
-			((1.5 * PLANFORM_AREA * SIDESLIP * SIDESLIP) / REF_AREA) * \
-			((XCG - XCP_BODY) / REF_DIAM) + \
-			((8 * WNG_AREA * SIDESLIP) / (BETA * REF_AREA)) * \
-			((XCG - XCP_WNG) / REF_DIAM) + \
-			((8 * TAIL_AREA * (SIDESLIP + YAW_FIN_DEFL_RAD)) / \
-			(BETA * REF_AREA)) * ((XCG - X_NOSETIP2XCD) / REF_DIAM) # nd
-
 		CZ = 2 * ALPHA + \
 			(1.5 * PLANFORM_AREA * ALPHA * ALPHA) / REF_AREA + \
 			(8 * WNG_AREA * ALPHA) / (BETA * REF_AREA) + \
@@ -435,7 +441,50 @@ def fly_msl(
 			((8 * WNG_AREA * ALPHA) / (BETA * REF_AREA)) * \
 			((XCG - XCP_WNG) / REF_DIAM) + \
 			((8 * TAIL_AREA * (ALPHA + PITCH_FIN_DEFL_RAD)) / \
-			(BETA * REF_AREA)) * ((XCG - X_NOSETIP2XCD) / REF_DIAM) # nd
+			(BETA * REF_AREA)) * ((XCG - XHL) / REF_DIAM) # nd
+
+		CY = 2 * SIDESLIP + \
+			(1.5 * PLANFORM_AREA * SIDESLIP * SIDESLIP) / REF_AREA + \
+			(8 * WNG_AREA * SIDESLIP) / (BETA * REF_AREA) + \
+			(8 * TAIL_AREA * (SIDESLIP + YAW_FIN_DEFL_RAD)) / (BETA * REF_AREA) # nd
+		CN = 2 * SIDESLIP * ((XCG - XCP_NOSE) / REF_DIAM) + \
+			((1.5 * PLANFORM_AREA * SIDESLIP * SIDESLIP) / REF_AREA) * \
+			((XCG - XCP_BODY) / REF_DIAM) + \
+			((8 * WNG_AREA * SIDESLIP) / (BETA * REF_AREA)) * \
+			((XCG - XCP_WNG) / REF_DIAM) + \
+			((8 * TAIL_AREA * (SIDESLIP + YAW_FIN_DEFL_RAD)) / \
+			(BETA * REF_AREA)) * ((XCG - XHL) / REF_DIAM) # nd
+
+		# AERODYNAMIC DERIVATIVES. #################################################
+		CZA = 2 + \
+			(1.5 * PLANFORM_AREA * ALPHA / REF_AREA) + \
+			(8 * WNG_AREA / (BETA * REF_AREA)) + \
+			(8 * TAIL_AREA / (BETA * REF_AREA))
+		CZD = (8 * TAIL_AREA / (BETA * REF_AREA))
+		CMA = (2 * (XCG - XCP_NOSE) / REF_DIAM) + \
+			(1.5 * PLANFORM_AREA * ALPHA / REF_AREA) * \
+			((XCG - XCP_BODY) / REF_DIAM) + \
+			(8 * WNG_AREA / (BETA * REF_AREA)) * \
+			((XCG - XCP_WNG) / REF_DIAM) + \
+			(8 * TAIL_AREA / (BETA * REF_AREA)) * \
+			((XCG - XHL) / REF_DIAM)
+		CMD = (8 * TAIL_AREA / (BETA * REF_AREA)) * \
+			((XCG - XHL) / REF_DIAM)
+
+		CYB = 2 + \
+			(1.5 * PLANFORM_AREA * SIDESLIP / REF_AREA) + \
+			(8 * WNG_AREA / (BETA * REF_AREA)) + \
+			(8 * TAIL_AREA / (BETA * REF_AREA))
+		CYD = (8 * TAIL_AREA / (BETA * REF_AREA))
+		CNB = (2 * (XCG - XCP_NOSE) / REF_DIAM) + \
+			(1.5 * PLANFORM_AREA * SIDESLIP / REF_AREA) * \
+			((XCG - XCP_BODY) / REF_DIAM) + \
+			(8 * WNG_AREA / (BETA * REF_AREA)) * \
+			((XCG - XCP_WNG) / REF_DIAM) + \
+			(8 * TAIL_AREA / (BETA * REF_AREA)) * \
+			((XCG - XHL) / REF_DIAM)
+		CND = (8 * TAIL_AREA / (BETA * REF_AREA)) * \
+			((XCG - XHL) / REF_DIAM)
 
 		# DERIVATIVES. #############################################################
 		QDOT = (Q * REF_AREA * REF_DIAM * CM) / TMOI # rad/s^2
