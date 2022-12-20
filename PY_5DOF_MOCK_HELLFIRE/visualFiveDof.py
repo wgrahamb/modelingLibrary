@@ -65,10 +65,10 @@ pitch.legend(fontsize="small")
 yaw = fig.add_subplot(223)
 yaw.set_title("Yaw")
 yaw.set_xlabel("TOF")
-# yaw.plot(df.iloc[startIndex:stopIndex]["TOF"], df.iloc[startIndex:stopIndex]["SIDESLIP"] * RAD_TO_DEG, label="SIDESLIP - DEG", color=colors.pop(0))
-# yaw.plot(df.iloc[startIndex:stopIndex]["TOF"], df.iloc[startIndex:stopIndex]["ENUPSI"] * RAD_TO_DEG, label="PSI - DEG", color=colors.pop(0))
+yaw.plot(df.iloc[startIndex:stopIndex]["TOF"], df.iloc[startIndex:stopIndex]["SIDESLIP"] * RAD_TO_DEG, label="SIDESLIP - DEG", color=colors.pop(0))
+yaw.plot(df.iloc[startIndex:stopIndex]["TOF"], df.iloc[startIndex:stopIndex]["ENUPSI"] * RAD_TO_DEG, label="PSI - DEG", color=colors.pop(0))
 yaw.plot(df.iloc[startIndex:stopIndex]["TOF"], df.iloc[startIndex:stopIndex]["RRATE"] * RAD_TO_DEG, label="PSI DOT - DEG", color=colors.pop(0))
-# yaw.plot(df.iloc[startIndex:stopIndex]["TOF"], df.iloc[startIndex:stopIndex]["VDOT"], label="SIDE ACC - M/S^2", color=colors.pop(0))
+yaw.plot(df.iloc[startIndex:stopIndex]["TOF"], df.iloc[startIndex:stopIndex]["VDOT"], label="SIDE ACC - M/S^2", color=colors.pop(0))
 yaw.legend(fontsize="small")
 
 # Fins

@@ -45,10 +45,10 @@ if __name__ == "__main__":
 	TIME_INCREMENT = None
 	MAXT           = 150
 
-	# Yaw Control Test.
-	LAST_YAW_PROP_ERR = 0.0
-	YAW_PROP_ERR      = 0.0
-	YAW_INT_ERR       = 0.0
+	# # Yaw Control Test.
+	# LAST_YAW_PROP_ERR = 0.0
+	# YAW_PROP_ERR      = 0.0
+	# YAW_INT_ERR       = 0.0
 
 	LAST_TIME = int(0)
 	while DYN["LETHALITY"] == endChecks.FLIGHT or DYN["LETHALITY"] == endChecks.TIME:
@@ -79,10 +79,10 @@ if __name__ == "__main__":
 
 		# Update components.
 		if N_ID == "PITCH_ACT":
-			COMPONENTS["PITCH_ACT"].update(0.0)
+			COMPONENTS["PITCH_ACT"].update(-1.0)
 		elif N_ID == "YAW_ACT":
 
-			YAW_FIN_COMM = 0.0
+			YAW_FIN_COMM = -1.0
 
 			# # Yaw Control Test.
 			# YAW_RATE_COMM     = np.radians(5.0)
@@ -105,10 +105,10 @@ if __name__ == "__main__":
 
 		# Console report.
 		if np.floor(TOF) == LAST_TIME:
-			X         = DYN["STATE"]["ENUPOSX"]
-			Y         = DYN["STATE"]["ENUPOSY"]
-			Z         = DYN["STATE"]["ENUPOSZ"]
-			MACH      = DYN["STATE"]["MACH"]
+			X    = DYN["STATE"]["ENUPOSX"]
+			Y    = DYN["STATE"]["ENUPOSY"]
+			Z    = DYN["STATE"]["ENUPOSZ"]
+			MACH = DYN["STATE"]["MACH"]
 			print(f"TOF {TOF:.0f} ENU {X:.2f} {Y:.2f} {Z:.2f} MACH {MACH:.2f}")
 			LAST_TIME += 1
 
