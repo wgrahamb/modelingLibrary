@@ -79,10 +79,10 @@ if __name__ == "__main__":
 
 		# Update components.
 		if N_ID == "PITCH_ACT":
-			COMPONENTS["PITCH_ACT"].update(-1.0)
+			COMPONENTS["PITCH_ACT"].update(0.0)
 		elif N_ID == "YAW_ACT":
 
-			YAW_FIN_COMM = -1.0
+			YAW_FIN_COMM = 0.0
 
 			# # Yaw Control Test.
 			# YAW_RATE_COMM     = np.radians(5.0)
@@ -101,7 +101,38 @@ if __name__ == "__main__":
 			# 	KD * YAW_DER_ERR
 			# )
 
-			COMPONENTS["YAW_ACT"].update(YAW_FIN_COMM)
+			REF_DIAM = 0.18
+			REF_AREA = np.pi * (REF_DIAM ** 2) / 4.0
+			Q        = DYN["STATE"]["Q"]
+			MASS     = DYN["STATE"]["MASS"]
+			SPD      = DYN["STATE"]["SPEED"]
+			TMOI     = DYN["STATE"]["TMOI"]
+			R_DEG    = np.degrees(DYN["STATE"]["RRATE"])
+
+			CYB = DYN["STATE"]["CYB"]
+			CYD = DYN["STATE"]["CYD"]
+			CNB = DYN["STATE"]["CNB"]
+			CND = DYN["STATE"]["CND"]
+
+			YB = -1 * Q * REF_AREA * CYB / (MASS * SPD)
+			YD = -1 * Q * REF_AREA * CYD / (MASS * SPD)
+			NB = Q * REF_AREA * REF_DIAM * CNB / TMOI
+			ND = Q * REF_AREA * REF_DIAM * CND / TMOI
+
+			OMEGAZ  = np.sqrt((NB * YD - YB * ND) / YD)
+			OMEGAAF = np.sqrt(-1.0 * NB)
+			ZETAAF  = YB * OMEGAAF / (2 * NB)
+			KR      = 0.15
+			K1      = -1.0 * SPD * ((NB * YD - YB * ND) / (1845 * NB))
+			TA      = ND / (NB * YD - YB * ND)
+			K3      = 1845 * K1 / SPD
+			KDC     = (1 - KR * K3) / (K1 * KR)
+
+			COMMAND = -1.0 # Gs
+
+			DEFL_COMM = KR * (KDC * COMMAND + R_DEG)
+
+			COMPONENTS["YAW_ACT"].update(DEFL_COMM)
 
 		# Console report.
 		if np.floor(TOF) == LAST_TIME:
