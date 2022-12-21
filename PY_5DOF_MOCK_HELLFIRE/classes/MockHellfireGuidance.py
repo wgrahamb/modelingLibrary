@@ -22,6 +22,7 @@ class MockHellfireGuidance:
         self.FLU_REL_POS      = np.zeros(3) # m
 
         self.STATE = {
+            "TIME": self.TIME,
             "NORM_COMM": self.NORM_COMM,
             "SIDE_COMM": self.SIDE_COMM,
             "TGO": self.TGO,
@@ -55,14 +56,15 @@ class MockHellfireGuidance:
         self.TGO         = FLU_REL_POS_M / CLOSING_SPD # seconds
 
         # PROPORTIONAL GUIDANCE.
-        if self.TGO < 3.0:
+        # if self.TGO < 3.0:
+        if True:
             T1             = np.cross(self.FLU_REL_POS, CLOSING_VEL)
             T2             = np.dot(self.FLU_REL_POS, self.FLU_REL_POS)
             OMEGA          = T1 / T2 # rad/s
-            T3             = -1.0 * self.PRO_NAV_GAIN * CLOSING_SPD * FLU_REL_POS_U
+            T3             = 1.0 * self.PRO_NAV_GAIN * CLOSING_SPD * FLU_REL_POS_U
             COMM           = np.cross(T3, OMEGA) # m/s^2
-            self.NORM_COMM = COMM[2] # m/s^2
-            self.SIDE_COMM = COMM[1] # m/s^2
+            self.NORM_COMM = -COMM[2] # m/s^2
+            self.SIDE_COMM = -COMM[1] # m/s^2
             AMAG           = np.sqrt(self.NORM_COMM ** 2 + self.SIDE_COMM ** 2) # m/s^2
             TRIG_RATIO     = np.arctan2(self.NORM_COMM, self.SIDE_COMM) # nd
             if AMAG > self.TERM_GUIDE_LIM:
@@ -88,6 +90,7 @@ class MockHellfireGuidance:
         self.NEXT_UPDATE_TIME = self.TIME + self.TIME_STEP
 
         self.STATE = {
+            "TIME": self.TIME,
             "NORM_COMM": self.NORM_COMM,
             "SIDE_COMM": self.SIDE_COMM,
             "TGO": self.TGO,

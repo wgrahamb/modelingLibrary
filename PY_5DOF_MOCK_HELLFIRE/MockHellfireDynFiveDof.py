@@ -66,7 +66,7 @@ def construct_msl(
 	A     = ATMOS.a # m/s
 	G     = ATMOS.g # m/s^2
 	MACH  = ATMOS.mach # nd
-	BETA  = np.sqrt(MACH) # "Normalized Speed" - Zarchan. nd
+	BETA  = 0.01 # "Normalized Speed" - Zarchan. nd (KLUDGE)
 
 	# MASS AND MOTOR PROPERTIES. ###################################################
 	MASS_AND_MOTOR = MockHellfireMassAndMotor()
@@ -106,6 +106,10 @@ def construct_msl(
 	QRATE          = 0.0 # rad/s
 	RRATE          = 0.0 # rad/s
 
+	REF_DIAM  = 0.18 # m
+	REF_LNGTH = 1.6 # m
+	REF_AREA  = np.pi * (REF_DIAM ** 2) / 4 # m^2
+
 	# DATA. ########################################################################
 	MISSILE = {
 		"IDENTITY": ID,
@@ -136,6 +140,9 @@ def construct_msl(
 			"CNB": 0.0,
 			"CND": 0.0,
 
+			"REF_DIAM": REF_DIAM, # m
+			"REF_LENGTH": REF_LNGTH, # m
+			"REF_AREA": REF_AREA, # m^2
 			"TOF": TOF, # seconds
 			"SPEED": SPEED, # m/s
 			"ALPHA": ALPHA, # rad
@@ -301,7 +308,7 @@ def fly_msl(
 	RD4        = 0.0 # rad/s^2
 
 	# AIRFRAME. ####################################################################
-	CD_LOOKUP          = [0.1, 0.6] # nd
+	CD_LOOKUP          = [0.1, 0.75] # nd
 	MACH_LOOKUP        = [0.6, 2.5] # nd
 	MM_TO_M            = 1.0 / 1000.0
 	REF_DIAM           = 0.18 # m
@@ -353,6 +360,9 @@ def fly_msl(
 			"CNB": CNB,
 			"CND": CND,
 
+			"REF_DIAM": REF_DIAM, # m
+			"REF_LENGTH": REF_LNGTH, # m
+			"REF_AREA": REF_AREA, # m^2
 			"TOF": TOF, # seconds
 			"SPEED": SPEED, # m/s
 			"ALPHA": ALPHA, # rad
@@ -400,7 +410,7 @@ def fly_msl(
 		A    = MSL["ATMOS"].a # m/s
 		G    = MSL["ATMOS"].g # m/s^2
 		MACH = MSL["ATMOS"].mach # nd
-		BETA = np.sqrt(MACH) # "Normalized Speed" - Zarchan. nd
+		BETA = 0.01 # "Normalized Speed" - Zarchan. nd (KLUDGE)
 
 		# MASS AND MOTOR PROPERTIES. ###############################################
 		MSL["MASS_AND_MOTOR"].update(TOF, P)
