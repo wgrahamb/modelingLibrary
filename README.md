@@ -22,13 +22,15 @@ To Do:
      try again with Zipfel's method.
 - CPP_6DOF_SAM
      - Start project. Reuse as much Zipfel code as possible.
+     - Maybe? I'm leaning toward porting ROCKET6G instead.
 - PY_5DOF_MOCK_HELLFIRE
-     - Using aerodynamic derivatives write in Zarchan's rate controller.
-     - Implement abstract base classes into components.
-     - INS from Zipfel CADAC_ADS6 project.
-     - Kalman Filter to pair with it after finished working through examples.
-     - Use bookmarked article to model the drag.
-     - Using final project from MAE540, design a real rocket motor.
+     - Navigator:
+          - INS and GPS from Zipfel, not sure which project yet.
+          - Kalman Filter (from Zipfel) to pair with it after finished
+          working through examples. See filters.py in pythonFunctions.
+     - Axial Forces:
+          - Use bookmarked article to model the drag.
+          - Using final project from MAE540, design a real rocket motor.
 - PY_6DOF_70MM_ROCKET
      - The pitch and yaw aerodynamics do not yet line up with the flight data.
      - Check alpha and beta calculations.

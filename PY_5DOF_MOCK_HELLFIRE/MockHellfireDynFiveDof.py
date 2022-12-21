@@ -85,15 +85,15 @@ def construct_msl(
 	ENU_TO_FLU = ct.FLIGHTPATH_TO_LOCAL_TM(INITIAL_AZ, -1.0 * INITIAL_EL) # nd
 	ENUPOS     = np.zeros(3) # m
 	ENUVEL     = INITIAL_AIRSPEED * (ENU_TO_FLU[0]) # m/s
-	ENUTHT     = INITIAL_EL
-	ENUPSI     = INITIAL_AZ
+	ENUTHT     = INITIAL_EL # rad
+	ENUPSI     = INITIAL_AZ # rad
 
 	GEODETIC0 = npa([np.radians(INITIAL_LLA[0]), np.radians(INITIAL_LLA[1]),
-		INITIAL_LLA[2]])
-	GEODETIC  = copy.deepcopy(GEODETIC0)
+		INITIAL_LLA[2]]) # rad, rad, m
+	GEODETIC  = copy.deepcopy(GEODETIC0) # rad, rad, m
 
-	ECEF0 = et.LLA_TO_ECI(GEODETIC0)
-	ECEF  = copy.deepcopy(ECEF0)
+	ECEF0 = et.LLA_TO_ECI(GEODETIC0) # m
+	ECEF  = copy.deepcopy(ECEF0) # m
 
 	# BODY. ########################################################################
 	TOF            = 0.0 # seconds
@@ -131,14 +131,14 @@ def construct_msl(
 			"MACH": MACH, # nd
 			"BETA": BETA, # nd
 
-			"CZA": 0.0,
-			"CZD": 0.0,
-			"CMA": 0.0,
-			"CMD": 0.0,
-			"CYB": 0.0,
-			"CYD": 0.0,
-			"CNB": 0.0,
-			"CND": 0.0,
+			"CZA": 0.0, # 1/deg
+			"CZD": 0.0, # 1/deg
+			"CMA": 0.0, # 1/deg
+			"CMD": 0.0, # 1/deg
+			"CYB": 0.0, # 1/deg
+			"CYD": 0.0, # 1/deg
+			"CNB": 0.0, # 1/deg
+			"CND": 0.0, # 1/deg
 
 			"REF_DIAM": REF_DIAM, # m
 			"REF_LENGTH": REF_LNGTH, # m
@@ -221,14 +221,14 @@ def fly_msl(
 	MACH = MSL["STATE"]["MACH"] # nd
 	BETA = MSL["STATE"]["BETA"] # nd
 
-	CZA = MSL["STATE"]["CZA"]
-	CZD = MSL["STATE"]["CZD"]
-	CMA = MSL["STATE"]["CMA"]
-	CMD = MSL["STATE"]["CMD"]
-	CYB = MSL["STATE"]["CYB"]
-	CYD = MSL["STATE"]["CYD"]
-	CNB = MSL["STATE"]["CNB"]
-	CND = MSL["STATE"]["CND"]
+	CZA = MSL["STATE"]["CZA"] # 1/deg
+	CZD = MSL["STATE"]["CZD"] # 1/deg
+	CMA = MSL["STATE"]["CMA"] # 1/deg
+	CMD = MSL["STATE"]["CMD"] # 1/deg
+	CYB = MSL["STATE"]["CYB"] # 1/deg
+	CYD = MSL["STATE"]["CYD"] # 1/deg
+	CNB = MSL["STATE"]["CNB"] # 1/deg
+	CND = MSL["STATE"]["CND"] # 1/deg
 
 	TOF           = MSL["STATE"]["TOF"] # seconds
 	SPEED         = MSL["STATE"]["SPEED"] # m/s
@@ -241,34 +241,34 @@ def fly_msl(
 	SPEC_FORCE[1] = MSL["STATE"]["VDOT"] # m/s^2
 	SPEC_FORCE[2] = MSL["STATE"]["WDOT"] # m/s^2
 
-	ENUPOS           = np.zeros(3) # m
-	ENUPOS[0]        = MSL["STATE"]["ENUPOSX"] # m
-	ENUPOS[1]        = MSL["STATE"]["ENUPOSY"] # m
-	ENUPOS[2]        = MSL["STATE"]["ENUPOSZ"] # m
-	ENUVEL           = np.zeros(3) # m/s
-	ENUVEL[0]        = MSL["STATE"]["ENUVELX"] # m/s
-	ENUVEL[1]        = MSL["STATE"]["ENUVELY"] # m/s
-	ENUVEL[2]        = MSL["STATE"]["ENUVELZ"] # m/s
-	ENUTHT           = MSL["STATE"]["ENUTHT"] # rad
-	ENUPSI           = MSL["STATE"]["ENUPSI"] # rad
+	ENUPOS    = np.zeros(3) # m
+	ENUPOS[0] = MSL["STATE"]["ENUPOSX"] # m
+	ENUPOS[1] = MSL["STATE"]["ENUPOSY"] # m
+	ENUPOS[2] = MSL["STATE"]["ENUPOSZ"] # m
+	ENUVEL    = np.zeros(3) # m/s
+	ENUVEL[0] = MSL["STATE"]["ENUVELX"] # m/s
+	ENUVEL[1] = MSL["STATE"]["ENUVELY"] # m/s
+	ENUVEL[2] = MSL["STATE"]["ENUVELZ"] # m/s
+	ENUTHT    = MSL["STATE"]["ENUTHT"] # rad
+	ENUPSI    = MSL["STATE"]["ENUPSI"] # rad
 
-	GEODETIC0    = np.zeros(3)
-	GEODETIC0[0] = MSL["STATE"]["LAT0"]
-	GEODETIC0[1] = MSL["STATE"]["LON0"]
-	GEODETIC0[2] = MSL["STATE"]["ALT0"]
-	GEODETIC     = np.zeros(3)
-	GEODETIC[0]  = MSL["STATE"]["LAT"]
-	GEODETIC[1]  = MSL["STATE"]["LON"]
-	GEODETIC[2]  = MSL["STATE"]["ALT"]
+	GEODETIC0    = np.zeros(3) # rad, rad, m
+	GEODETIC0[0] = MSL["STATE"]["LAT0"] # rad, rad, m
+	GEODETIC0[1] = MSL["STATE"]["LON0"] # rad, rad, m
+	GEODETIC0[2] = MSL["STATE"]["ALT0"] # rad, rad, m
+	GEODETIC     = np.zeros(3) # rad, rad, m
+	GEODETIC[0]  = MSL["STATE"]["LAT"] # rad, rad, m
+	GEODETIC[1]  = MSL["STATE"]["LON"] # rad, rad, m
+	GEODETIC[2]  = MSL["STATE"]["ALT"] # rad, rad, m
 
-	ECEF0    = np.zeros(3)
-	ECEF0[0] = MSL["STATE"]["ECEF_X0"]
-	ECEF0[1] = MSL["STATE"]["ECEF_Y0"]
-	ECEF0[2] = MSL["STATE"]["ECEF_Z0"]
-	ECEF     = np.zeros(3)
-	ECEF[0]  = MSL["STATE"]["ECEF_X"]
-	ECEF[1]  = MSL["STATE"]["ECEF_Y"]
-	ECEF[2]  = MSL["STATE"]["ECEF_Z"]
+	ECEF0    = np.zeros(3) # m
+	ECEF0[0] = MSL["STATE"]["ECEF_X0"] # m
+	ECEF0[1] = MSL["STATE"]["ECEF_Y0"] # m
+	ECEF0[2] = MSL["STATE"]["ECEF_Z0"] # m
+	ECEF     = np.zeros(3) # m
+	ECEF[0]  = MSL["STATE"]["ECEF_X"] # m
+	ECEF[1]  = MSL["STATE"]["ECEF_Y"] # m
+	ECEF[2]  = MSL["STATE"]["ECEF_Z"] # m
 
 	# INTEGRATION STATE. ###########################################################
 	INTEGRATION_PASS = 0
@@ -279,33 +279,33 @@ def fly_msl(
 	STATE_Q0   = QRATE # rad/s
 	STATE_R0   = RRATE # rad/s
 
-	V1         = np.zeros(3) # m/s
-	A1         = np.zeros(3) # m/s^2
-	Q1         = 0.0 # rad/s
-	R1         = 0.0 # rad/s
-	QD1        = 0.0 # rad/s^2
-	RD1        = 0.0 # rad/s^2
+	V1  = np.zeros(3) # m/s
+	A1  = np.zeros(3) # m/s^2
+	Q1  = 0.0 # rad/s
+	R1  = 0.0 # rad/s
+	QD1 = 0.0 # rad/s^2
+	RD1 = 0.0 # rad/s^2
 
-	V2         = np.zeros(3) # m/s
-	A2         = np.zeros(3) # m/s^2
-	Q2         = 0.0 # rad/s
-	R2         = 0.0 # rad/s
-	QD2        = 0.0 # rad/s^2
-	RD2        = 0.0 # rad/s^2
+	V2  = np.zeros(3) # m/s
+	A2  = np.zeros(3) # m/s^2
+	Q2  = 0.0 # rad/s
+	R2  = 0.0 # rad/s
+	QD2 = 0.0 # rad/s^2
+	RD2 = 0.0 # rad/s^2
 
-	V3         = np.zeros(3) # m/s
-	A3         = np.zeros(3) # m/s^2
-	Q3         = 0.0 # rad/s
-	R3         = 0.0 # rad/s
-	QD3        = 0.0 # rad/s^2
-	RD3        = 0.0 # rad/s^2
+	V3  = np.zeros(3) # m/s
+	A3  = np.zeros(3) # m/s^2
+	Q3  = 0.0 # rad/s
+	R3  = 0.0 # rad/s
+	QD3 = 0.0 # rad/s^2
+	RD3 = 0.0 # rad/s^2
 
-	V4         = np.zeros(3) # m/s
-	A4         = np.zeros(3) # m/s^2
-	Q4         = 0.0 # rad/s
-	R4         = 0.0 # rad/s
-	QD4        = 0.0 # rad/s^2
-	RD4        = 0.0 # rad/s^2
+	V4  = np.zeros(3) # m/s
+	A4  = np.zeros(3) # m/s^2
+	Q4  = 0.0 # rad/s
+	R4  = 0.0 # rad/s
+	QD4 = 0.0 # rad/s^2
+	RD4 = 0.0 # rad/s^2
 
 	# AIRFRAME. ####################################################################
 	CD_LOOKUP          = [0.1, 0.75] # nd
@@ -351,14 +351,14 @@ def fly_msl(
 			"MACH": MACH, # nd
 			"BETA": BETA, # nd
 
-			"CZA": CZA,
-			"CZD": CZD,
-			"CMA": CMA,
-			"CMD": CMD,
-			"CYB": CYB,
-			"CYD": CYD,
-			"CNB": CNB,
-			"CND": CND,
+			"CZA": CZA, # 1/deg
+			"CZD": CZD, # 1/deg
+			"CMA": CMA, # 1/deg
+			"CMD": CMD, # 1/deg
+			"CYB": CYB, # 1/deg
+			"CYD": CYD, # 1/deg
+			"CNB": CNB, # 1/deg
+			"CND": CND, # 1/deg
 
 			"REF_DIAM": REF_DIAM, # m
 			"REF_LENGTH": REF_LNGTH, # m
@@ -469,32 +469,32 @@ def fly_msl(
 		CZA = 2 + \
 			(1.5 * PLANFORM_AREA * ALPHA / REF_AREA) + \
 			(8 * WNG_AREA / (BETA * REF_AREA)) + \
-			(8 * TAIL_AREA / (BETA * REF_AREA))
-		CZD = (8 * TAIL_AREA / (BETA * REF_AREA))
+			(8 * TAIL_AREA / (BETA * REF_AREA)) # 1/deg
+		CZD = (8 * TAIL_AREA / (BETA * REF_AREA)) # 1/deg
 		CMA = (2 * (XCG - XCP_NOSE) / REF_DIAM) + \
 			(1.5 * PLANFORM_AREA * ALPHA / REF_AREA) * \
 			((XCG - XCP_BODY) / REF_DIAM) + \
 			(8 * WNG_AREA / (BETA * REF_AREA)) * \
 			((XCG - XCP_WNG) / REF_DIAM) + \
 			(8 * TAIL_AREA / (BETA * REF_AREA)) * \
-			((XCG - XHL) / REF_DIAM)
+			((XCG - XHL) / REF_DIAM) # 1/deg
 		CMD = (8 * TAIL_AREA / (BETA * REF_AREA)) * \
-			((XCG - XHL) / REF_DIAM)
+			((XCG - XHL) / REF_DIAM) # 1/deg
 
 		CYB = 2 + \
 			(1.5 * PLANFORM_AREA * SIDESLIP / REF_AREA) + \
 			(8 * WNG_AREA / (BETA * REF_AREA)) + \
-			(8 * TAIL_AREA / (BETA * REF_AREA))
-		CYD = (8 * TAIL_AREA / (BETA * REF_AREA))
+			(8 * TAIL_AREA / (BETA * REF_AREA)) # 1/deg
+		CYD = (8 * TAIL_AREA / (BETA * REF_AREA)) # 1/deg
 		CNB = (2 * (XCG - XCP_NOSE) / REF_DIAM) + \
 			(1.5 * PLANFORM_AREA * SIDESLIP / REF_AREA) * \
 			((XCG - XCP_BODY) / REF_DIAM) + \
 			(8 * WNG_AREA / (BETA * REF_AREA)) * \
 			((XCG - XCP_WNG) / REF_DIAM) + \
 			(8 * TAIL_AREA / (BETA * REF_AREA)) * \
-			((XCG - XHL) / REF_DIAM)
+			((XCG - XHL) / REF_DIAM) # 1/deg
 		CND = (8 * TAIL_AREA / (BETA * REF_AREA)) * \
-			((XCG - XHL) / REF_DIAM)
+			((XCG - XHL) / REF_DIAM) # 1/deg
 
 		# DERIVATIVES. #############################################################
 		QDOT = (Q * REF_AREA * REF_DIAM * CM) / TMOI # rad/s^2
@@ -515,9 +515,9 @@ def fly_msl(
 		T2 = np.sin(GEODETIC0[0]) * ENUPOS[2] + np.cos(GEODETIC0[0]) * ENUPOS[1]
 		T3 = np.cos(GEODETIC0[1]) * T1 - np.sin(GEODETIC0[1]) * ENUPOS[0]
 		T4 = np.sin(GEODETIC0[1]) * T1 + np.cos(GEODETIC0[1]) * ENUPOS[0]
-		ECEF = ECEF0 + npa([T3, T4, T2])
+		ECEF = ECEF0 + npa([T3, T4, T2]) # m
 
-		GEODETIC = et.ECI_TO_LLA(ECEF)
+		GEODETIC = et.ECI_TO_LLA(ECEF) # rad, rad, m
 
 		# STATE. ###################################################################
 		if INTEGRATION_PASS == 0:

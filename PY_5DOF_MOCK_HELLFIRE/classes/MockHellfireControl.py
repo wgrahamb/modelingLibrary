@@ -62,6 +62,9 @@ class MockHellfireControl:
 
         YAW_G_COMM        = (SIDE_COMM / STD_GRAV) * FT_TO_M
         self.YAW_FIN_COMM = YAW_KR * (YAW_KDC * YAW_G_COMM + np.degrees(RRATE))
+        TEMP              = np.sign(self.YAW_FIN_COMM)
+        if np.abs(self.YAW_FIN_COMM) > self.FIN_LIM:
+            self.YAW_FIN_COMM = TEMP * self.FIN_LIM
 
         # Pitch control.
         ZA = -1 * Q * REF_AREA * CZA / (MASS * SPD)
@@ -77,6 +80,9 @@ class MockHellfireControl:
         PITCH_G_COMM        = (NORM_COMM / STD_GRAV) * FT_TO_M
         self.PITCH_FIN_COMM = PITCH_KR * (PITCH_KDC * PITCH_G_COMM + \
             np.degrees(QRATE))
+        TEMP                = np.sign(self.PITCH_FIN_COMM)
+        if np.abs(self.PITCH_FIN_COMM) > self.FIN_LIM:
+            self.PITCH_FIN_COMM = TEMP * self.FIN_LIM
 
         # Update time.
         self.TIME             += self.TIME_STEP

@@ -27,7 +27,7 @@ if __name__ == "__main__":
 
 	# Dynamics.
 	LLA0 = npa([38.8719, 77.0563, 0.0])
-	AZ0  = 55
+	AZ0  = 65
 	EL0  = 55
 	SPD0 = 10
 	ID   = "MOCK_HELLFIRE5DOF"
@@ -38,12 +38,12 @@ if __name__ == "__main__":
 		"PITCH_ACT": SecondOrderActuator("PITCH_DEFL"),
 		"YAW_ACT": SecondOrderActuator("YAW_DEFL"),
 		"CONTROL": MockHellfireControl("CONTROL"),
-		"GUIDANCE": MockHellfireGuidance("GUIDANCE", npa([0.8, 0.8, -0.1]))
+		"GUIDANCE": MockHellfireGuidance("GUIDANCE", npa([0.4, -0.4, 0.4]))
 	}
 
 	# Target.
 	TGT_POS = npa([7000.0, 0.0, 500.0])
-	TGT_VEL = np.zeros(3)
+	TGT_VEL = npa([0.0, 0.0, 0.0])
 
 	# Sim control.
 	TIME_INCREMENT = None
@@ -53,6 +53,7 @@ if __name__ == "__main__":
 	MISS_DIST      = 5.0
 	LETHALITY      = None
 
+	print()
 	while DYN["LETHALITY"] == endChecks.FLIGHT or DYN["LETHALITY"] == endChecks.TIME:
 
 		# Dynamics tof is driver.
@@ -69,15 +70,19 @@ if __name__ == "__main__":
 				N    = COMPONENTS[f"{key}"].NEXT_UPDATE_TIME
 				N_ID = key
 
-		# Update dynamics.
 		TIME_INCREMENT = N - TOF
 		if TIME_INCREMENT > EPSILON:
+
+			# Update dynamics.
 			DYN = Dyn.fly_msl(
 				MISSILE_INPUT_DICT=DYN,
 				FLY_FOR_THIS_LONG=TIME_INCREMENT,
 				PITCH_FIN_DEFL_DEG_INPUT=COMPONENTS["PITCH_ACT"].DEFLECTION,
 				YAW_FIN_DEFL_DEG_INPUT=COMPONENTS["YAW_ACT"].DEFLECTION
 			)
+
+			# Update target.
+			TGT_POS += (TIME_INCREMENT * TGT_VEL)
 
 		# Update components.
 		if N_ID == "PITCH_ACT":
@@ -149,10 +154,10 @@ if __name__ == "__main__":
 				FLAG = 0
 			elif FLAG == 2:
 				print()
-				print(f"REPORT:")
-				print(f"STATUS: TOF {TOF:.4f} ENU {X:.2f} {Y:.2f} {Z:.2f} MACH {MACH:.2f}")
-				print(f"RESULT: {LETHALITY}")
-				print(f"MISS  : {COMPONENTS['GUIDANCE'].FLU_REL_POS}")
+				print(f"REPORT :")
+				print(f"STATUS : TOF {TOF:.4f} ENU {X:.2f} {Y:.2f} {Z:.2f} MACH {MACH:.2f}")
+				print(f"RESULT : {LETHALITY}")
+				print(f"MISS   : {COMPONENTS['GUIDANCE'].FLU_REL_POS}")
 				print()
 				break
 

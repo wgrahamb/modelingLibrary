@@ -31,12 +31,30 @@ trajectory.set_xlabel("E", labelpad=10)
 trajectory.set_ylabel("N", labelpad=10)
 trajectory.set_zlabel("U", labelpad=10)
 if scale:
-	xMin = min(list(df.iloc[startIndex:stopIndex]["ENUPOSX"]))
-	xMax = max(list(df.iloc[startIndex:stopIndex]["ENUPOSX"]))
-	yMin = min(list(df.iloc[startIndex:stopIndex]["ENUPOSY"]))
-	yMax = max(list(df.iloc[startIndex:stopIndex]["ENUPOSY"]))
-	zMin = min(list(df.iloc[startIndex:stopIndex]["ENUPOSZ"]))
-	zMax = max(list(df.iloc[startIndex:stopIndex]["ENUPOSZ"]))
+	xMin = min(
+		list(df.iloc[startIndex:stopIndex]["ENUPOSX"]) + \
+		list(guidanceDF.iloc[startIndex:stopIndex]["TGT_POS_X"])
+	)
+	xMax = max(
+		list(df.iloc[startIndex:stopIndex]["ENUPOSX"]) + \
+		list(guidanceDF.iloc[startIndex:stopIndex]["TGT_POS_X"])
+	)
+	yMin = min(
+		list(df.iloc[startIndex:stopIndex]["ENUPOSY"]) + \
+		list(guidanceDF.iloc[startIndex:stopIndex]["TGT_POS_Y"])
+	)
+	yMax = max(
+		list(df.iloc[startIndex:stopIndex]["ENUPOSY"]) + \
+		list(guidanceDF.iloc[startIndex:stopIndex]["TGT_POS_Y"])
+	)
+	zMin = min(
+		list(df.iloc[startIndex:stopIndex]["ENUPOSZ"]) + \
+		list(guidanceDF.iloc[startIndex:stopIndex]["TGT_POS_Z"])
+	)
+	zMax = max(
+		list(df.iloc[startIndex:stopIndex]["ENUPOSZ"]) + \
+		list(guidanceDF.iloc[startIndex:stopIndex]["TGT_POS_Z"])
+	)
 	trajectory.set_box_aspect(
 		(
 			np.ptp([xMin - 1000, xMax + 1000]), 
@@ -53,6 +71,24 @@ trajectory.plot(
 	df.iloc[startIndex:stopIndex]["ENUPOSZ"],
 	color=colors.pop(0)
 )
+if guidanceDF.iloc[startIndex]["TGT_POS_X"] != \
+	guidanceDF.iloc[stopIndex]["TGT_POS_X"]:
+	trajectory.plot(
+		guidanceDF.iloc[startIndex:stopIndex]["TGT_POS_X"],
+		guidanceDF.iloc[startIndex:stopIndex]["TGT_POS_Y"],
+		guidanceDF.iloc[startIndex:stopIndex]["TGT_POS_Z"],
+		label="TARGET",
+		color=colors.pop(0)
+	)
+else:
+	trajectory.scatter(
+		guidanceDF.iloc[stopIndex]["TGT_POS_X"],
+		guidanceDF.iloc[stopIndex]["TGT_POS_Y"],
+		guidanceDF.iloc[stopIndex]["TGT_POS_Z"],
+		label="TARGET",
+		color=colors.pop(0)
+	)
+trajectory.legend(fontsize="small")
 
 # Pitch.
 pitch = fig.add_subplot(222)
