@@ -66,7 +66,7 @@ def construct_msl(
 	A     = ATMOS.a # m/s
 	G     = ATMOS.g # m/s^2
 	MACH  = ATMOS.mach # nd
-	BETA  = 0.01 # "Normalized Speed" - Zarchan. nd (KLUDGE)
+	BETA  = 0.01 # "Normalized Speed" - Zarchan. nd (MAJOR KLUDGE)
 
 	# MASS AND MOTOR PROPERTIES. ###################################################
 	MASS_AND_MOTOR = MockHellfireMassAndMotor()
@@ -410,7 +410,7 @@ def fly_msl(
 		A    = MSL["ATMOS"].a # m/s
 		G    = MSL["ATMOS"].g # m/s^2
 		MACH = MSL["ATMOS"].mach # nd
-		BETA = 0.01 # "Normalized Speed" - Zarchan. nd (KLUDGE)
+		BETA = 0.01 # "Normalized Speed" - Zarchan. nd (MAJOR KLUDGE)
 
 		# MASS AND MOTOR PROPERTIES. ###############################################
 		MSL["MASS_AND_MOTOR"].update(TOF, P)
