@@ -27,7 +27,7 @@ if __name__ == "__main__":
 
 	# Dynamics.
 	LLA0 = npa([38.8719, 77.0563, 0.0])
-	AZ0  = 85
+	AZ0  = 45
 	EL0  = 55
 	SPD0 = 10
 	ID   = "MOCK_HELLFIRE5DOF"
@@ -42,12 +42,12 @@ if __name__ == "__main__":
 	}
 
 	# Target.
-	TGT_POS = npa([20000.0, 0.0, 500.0])
+	TGT_POS = npa([7000.0, 0.0, 500.0])
 	TGT_VEL = npa([0.0, 0.0, 0.0])
 
 	# Sim control.
 	TIME_INCREMENT = None
-	MAXT           = 150
+	MAXT           = 1500
 	FLAG           = int(0)
 	LAST_TIME      = int(0)
 	MISS_DIST      = 5.0
@@ -149,7 +149,7 @@ if __name__ == "__main__":
 			Z    = DYN["STATE"]["ENUPOSZ"]
 			MACH = DYN["STATE"]["MACH"]
 			if FLAG == 1:
-				print(f"TOF {TOF:.0f} ENU {X:.2f} {Y:.2f} {Z:.2f} MACH {MACH:.2f}")
+				# print(f"TOF {TOF:.0f} ENU {X:.2f} {Y:.2f} {Z:.2f} MACH {MACH:.2f}")
 				LAST_TIME += int(1)
 				FLAG = 0
 			elif FLAG == 2:

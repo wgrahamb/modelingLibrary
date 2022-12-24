@@ -49,6 +49,8 @@ class MockHellfireControl:
         SIDE_COMM # m/s^2
     ):
 
+        A_GAIN = 1845 # From Zarchan. An unexplained gain.
+
         # Yaw control.
         YB = -1 * Q * REF_AREA * CYB / (MASS * SPD)
         YD = -1 * Q * REF_AREA * CYD / (MASS * SPD)
@@ -56,8 +58,8 @@ class MockHellfireControl:
         ND = Q * REF_AREA * REF_DIAM * CND / TMOI
 
         YAW_KR  = 0.15
-        YAW_K1  = -1.0 * SPD * ((NB * YD - YB * ND) / (1845 * NB))
-        YAW_K3  = 1845 * YAW_K1 / SPD
+        YAW_K1  = -1.0 * SPD * ((NB * YD - YB * ND) / (A_GAIN * NB))
+        YAW_K3  = A_GAIN * YAW_K1 / SPD
         YAW_KDC = (1 - YAW_KR * YAW_K3) / (YAW_K1 * YAW_KR)
 
         YAW_G_COMM        = (SIDE_COMM / STD_GRAV) * FT_TO_M
@@ -73,8 +75,8 @@ class MockHellfireControl:
         MD = Q * REF_AREA * REF_DIAM * CMD / TMOI
 
         PITCH_KR  = 0.15
-        PITCH_K1  = -1 * SPD * ((MA * ZD - ZA * MD) / (1845 * MA))
-        PITCH_K3  = 1845 * PITCH_K1 / SPD
+        PITCH_K1  = -1 * SPD * ((MA * ZD - ZA * MD) / (A_GAIN * MA))
+        PITCH_K3  = A_GAIN * PITCH_K1 / SPD
         PITCH_KDC = (1 - PITCH_KR * PITCH_K3) / (PITCH_K1 * PITCH_KR)
 
         PITCH_G_COMM        = (NORM_COMM / STD_GRAV) * FT_TO_M
