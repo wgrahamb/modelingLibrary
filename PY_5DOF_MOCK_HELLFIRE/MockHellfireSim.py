@@ -149,7 +149,7 @@ if __name__ == "__main__":
 			Z    = DYN["STATE"]["ENUPOSZ"]
 			MACH = DYN["STATE"]["MACH"]
 			if FLAG == 1:
-				# print(f"TOF {TOF:.0f} ENU {X:.2f} {Y:.2f} {Z:.2f} MACH {MACH:.2f}")
+				print(f"TOF {TOF:.0f} ENU {X:.2f} {Y:.2f} {Z:.2f} MACH {MACH:.2f}")
 				LAST_TIME += int(1)
 				FLAG = 0
 			elif FLAG == 2:

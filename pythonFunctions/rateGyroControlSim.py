@@ -18,9 +18,10 @@ RAD2DEG = 57.3
 
 # INPUTS
 ALT       = 1000 # FEET
-INPUT_VEL = npa([100.0, 2000.0])
+INPUT_VEL = npa([1900.0, 100.0])
 TGT_POS   = npa([18000.0, 18000.0])
-TGT_VEL   = npa([-30.0, -1100.0])
+TGT_VEL   = npa([-100.0, 0.0])
+FLAG      = 1 # 0 = set gain, 1 = gain scheduling
 
 # MISSILE CONSTANTS
 REF_DIAM            = 1 # FEET
@@ -164,23 +165,60 @@ while TOF <= MAXT:
 	CMA  = CMAP + 8 * TAIL_AREA * TEMP2 / (BETA * REF_AREA)
 	CMD  = 8 * TAIL_AREA * TEMP2 / (BETA * REF_AREA)
 
-	ZA  = -1 * G * Q * REF_AREA * CNA / (MASS * SPD)
-	ZD  = -1 * G * Q * REF_AREA * CND / (MASS * SPD)
-	MA   = Q * REF_AREA * REF_DIAM * CMA / TMOI
-	MD   = Q * REF_AREA * REF_DIAM * CMD / TMOI
+	ZA = -1 * G * Q * REF_AREA * CNA / (MASS * SPD)
+	ZD = -1 * G * Q * REF_AREA * CND / (MASS * SPD)
+	MA = Q * REF_AREA * REF_DIAM * CMA / TMOI
+	MD = Q * REF_AREA * REF_DIAM * CMD / TMOI
 
-	OMEGAZ  = np.sqrt((MA * ZD - MD * ZA) / ZD)
-	OMEGAAF = np.sqrt(-1 * MA)
-	ZETAAF  = ZA * OMEGAAF / (2 * MA)
-	KR      = 0.15
-	K1      = -1 * SPD * ((MA * ZD - ZA * MD) / (1845 * MA))
-	TA      = MD / (MA * ZD - MD * ZA)
-	K3      = 1845 * K1 / SPD
-	KDC     = (1 - KR * K3) / (K1 * KR)
+	if FLAG == 0:
+
+		OMEGAZ  = np.sqrt((MA * ZD - MD * ZA) / ZD)
+		OMEGAAF = np.sqrt(-1 * MA)
+		ZETAAF  = ZA * OMEGAAF / (2 * MA)
+		KR      = 0.15
+		K1      = -1 * SPD * ((MA * ZD - ZA * MD) / (1845 * MA))
+		TA      = MD / (MA * ZD - MD * ZA)
+		K3      = 1845 * K1 / SPD
+		KDC     = (1 - KR * K3) / (K1 * KR)
+
+	elif FLAG == 1:
+
+		WCR  = 120.0
+		TAU  = 0.4
+		ZETA = 0.9
+
+		OMEGAZ  = np.sqrt((MA*ZD-ZA*MD)/ZD)
+		OMEGAAF = np.sqrt(-MA)
+		ZETAAF  = 0.5*OMEGAAF*ZA/MA
+		K1      = -SPD*(MA*ZD-MD*ZA)/(1845*MA)
+		TA      = MD/(MA*ZD-MD*ZA)
+		K3      = 1845*K1/SPD
+		W       = (TAU*WCR*(1+2.*ZETAAF*OMEGAAF/WCR)-1)/(2*ZETA*TAU)
+		W0      = W/np.sqrt(TAU*WCR)
+		Z0      = .5*W0*(2*ZETA/W+TAU-OMEGAAF**2/(W0*W0*WCR))
+		XKC     = (-W0**2/OMEGAZ**2-1.+2.*Z0*W0*TA)/(1.-2.*Z0*W0*TA+W0*W0*TA*TA)
+		XKA     = K3/(K1*XKC)
+		XK0     = -W*W/(TAU*OMEGAAF*OMEGAAF)
+		XK      = XK0/(K1*(1+XKC))
+		WI      = XKC*TA*W0*W0/(1+XKC+W0**2/OMEGAZ**2)
+		KR      = XK/(XKA*WI)
+		KDC     = 1.+1845./(XKA*SPD)
+
+	else:
+
+		print("SET FLAG TO '0' or '1'")
+		print("TERMINATING")
+		exit(0)
 
 	# DERIVATIVES
 	THD       = K3 * (E + TA * EDOT) # DEG PER SEC
-	DEFL      = KR * (KDC * COMMAND + THD) # DEG
+
+	DEFL = None
+	if FLAG == 0:
+		DEFL  = KR * (KDC * COMMAND + THD) # DEG
+	elif FLAG == 1:
+		DEFL  = KR * (KDC * -COMMAND + THD) # DEG
+
 	LIMIT     = 25
 	SIGN_DEFL = np.sign(DEFL)
 	if np.abs(DEFL) > LIMIT:
@@ -206,7 +244,7 @@ while TOF <= MAXT:
 
 		# REPORT
 		if round(TOF, 3).is_integer() and LASTT != TOF:
-			print(f"{TOF:.0f} {POS}")
+			print(f"TOF : {TOF:.0f} | POS : {POS} | SPD : {la.norm(VEL):.2f}")
 			LASTT = TOF
 
 		# END CHECK
