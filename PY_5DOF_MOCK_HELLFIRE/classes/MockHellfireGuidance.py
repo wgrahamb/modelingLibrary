@@ -10,8 +10,10 @@ class MockHellfireGuidance:
 
         self.TIME             = 0.0 # s
         self.TIME_STEP        = (1 / 100.0) # s
+        self.LOOP_COUNT       = int(0) # counter
+        self.GUIDE_FLAG       = int(0) # 0 = LOA, 1 = PRO_NAV
         self.NEXT_UPDATE_TIME = self.TIME + self.TIME_STEP # s
-        self.MID_GUIDE_LIM    = 50.0 # m/s^2
+        self.MID_GUIDE_LIM    = 30.0 # m/s^2
         self.TERM_GUIDE_LIM   = 100.0 # m/s^2
         self.LINE_OF_ATTACK   = LOA # nd
         self.LOA_GAIN         = 1.5 # nd
@@ -58,8 +60,14 @@ class MockHellfireGuidance:
         CLOSING_SPD      = la.norm(CLOSING_VEL) # m/s
         self.TGO         = FLU_REL_POS_M / CLOSING_SPD # seconds
 
+        # CHECK FOR A TARGET THAT IS RETREATING.
+        # ASSUMES GUIDING FROM ZERO VELOCITY (AKA LAUNCH).
+        if self.LOOP_COUNT < 10 and self.GUIDE_FLAG == 0:
+            if CLOSING_VEL[0] > 0:
+                self.GUIDE_FLAG = 1
+
         # PROPORTIONAL GUIDANCE.
-        if self.TGO < 3.0:
+        if self.TGO < 3.0 or self.GUIDE_FLAG == 1:
         # if True:
             T1             = np.cross(self.FLU_REL_POS, CLOSING_VEL)
             T2             = np.dot(self.FLU_REL_POS, self.FLU_REL_POS)
@@ -89,6 +97,7 @@ class MockHellfireGuidance:
             self.NORM_COMM = AMAG * np.sin(TRIG_RATIO) # m/s^2
             self.SIDE_COMM = AMAG * np.cos(TRIG_RATIO) # m/s^2
 
+        self.LOOP_COUNT       += 1
         self.TIME             += self.TIME_STEP
         self.NEXT_UPDATE_TIME = self.TIME + self.TIME_STEP
 

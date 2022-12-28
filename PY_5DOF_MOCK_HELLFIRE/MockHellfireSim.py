@@ -27,7 +27,7 @@ if __name__ == "__main__":
 
 	# Dynamics.
 	LLA0 = npa([38.8719, 77.0563, 0.0])
-	AZ0  = 45
+	AZ0  = -55
 	EL0  = 55
 	SPD0 = 10
 	ID   = "MOCK_HELLFIRE5DOF"
@@ -42,7 +42,7 @@ if __name__ == "__main__":
 	}
 
 	# Target.
-	TGT_POS = npa([7000.0, 0.0, 500.0])
+	TGT_POS = npa([8000.0, 0.0, 500.0])
 	TGT_VEL = npa([0.0, 0.0, 0.0])
 
 	# Sim control.
@@ -156,9 +156,9 @@ if __name__ == "__main__":
 				MISS = COMPONENTS['GUIDANCE'].FLU_REL_POS
 				print()
 				print(f"REPORT :")
-				print(f"STATUS : TOF {TOF:.4f} ENU {X:.2f} {Y:.2f} {Z:.2f} MACH {MACH:.2f}")
-				print(f"RESULT : {LETHALITY}")
-				print(f"MISS   : {la.norm(MISS)} | {MISS}")
+				print(f"STATUS : TOF {TOF:.4f} | ENU {X:.2f} {Y:.2f} {Z:.2f} | MACH {MACH:.2f}")
+				print(f"RESULT : {LETHALITY.name}")
+				print(f"MISS   : {la.norm(MISS):.4f} | {MISS}")
 				print()
 				break
 

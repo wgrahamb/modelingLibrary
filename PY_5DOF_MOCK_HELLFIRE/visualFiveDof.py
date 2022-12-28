@@ -3,7 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from utility.matPlotLibColors import matPlotLibColors
 import matplotlib
-# matplotlib.use('WebAgg')
+matplotlib.use('WebAgg')
 
 RAD_TO_DEG = 57.2957795130823
 

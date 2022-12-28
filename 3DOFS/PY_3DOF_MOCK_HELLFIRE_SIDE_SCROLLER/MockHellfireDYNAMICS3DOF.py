@@ -301,8 +301,9 @@ def Fly3DOF(MSL_INPUT, FLY_FOR_THIS_LONG, FIN_DEFL_DEG):
 		BETA = None # "Normalized Speed" - Zarchan. I don't know what this is. Can't find it anywhere else.
 		if MACH > 1:
 			BETA = np.sqrt(MACH ** 2 - 1) # Non dimensional.
+			# print(BETA)
 		else:
-			BETA = MACH # Non dimensional.
+			BETA = np.sqrt(1.001 ** 2 - 1) # Non dimensional.
 
 		# MASS AND MOTOR PROPERTIES.
 		MASS_AND_MOTOR.update(TOF, P)
