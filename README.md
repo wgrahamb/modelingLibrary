@@ -23,6 +23,7 @@ present the work I have done.
      - Add a rotating elliptical earth.
      - Add a getState method.
      - Add guidance modes to CPP_6DOF_SRAAM_V2. Initial turn, midcourse, terminal.
+     This bit will include some basic fire control.
      - Using Zarchan method, write a rate controller. Needs work. If have trouble
      try again with Zipfel's method.
 - CPP_6DOF_SAM
