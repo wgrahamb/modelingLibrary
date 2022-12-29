@@ -71,10 +71,10 @@ if __name__ == "__main__":
 		N_ID = None
 		for index, key in enumerate(COMPONENTS.keys()):
 			if index == 0:
-				N_DT    = COMPONENTS[f"{key}"].NEXT_UPDATE_TIME
+				N_DT = COMPONENTS[f"{key}"].NEXT_UPDATE_TIME
 				N_ID = key
 			elif COMPONENTS[f"{key}"].NEXT_UPDATE_TIME < N_DT:
-				N_DT    = COMPONENTS[f"{key}"].NEXT_UPDATE_TIME
+				N_DT = COMPONENTS[f"{key}"].NEXT_UPDATE_TIME
 				N_ID = key
 
 		# Check for dynamics and target update.
@@ -83,10 +83,10 @@ if __name__ == "__main__":
 
 			# Update dynamics.
 			DYN = Dyn.fly_msl(
-				MISSILE_INPUT_DICT=DYN,
-				FLY_FOR_THIS_LONG=TIME_INCREMENT,
-				PITCH_FIN_DEFL_DEG_INPUT=COMPONENTS["PITCH_ACT"].DEFLECTION,
-				YAW_FIN_DEFL_DEG_INPUT=COMPONENTS["YAW_ACT"].DEFLECTION
+				MISSILE_INPUT_DICT       = DYN,
+				FLY_FOR_THIS_LONG        = TIME_INCREMENT,
+				PITCH_FIN_DEFL_DEG_INPUT = COMPONENTS["PITCH_ACT"].DEFLECTION,
+				YAW_FIN_DEFL_DEG_INPUT   = COMPONENTS["YAW_ACT"].DEFLECTION
 			)
 
 			# Update target.
