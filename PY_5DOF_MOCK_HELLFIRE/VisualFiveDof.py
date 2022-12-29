@@ -88,7 +88,7 @@ else:
 		label="TARGET",
 		color=colors.pop(0)
 	)
-trajectory.legend(fontsize="small")
+trajectory.legend(fontsize="xx-small")
 
 # Pitch.
 pitch = fig.add_subplot(222)
@@ -124,7 +124,7 @@ pitch.plot(
 	label="THETA - DEG",
 	color=colors.pop(0)
 )
-pitch.legend(fontsize="small")
+pitch.legend(fontsize="xx-small")
 
 # Yaw.
 yaw = fig.add_subplot(223)
@@ -160,7 +160,7 @@ yaw.plot(
 	label="PSI - DEG",
 	color=colors.pop(0)
 )
-yaw.legend(fontsize="small")
+yaw.legend(fontsize="xx-small")
 
 # Fins
 fins = fig.add_subplot(224)
@@ -191,7 +191,7 @@ fins.plot(
 	label="YAW DEFLECTION",
 	color=colors.pop(0)
 )
-fins.legend(fontsize="small")
+fins.legend(fontsize="xx-small")
 
 # Show.
 fig.subplots_adjust(top=0.9, bottom=0.1, left=0.1, hspace=0.4)
