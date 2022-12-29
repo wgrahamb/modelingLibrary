@@ -27,8 +27,8 @@ if __name__ == "__main__":
 
 	# Dynamics.
 	LLA0 = npa([38.8719, 77.0563, 0.0])
-	AZ0  = 20
-	EL0  = 55
+	AZ0  = -20
+	EL0  = 65
 	SPD0 = 10
 	ID   = "MOCK_HELLFIRE5DOF"
 	DYN  = Dyn.construct_msl(LLA0, AZ0, EL0, SPD0, ID)
@@ -40,7 +40,7 @@ if __name__ == "__main__":
 		"CONTROL": MockHellfireControl("CONTROL"),
 		"GUIDANCE": MockHellfireGuidance(
 			"GUIDANCE",
-			npa([0.4, -0.4, 0.2])
+			npa([0.4, 0.4, 0.4])
 		)
 	}
 
@@ -153,16 +153,17 @@ if __name__ == "__main__":
 			X    = DYN["STATE"]["ENUPOSX"]
 			Y    = DYN["STATE"]["ENUPOSY"]
 			Z    = DYN["STATE"]["ENUPOSZ"]
+			ENU  = npa([X, Y, Z])
 			MACH = DYN["STATE"]["MACH"]
 			if FLAG == 1:
-				print(f"TOF {TOF:.0f} ENU {X:.2f} {Y:.2f} {Z:.2f} MACH {MACH:.2f}")
+				print(f"TOF {TOF:.0f} ENU {ENU} MACH {MACH:.2f}")
 				LAST_TIME += int(1)
 				FLAG = 0
 			elif FLAG == 2:
 				MISS = COMPONENTS['GUIDANCE'].FLU_REL_POS
 				print()
 				print(f"REPORT :")
-				print(f"STATUS : TOF {TOF:.4f} | ENU {X:.2f} {Y:.2f} {Z:.2f} | MACH {MACH:.2f}")
+				print(f"STATUS : TOF {TOF:.4f} | ENU {ENU} | MACH {MACH:.2f}")
 				print(f"RESULT : {LETHALITY.name}")
 				print(f"MISS   : {la.norm(MISS):.4f} | {MISS}")
 				print()

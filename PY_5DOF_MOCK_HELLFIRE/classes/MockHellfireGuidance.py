@@ -69,7 +69,7 @@ class MockHellfireGuidance:
                 self.GUIDE_FLAG = 1
 
         # PROPORTIONAL GUIDANCE.
-        if self.TGO < 3.0 or self.GUIDE_FLAG == 1:
+        if self.TGO < 5.0 or self.GUIDE_FLAG == 1:
         # if True:
             T1             = np.cross(self.FLU_REL_POS, CLOSING_VEL)
             T2             = np.dot(self.FLU_REL_POS, self.FLU_REL_POS)

@@ -71,6 +71,8 @@ def construct_msl(
 	if MACH > 1:
 		BETA = np.sqrt(MACH ** 2 - 1)
 	else:
+		# MAX_MACH = 1.5 # estimate
+		# BETA = MACH / MAX_MACH
 		BETA = np.sqrt(1.001 ** 2 - 1)
 
 	# MASS AND MOTOR PROPERTIES. ###################################################
@@ -420,6 +422,8 @@ def fly_msl(
 		if MACH > 1:
 			BETA = np.sqrt(MACH ** 2 - 1)
 		else:
+			# MAX_MACH = 1.5 # estimate
+			# BETA = MACH / MAX_MACH
 			BETA = np.sqrt(1.001 ** 2 - 1)
 
 		# MASS AND MOTOR PROPERTIES. ###############################################
