@@ -10,10 +10,13 @@ directory = "3DOFS/CPP_3DOF_PIP_SELECTION/output"
 dfs = []
 
 for f in os.listdir(directory):
-	path = f"{directory}/{f}"
-	df = pd.read_csv(open(r"{}".format(path)), delimiter= " ")
-	df.name = f
-	dfs.append(df)
+	if f == ".gitignore":
+		pass
+	else:
+		path = f"{directory}/{f}"
+		df = pd.read_csv(open(r"{}".format(path)), delimiter= " ")
+		df.name = f
+		dfs.append(df)
 
 startIndex = 0
 stopIndex = -1

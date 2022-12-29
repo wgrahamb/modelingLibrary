@@ -173,7 +173,7 @@ void fly(Missile &missile, bool LogData, bool ConsoleReport, string identity)
 	ofstream LogFile;
 	if (LogData)
 	{
-		string fileName = "output/flyout_" + identity + ".txt";
+		string fileName = "3DOFS/CPP_3DOF_PIP_SELECTION/output/flyout_" + identity + ".txt";
 		LogFile.open(fileName);
 		LogFile << "tof posE posN posU tgtE tgtN tgtU\n";
 	}
