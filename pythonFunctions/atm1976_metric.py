@@ -45,6 +45,8 @@ class atm1976_metric:
 		self.ptab=[1.0, 2.233611e-1, 5.403295e-2, 8.5666784e-3, 1.0945601e-3, 6.6063531e-4, 3.9046834e-5, 3.68501e-6]  #pressure
 		self.gtab=[-6.5, 0.0, 1.0, 2.8, 0.0, -2.8, -2.0, 0.0]   #temperature gradient
 
+		print("ATM1976 LOADED")
+
 	def update(self, ALT, SPEED): # Meters, Meters per second.
 
 		delta = None

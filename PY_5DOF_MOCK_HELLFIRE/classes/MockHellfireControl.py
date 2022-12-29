@@ -8,13 +8,17 @@ class MockHellfireControl:
 
     def __init__(self, ID):
 
+        # Component class behavior.
         self.TIME             = 0.0 # s
         self.TIME_STEP        = (1 / 100.0) # s
         self.NEXT_UPDATE_TIME = self.TIME + self.TIME_STEP # s
+
+        # Class members.
         self.PITCH_FIN_COMM   = 0.0 # deg
         self.YAW_FIN_COMM     = 0.0 # deg
         self.FIN_LIM          = 12.0 # deg
 
+        # Logging.
         self.LOGFILE = open(f"PY_5DOF_MOCK_HELLFIRE/data/{ID}.txt", "w")
         self.STATE = {
             "TIME": self.TIME,
@@ -25,6 +29,7 @@ class MockHellfireControl:
         lf.writeHeader(self.STATE, self.LOGFILE)
         lf.writeData(self.STATE, self.LOGFILE)
 
+        # Report.
         print("MOCK HELLFIRE CONTROL LOADED")
 
     def update(
@@ -50,19 +55,21 @@ class MockHellfireControl:
     ):
 
         # From Zarchan. An unexplained gain.
-        # Probably from the algebra in the transfer function.
+        # Seemingly from the algebra in the transfer function.
         A_GAIN = 1845
 
+        # I think this is the target behavior of the airframe.
         WCR  = 150.0
         TAU  = 0.1
         ZETA = 0.7
 
-        # Yaw control.
+        # Yaw control derivatives.
         YB = -1 * Q * REF_AREA * CYB / (MASS * SPD)
         YD = -1 * Q * REF_AREA * CYD / (MASS * SPD)
         NB = Q * REF_AREA * REF_DIAM * CNB / TMOI
         ND = Q * REF_AREA * REF_DIAM * CND / TMOI
 
+        # One yawing control method.
         YAW_OMEGAZ  = np.sqrt((NB*YD-YB*ND)/YD)
         YAW_OMEGAAF = np.sqrt(-NB)
         YAW_ZETAAF  = 0.5*YAW_OMEGAAF*YB/NB
@@ -80,23 +87,26 @@ class MockHellfireControl:
         YAW_KR      = YAW_XK/(YAW_XKA*YAW_WI)
         YAW_KDC     = (1 - YAW_KR * YAW_K3) / (YAW_K1 * YAW_KR)
 
+        # A simpler yawing control method.
         # YAW_KR  = 0.15
         # YAW_K1  = -1.0 * SPD * ((NB * YD - YB * ND) / (A_GAIN * NB))
         # YAW_K3  = A_GAIN * YAW_K1 / SPD
         # YAW_KDC = (1 - YAW_KR * YAW_K3) / (YAW_K1 * YAW_KR)
 
+        # Yawing fin command
         YAW_G_COMM        = (SIDE_COMM / STD_GRAV) * FT_TO_M
         self.YAW_FIN_COMM = YAW_KR * (YAW_KDC * YAW_G_COMM + np.degrees(RRATE))
         TEMP              = np.sign(self.YAW_FIN_COMM)
         if np.abs(self.YAW_FIN_COMM) > self.FIN_LIM:
             self.YAW_FIN_COMM = TEMP * self.FIN_LIM
 
-        # Pitch control.
+        # Pitch control derivatives.
         ZA = -1 * Q * REF_AREA * CZA / (MASS * SPD)
         ZD = -1 * Q * REF_AREA * CZD / (MASS * SPD)
         MA = Q * REF_AREA * REF_DIAM * CMA / TMOI
         MD = Q * REF_AREA * REF_DIAM * CMD / TMOI
 
+        # One pitching control method.
         PITCH_OMEGAZ  = np.sqrt((MA*ZD-ZA*MD)/ZD)
         PITCH_OMEGAAF = np.sqrt(-MA)
         PITCH_ZETAAF  = 0.5*PITCH_OMEGAAF*ZA/MA
@@ -119,12 +129,14 @@ class MockHellfireControl:
         PITCH_KR      = PITCH_XK/(PITCH_XKA*PITCH_WI)
         PITCH_KDC     = (1 - PITCH_KR * PITCH_K3) / (PITCH_K1 * PITCH_KR)
 
+        # A simpler yawing control method.
         # PITCH_KR  = 0.15
         # PITCH_K1  = -1 * SPD * ((MA * ZD - ZA * MD) / (A_GAIN * MA))
         # PITCH_K3  = A_GAIN * PITCH_K1 / SPD
         # PITCH_KDC = (1 - PITCH_KR * PITCH_K3) / (PITCH_K1 * PITCH_KR)
 
-        PITCH_G_COMM        = (NORM_COMM / STD_GRAV) * FT_TO_M
+        # Pitching fin command.
+        PITCH_G_COMM        = ((NORM_COMM + STD_GRAV) / STD_GRAV) * FT_TO_M
         self.PITCH_FIN_COMM = PITCH_KR * (PITCH_KDC * PITCH_G_COMM + \
             np.degrees(QRATE))
         TEMP                = np.sign(self.PITCH_FIN_COMM)

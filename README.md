@@ -30,13 +30,18 @@ present the work I have done.
      - Start project. Reuse as much Zipfel code as possible.
      - Maybe? I'm leaning toward porting ROCKET6G instead.
 - PY_5DOF_MOCK_HELLFIRE
+     - Turn enu to ecef into a method to put in earthTransforms.py.
+     - Split dynamics and components in to seperate folders.
+     - Make aerodynamics its own class within dynamics. Use the found paper to 
+     estimate pitch damping.
+     - Axial Forces: (Make aerodynamics its own class within dynamics.)
+          - Use bookmarked article to model the drag.
+          - Using final project from MAE540, design a real rocket motor. Then the
+          mass and motor properties will have to be split.
      - Navigator:
           - INS (ADS6) and GPS (not sure which project) from Zipfel.
           - Kalman Filter (from Zipfel) to pair with it after finished
           working through examples. See filters.py in pythonFunctions.
-     - Axial Forces: (Make aerodynamics its own class within dynamics.)
-          - Use bookmarked article to model the drag.
-          - Using final project from MAE540, design a real rocket motor.
 - PY_6DOF_70MM_ROCKET
      - The pitch and yaw aerodynamics do not yet line up with the flight data.
      - Check alpha and beta calculations.

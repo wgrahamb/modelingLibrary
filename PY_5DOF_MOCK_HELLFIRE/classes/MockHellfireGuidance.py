@@ -8,11 +8,14 @@ class MockHellfireGuidance:
 
     def __init__(self, ID, LOA):
 
+        # COMPONENT CLASS BEHAVIOR.
         self.TIME             = 0.0 # s
         self.TIME_STEP        = (1 / 100.0) # s
+        self.NEXT_UPDATE_TIME = self.TIME + self.TIME_STEP # s
+
+        # CLASS MEMBERS.
         self.LOOP_COUNT       = int(0) # counter
         self.GUIDE_FLAG       = int(0) # 0 = LOA, 1 = PRO_NAV
-        self.NEXT_UPDATE_TIME = self.TIME + self.TIME_STEP # s
         self.MID_GUIDE_LIM    = 30.0 # m/s^2
         self.TERM_GUIDE_LIM   = 100.0 # m/s^2
         self.LINE_OF_ATTACK   = LOA # nd
@@ -23,6 +26,7 @@ class MockHellfireGuidance:
         self.TGO              = -1.0 # s
         self.FLU_REL_POS      = np.zeros(3) # m
 
+        # LOGGING.
         self.STATE = {
             "TIME": self.TIME,
             "NORM_COMM": self.NORM_COMM,
@@ -41,6 +45,7 @@ class MockHellfireGuidance:
         lf.writeHeader(self.STATE, self.LOGFILE)
         lf.writeData(self.STATE, self.LOGFILE)
 
+        # REPORT.
         print("MOCK HELLFIRE GUIDANCE LOADED")
 
     def update(
@@ -99,9 +104,11 @@ class MockHellfireGuidance:
             self.NORM_COMM = AMAG * np.sin(TRIG_RATIO) # m/s^2
             self.SIDE_COMM = AMAG * np.cos(TRIG_RATIO) # m/s^2
 
+        # UPDATE TIME.
         self.TIME             += self.TIME_STEP
         self.NEXT_UPDATE_TIME = self.TIME + self.TIME_STEP
 
+        # GRAB STATE.
         self.STATE = {
             "TIME": self.TIME,
             "NORM_COMM": self.NORM_COMM,
@@ -115,6 +122,7 @@ class MockHellfireGuidance:
             "TGT_POS_Z": TGT_POS[2]
         }
 
+        # LOG DATA.
         lf.writeData(self.STATE, self.LOGFILE)
 
 

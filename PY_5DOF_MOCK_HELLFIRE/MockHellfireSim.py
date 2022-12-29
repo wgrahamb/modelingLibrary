@@ -2,6 +2,7 @@
 import numpy as np
 from numpy import array as npa
 from numpy import linalg as la
+import time
 np.set_printoptions(suppress=True, precision=2)
 
 # Utility.
@@ -16,7 +17,7 @@ from classes.MockHellfireGuidance import MockHellfireGuidance
 import MockHellfireDynFiveDof as Dyn
 from MockHellfireDynFiveDof import endChecks
 
-# MATH CONSTANTS
+# Some constants.
 RAD_TO_DEG = 57.2957795130823
 DEG_TO_RAD = 1.0 / RAD_TO_DEG
 FT_TO_M    = 0.3048
@@ -27,8 +28,8 @@ if __name__ == "__main__":
 
 	# Dynamics.
 	LLA0 = npa([38.8719, 77.0563, 0.0])
-	AZ0  = -20
-	EL0  = 65
+	AZ0  = -40
+	EL0  = 25
 	SPD0 = 10
 	ID   = "MOCK_HELLFIRE5DOF"
 	DYN  = Dyn.construct_msl(LLA0, AZ0, EL0, SPD0, ID)
@@ -40,7 +41,7 @@ if __name__ == "__main__":
 		"CONTROL": MockHellfireControl("CONTROL"),
 		"GUIDANCE": MockHellfireGuidance(
 			"GUIDANCE",
-			npa([0.4, 0.4, 0.4])
+			npa([0.4, 0.5, 0.4])
 		)
 	}
 
@@ -49,6 +50,7 @@ if __name__ == "__main__":
 	TGT_VEL = npa([-100.0, 0.0, 0.0])
 
 	# Sim control.
+	REAL_START     = time.time()
 	TIME_INCREMENT = None
 	MAXT           = 1500
 	FLAG           = int(0)
@@ -56,25 +58,27 @@ if __name__ == "__main__":
 	MISS_DIST      = 5.0
 	LETHALITY      = None
 
+	# Loop.
 	print()
-	while DYN["LETHALITY"] == endChecks.FLIGHT or DYN["LETHALITY"] == endChecks.TIME:
+	while DYN["LETHALITY"] == endChecks.FLIGHT or \
+		DYN["LETHALITY"] == endChecks.TIME:
 
 		# Dynamics tof is driver.
 		TOF = DYN["STATE"]["TOF"]
 
 		# Get next update time.
-		N    = None
+		N_DT = None
 		N_ID = None
 		for index, key in enumerate(COMPONENTS.keys()):
 			if index == 0:
-				N    = COMPONENTS[f"{key}"].NEXT_UPDATE_TIME
+				N_DT    = COMPONENTS[f"{key}"].NEXT_UPDATE_TIME
 				N_ID = key
-			elif COMPONENTS[f"{key}"].NEXT_UPDATE_TIME < N:
-				N    = COMPONENTS[f"{key}"].NEXT_UPDATE_TIME
+			elif COMPONENTS[f"{key}"].NEXT_UPDATE_TIME < N_DT:
+				N_DT    = COMPONENTS[f"{key}"].NEXT_UPDATE_TIME
 				N_ID = key
 
 		# Check for dynamics and target update.
-		TIME_INCREMENT = N - TOF
+		TIME_INCREMENT = N_DT - TOF
 		if TIME_INCREMENT > EPSILON:
 
 			# Update dynamics.
@@ -90,31 +94,68 @@ if __name__ == "__main__":
 
 		# Update components.
 		if N_ID == "PITCH_ACT":
-			COMPONENTS["PITCH_ACT"].update(COMPONENTS["CONTROL"].PITCH_FIN_COMM)
+
+			# Handle input.
+			PITCH_FIN_COMM = COMPONENTS["CONTROL"].PITCH_FIN_COMM
+
+			# Update pitching actuator.
+			COMPONENTS["PITCH_ACT"].update(PITCH_FIN_COMM)
+
 		elif N_ID == "YAW_ACT":
-			COMPONENTS["YAW_ACT"].update(COMPONENTS["CONTROL"].YAW_FIN_COMM)
+
+			# Handle input.
+			YAW_FIN_COMM = COMPONENTS["CONTROL"].YAW_FIN_COMM
+
+			# Update yawing actuator.
+			COMPONENTS["YAW_ACT"].update(YAW_FIN_COMM)
+
 		elif N_ID == "CONTROL":
+
+			# Handle input.
+			REF_DIAM  = DYN["STATE"]["REF_DIAM"]
+			REF_AREA  = DYN["STATE"]["REF_AREA"]
+			Q         = DYN["STATE"]["Q"]
+			MASS      = DYN["STATE"]["MASS"]
+			SPD       = DYN["STATE"]["SPEED"]
+			TMOI      = DYN["STATE"]["TMOI"]
+			RRATE     = DYN["STATE"]["RRATE"]
+			QRATE     = DYN["STATE"]["QRATE"]
+			CYB       = DYN["STATE"]["CYB"]
+			CYD       = DYN["STATE"]["CYD"]
+			CNB       = DYN["STATE"]["CNB"]
+			CND       = DYN["STATE"]["CND"]
+			CZA       = DYN["STATE"]["CZA"]
+			CZD       = DYN["STATE"]["CZD"]
+			CMA       = DYN["STATE"]["CMA"]
+			CMD       = DYN["STATE"]["CMD"]
+			NORM_COMM = COMPONENTS["GUIDANCE"].NORM_COMM
+			SIDE_COMM = COMPONENTS["GUIDANCE"].SIDE_COMM
+
+			# Update control.
 			COMPONENTS["CONTROL"].update(
-				DYN["STATE"]["REF_DIAM"],
-				DYN["STATE"]["REF_AREA"],
-				DYN["STATE"]["Q"],
-				DYN["STATE"]["MASS"],
-				DYN["STATE"]["SPEED"],
-				DYN["STATE"]["TMOI"],
-				DYN["STATE"]["RRATE"],
-				DYN["STATE"]["QRATE"],
-				DYN["STATE"]["CYB"],
-				DYN["STATE"]["CYD"],
-				DYN["STATE"]["CNB"],
-				DYN["STATE"]["CND"],
-				DYN["STATE"]["CZA"],
-				DYN["STATE"]["CZD"],
-				DYN["STATE"]["CMA"],
-				DYN["STATE"]["CMD"],
-				COMPONENTS["GUIDANCE"].NORM_COMM,
-				COMPONENTS["GUIDANCE"].SIDE_COMM
+				REF_DIAM,
+				REF_AREA,
+				Q,
+				MASS,
+				SPD,
+				TMOI,
+				RRATE,
+				QRATE,
+				CYB,
+				CYD,
+				CNB,
+				CND,
+				CZA,
+				CZD,
+				CMA,
+				CMD,
+				NORM_COMM,
+				SIDE_COMM
 			)
+
 		elif N_ID == "GUIDANCE":
+
+			# Handle input.
 			ENU_TO_FLU = ct.FLIGHTPATH_TO_LOCAL_TM(
 				DYN["STATE"]["ENUPSI"],
 				-1.0 * DYN["STATE"]["ENUTHT"]
@@ -127,6 +168,8 @@ if __name__ == "__main__":
 			ENUVEL[0] = DYN["STATE"]["ENUVELX"]
 			ENUVEL[1] = DYN["STATE"]["ENUVELY"]
 			ENUVEL[2] = DYN["STATE"]["ENUVELZ"]
+
+			# Update guidance.
 			COMPONENTS["GUIDANCE"].update(
 				ENU_TO_FLU,
 				ENUPOS,
@@ -135,10 +178,11 @@ if __name__ == "__main__":
 				TGT_VEL
 			)
 
-		# Checks and flags.
+		# Console report check.
 		if np.floor(TOF) == LAST_TIME:
 			FLAG = 1
 
+		# End checks.
 		if TOF > MAXT:
 			FLAG = 2
 			LETHALITY = endChecks.TIME
@@ -149,6 +193,7 @@ if __name__ == "__main__":
 			FLAG = 2
 			LETHALITY = endChecks.HIT
 
+		# Console report.
 		if FLAG != 0:
 			X    = DYN["STATE"]["ENUPOSX"]
 			Y    = DYN["STATE"]["ENUPOSY"]
@@ -156,16 +201,18 @@ if __name__ == "__main__":
 			ENU  = npa([X, Y, Z])
 			MACH = DYN["STATE"]["MACH"]
 			if FLAG == 1:
-				print(f"TOF {TOF:.0f} ENU {ENU} MACH {MACH:.2f}")
+				print(f"TOF {TOF:>{2}.0f} | E {X:>{7}.2f} | N {Y:>{7}.2f} | U {Z:>{7}.2f} | MACH {MACH:>{4}.2f}")
 				LAST_TIME += int(1)
-				FLAG = 0
+				FLAG      = 0
 			elif FLAG == 2:
-				MISS = COMPONENTS['GUIDANCE'].FLU_REL_POS
+				RUNTIME = time.time() - REAL_START
+				MISS    = COMPONENTS['GUIDANCE'].FLU_REL_POS
 				print()
-				print(f"REPORT :")
-				print(f"STATUS : TOF {TOF:.4f} | ENU {ENU} | MACH {MACH:.2f}")
-				print(f"RESULT : {LETHALITY.name}")
-				print(f"MISS   : {la.norm(MISS):.4f} | {MISS}")
+				print(f"*** REPORT ***")
+				print(f"STATUS   : TOF {TOF:.4f} | ENU {ENU} | MACH {MACH:.2f}")
+				print(f"RESULT   : {LETHALITY.name}")
+				print(f"MISS     : {la.norm(MISS):.4f} | {MISS}")
+				print(f"RUN TIME : {RUNTIME:.2f} SECONDS")
 				print()
 				break
 

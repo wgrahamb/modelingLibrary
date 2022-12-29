@@ -67,7 +67,7 @@ def construct_msl(
 	G     = ATMOS.g # m/s^2
 	MACH  = ATMOS.mach # nd
 
-	# "Normalized Speed" - Zarchan. nd (KLUDGE)
+	# "Normalized Speed" - Zarchan. nd (KLUDGE?)
 	if MACH > 1:
 		BETA = np.sqrt(MACH ** 2 - 1)
 	else:
@@ -418,7 +418,7 @@ def fly_msl(
 		G    = MSL["ATMOS"].g # m/s^2
 		MACH = MSL["ATMOS"].mach # nd
 
-		# "Normalized Speed" - Zarchan. nd (KLUDGE)
+		# "Normalized Speed" - Zarchan. nd (KLUDGE?)
 		if MACH > 1:
 			BETA = np.sqrt(MACH ** 2 - 1)
 		else:
@@ -450,10 +450,6 @@ def fly_msl(
 			CD = linearInterpolation(MACH, MACH_LOOKUP, CD_LOOKUP)
 		else:
 			CD = CD_LOOKUP[0]
-		DRAG_FORCE      = CD * REF_AREA * Q # newtons
-		WIND_TO_BODY    = ct.FLIGHTPATH_TO_LOCAL_TM(SIDESLIP, ALPHA) # nd
-		WIND_DRAG_FORCE = npa([-DRAG_FORCE, 0.0, 0.0]) # newtons
-		BODY_DRAG       = (WIND_TO_BODY @ WIND_DRAG_FORCE) / MASS # m/s^2
 
 		# AERODYNAMICS. ############################################################
 		CZ = 2 * ALPHA + \
@@ -521,6 +517,11 @@ def fly_msl(
 		SPEC_FORCE[1] = (Q * REF_AREA * CY) / MASS # m/s^2
 		SPEC_FORCE[2] = (Q * REF_AREA * CZ) / MASS # m/s^2
 
+		DRAG_FORCE      = CD * REF_AREA * Q # newtons
+		WIND_TO_BODY    = ct.FLIGHTPATH_TO_LOCAL_TM(SIDESLIP, ALPHA) # nd
+		WIND_DRAG_FORCE = npa([-DRAG_FORCE, 0.0, 0.0]) # newtons
+		BODY_DRAG       = (WIND_TO_BODY @ WIND_DRAG_FORCE) / MASS # m/s^2
+
 		LOCAL_G       = npa([0.0, 0.0, -1.0 * G]) # m/s^2
 		BODY_G        = ENU_TO_FLU @ LOCAL_G # m/s^2
 		SPEC_FORCE    += (BODY_G + BODY_DRAG) # m/s^2
@@ -530,8 +531,8 @@ def fly_msl(
 		# GEOMETRY #################################################################
 		T1 = np.cos(GEODETIC0[0]) * ENUPOS[2] - np.sin(GEODETIC0[0]) * ENUPOS[1]
 		T2 = np.sin(GEODETIC0[0]) * ENUPOS[2] + np.cos(GEODETIC0[0]) * ENUPOS[1]
-		T3 = np.cos(GEODETIC0[1]) * T1 - np.sin(GEODETIC0[1]) * ENUPOS[0]
-		T4 = np.sin(GEODETIC0[1]) * T1 + np.cos(GEODETIC0[1]) * ENUPOS[0]
+		T3 = np.cos(GEODETIC0[1]) * T1        - np.sin(GEODETIC0[1]) * ENUPOS[0]
+		T4 = np.sin(GEODETIC0[1]) * T1        + np.cos(GEODETIC0[1]) * ENUPOS[0]
 		ECEF = ECEF0 + npa([T3, T4, T2]) # m
 
 		GEODETIC = et.ECI_TO_LLA(ECEF) # rad, rad, m
