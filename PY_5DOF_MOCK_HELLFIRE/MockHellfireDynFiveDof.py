@@ -408,7 +408,7 @@ def fly_msl(
 	while GO:
 
 		# ATMOSPHERE. ##############################################################
-		MSL["ATMOS"].update(ENUPOS[2], SPEED)
+		MSL["ATMOS"].update(GEODETIC[2], SPEED)
 		RHO  = MSL["ATMOS"].rho # kg/m^3
 		Q    = MSL["ATMOS"].q # pa
 		P    = MSL["ATMOS"].p # pa
@@ -439,6 +439,7 @@ def fly_msl(
 		ALPHA    = -1.0 * TEMP1 # rad
 		SIDESLIP = -1.0 * TEMP2 # rad
 
+		# SET APART FOR COMPONENTIZATION. ##########################################
 		# BASIC DRAG MODEL. ########################################################
 		CD = None # nd
 		if MACH >= MACH_LOOKUP[0]:
@@ -505,6 +506,8 @@ def fly_msl(
 			((XCG - XHL) / REF_DIAM) # 1/deg
 		CND = (8 * TAIL_AREA / (BETA * REF_AREA)) * \
 			((XCG - XHL) / REF_DIAM) # 1/deg
+		############################################################################
+		# END SET APART. ###########################################################
 
 		# DERIVATIVES. #############################################################
 		QDOT = (Q * REF_AREA * REF_DIAM * CM) / TMOI # rad/s^2

@@ -27,7 +27,7 @@ if __name__ == "__main__":
 
 	# Dynamics.
 	LLA0 = npa([38.8719, 77.0563, 0.0])
-	AZ0  = -55
+	AZ0  = 20
 	EL0  = 55
 	SPD0 = 10
 	ID   = "MOCK_HELLFIRE5DOF"
@@ -38,12 +38,15 @@ if __name__ == "__main__":
 		"PITCH_ACT": SecondOrderActuator("PITCH_DEFL"),
 		"YAW_ACT": SecondOrderActuator("YAW_DEFL"),
 		"CONTROL": MockHellfireControl("CONTROL"),
-		"GUIDANCE": MockHellfireGuidance("GUIDANCE", npa([0.4, -0.4, 0.4]))
+		"GUIDANCE": MockHellfireGuidance(
+			"GUIDANCE",
+			npa([0.4, -0.4, 0.2])
+		)
 	}
 
 	# Target.
-	TGT_POS = npa([8000.0, 0.0, 500.0])
-	TGT_VEL = npa([0.0, 0.0, 0.0])
+	TGT_POS = npa([6000.0, 0.0, 500.0])
+	TGT_VEL = npa([-100.0, 0.0, 0.0])
 
 	# Sim control.
 	TIME_INCREMENT = None
@@ -70,6 +73,7 @@ if __name__ == "__main__":
 				N    = COMPONENTS[f"{key}"].NEXT_UPDATE_TIME
 				N_ID = key
 
+		# Check for dynamics and target update.
 		TIME_INCREMENT = N - TOF
 		if TIME_INCREMENT > EPSILON:
 
@@ -134,15 +138,17 @@ if __name__ == "__main__":
 		# Checks and flags.
 		if np.floor(TOF) == LAST_TIME:
 			FLAG = 1
+
 		if TOF > MAXT:
 			FLAG = 2
 			LETHALITY = endChecks.TIME
-		if COMPONENTS["GUIDANCE"].FLU_REL_POS[0] < 0.0 and TOF > 1:
+		elif COMPONENTS["GUIDANCE"].FLU_REL_POS[0] < 0.0 and TOF > 1:
 			FLAG = 2
 			LETHALITY = endChecks.POCA
-		if la.norm(COMPONENTS["GUIDANCE"].FLU_REL_POS) < MISS_DIST and TOF > 1:
+		elif la.norm(COMPONENTS["GUIDANCE"].FLU_REL_POS) < MISS_DIST and TOF > 1:
 			FLAG = 2
 			LETHALITY = endChecks.HIT
+
 		if FLAG != 0:
 			X    = DYN["STATE"]["ENUPOSX"]
 			Y    = DYN["STATE"]["ENUPOSY"]

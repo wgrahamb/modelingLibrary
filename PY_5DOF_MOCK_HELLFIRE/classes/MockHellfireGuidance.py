@@ -61,9 +61,11 @@ class MockHellfireGuidance:
         self.TGO         = FLU_REL_POS_M / CLOSING_SPD # seconds
 
         # CHECK FOR A TARGET THAT IS RETREATING.
-        # ASSUMES GUIDING FROM ZERO VELOCITY (AKA LAUNCH).
+        # ASSUMES GUIDING FROM ZERO VELOCITY (I.E. LAUNCH).
         if self.LOOP_COUNT < 10 and self.GUIDE_FLAG == 0:
+            self.LOOP_COUNT       += 1
             if CLOSING_VEL[0] > 0:
+                # SWITCH TO PRONAV FOR A RETREATING TARGET.
                 self.GUIDE_FLAG = 1
 
         # PROPORTIONAL GUIDANCE.
@@ -97,7 +99,6 @@ class MockHellfireGuidance:
             self.NORM_COMM = AMAG * np.sin(TRIG_RATIO) # m/s^2
             self.SIDE_COMM = AMAG * np.cos(TRIG_RATIO) # m/s^2
 
-        self.LOOP_COUNT       += 1
         self.TIME             += self.TIME_STEP
         self.NEXT_UPDATE_TIME = self.TIME + self.TIME_STEP
 

@@ -12,6 +12,11 @@ Start with numpy, pandas, and matplotlib.
 Build scripts written in python are included.
 
 To Do:
+- Might pair down the repository and find a better way of presenting it. I think
+that it is bloated as is. I want CPP_6DOF_SRAAM_V2 and PY_5DOF_MOCK_HELLFIRE to 
+be the main modeling presentations and then I want to start showcasing my rocket
+propulsion projects. As far as presenting it, will have to think on how best to
+present the work I have done.
 - CPP_6DOF_SRAAM_V2
      - Update the readme to point out how my
      programming skills have changed from V1 to V2.
@@ -25,10 +30,10 @@ To Do:
      - Maybe? I'm leaning toward porting ROCKET6G instead.
 - PY_5DOF_MOCK_HELLFIRE
      - Navigator:
-          - INS and GPS from Zipfel, not sure which project yet.
+          - INS (ADS6) and GPS (not sure which project) from Zipfel.
           - Kalman Filter (from Zipfel) to pair with it after finished
           working through examples. See filters.py in pythonFunctions.
-     - Axial Forces:
+     - Axial Forces: (Make aerodynamics its own class within dynamics.)
           - Use bookmarked article to model the drag.
           - Using final project from MAE540, design a real rocket motor.
 - PY_6DOF_70MM_ROCKET
@@ -38,7 +43,7 @@ To Do:
      - Finish working through filters.py
      - Need to derive a class from rocketPropulsionFinal.py called
      solidRocketBooster.py
-     - Port rocketPropulsionFinal.py to CPP and make it a main project.
+     - Port rocketPropulsionFinal.py to CPP (C?) and make it a main project.
 
 Folder Structure:
 
