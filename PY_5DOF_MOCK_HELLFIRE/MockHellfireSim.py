@@ -67,18 +67,18 @@ if __name__ == "__main__":
 		TOF = DYN["STATE"]["TOF"]
 
 		# Get next update time.
-		N_DT = None
+		N_T  = None
 		N_ID = None
 		for index, key in enumerate(COMPONENTS.keys()):
 			if index == 0:
-				N_DT = COMPONENTS[f"{key}"].NEXT_UPDATE_TIME
+				N_T  = COMPONENTS[f"{key}"].NEXT_UPDATE_TIME
 				N_ID = key
-			elif COMPONENTS[f"{key}"].NEXT_UPDATE_TIME < N_DT:
-				N_DT = COMPONENTS[f"{key}"].NEXT_UPDATE_TIME
+			elif COMPONENTS[f"{key}"].NEXT_UPDATE_TIME < N_T:
+				N_T  = COMPONENTS[f"{key}"].NEXT_UPDATE_TIME
 				N_ID = key
 
 		# Check for dynamics and target update.
-		TIME_INCREMENT = N_DT - TOF
+		TIME_INCREMENT = N_T - TOF
 		if TIME_INCREMENT > EPSILON:
 
 			# Update dynamics.

@@ -23,15 +23,87 @@ present the work I have done.
      - Add a rotating elliptical earth.
      - Add a getState method.
      - Add guidance modes to CPP_6DOF_SRAAM_V2. Initial turn, midcourse, terminal.
-     This bit will include some basic fire control.
+     This bit will include some basic fire control. Fly the missile over various
+     ranges, then average the speed to get a table lookup for TGO.
      - Using Zarchan method, write a rate controller. Needs work. If have trouble
-     try again with Zipfel's method.
+     try again with Zipfel's method. Zipfel's rate controller could also work.
 - CPP_6DOF_SAM
      - Start project. Reuse as much Zipfel code as possible.
      - Maybe? I'm leaning toward porting ROCKET6G instead.
 - PY_5DOF_MOCK_HELLFIRE
+     - Dynamics
+          - Five Dof Engine
+               - Input the classes in the "construct_msl" method.
+          - Aerodynamics
+               - Five Coefficient Aerodynamics:
+                    - Input:
+                    - Output:
+                         - Aerodynamic Forces:
+                              - CX (Axial Coefficient)
+                              - CZ (Normal Force Coefficient)
+                              - CM (Pitching Moment Coefficient)
+                              - CY (Lateral Force Coefficient)
+                              - CN (Yawing Moment Coefficient)
+                         - Aerodynamic Derivatives:
+                              - CZA (Normal Force Coefficient due to Alpha)
+                              - CZD (Normal Force Coefficient due to Deflection)
+                              - CYB (Lateral Force Coefficient due to Sideslip)
+                              - CYD (Lateral Force Coefficient due to Deflection)
+                              - CMA (Pitching Moment Coefficient due to Alpha)
+                              - CMD (Pitching Moment Coefficient due to Deflection)
+                              - CNB (Yawing Moment Coefficient due to Sideslip)
+                              - CND (Yawing Moment Coefficient due to Deflection)
+          - Mass Properties
+               - Input:
+               - Output:
+                    - Center of Gravity
+                    - Missile Mass
+                    - Lateral Moment of Inertia
+          - Motor
+               - Input:
+               - Output:
+                    - Thrust
+          - Atmosphere
+               - Input:
+                    - Altitude
+                    - Speed
+               - Output:
+                    - Air Density
+                    - Dynamic Pressure
+                    - Air Pressure
+                    - Speed of Sound
+                    - Acceleration due to Gravity
+                    - Mach
+     - Components
+          - Component Base Class
+               - Specifically needs to define the time behavior.
+               - Use a method to get next time, don't grab it directly.
+          - Actuators
+               - Input:
+                    - Fin Command
+               - Output:
+                    - Fin Deflection
+          - Guidance
+               - Input:
+                    - Missile Local to Body DCM
+                    - Missile Local Position
+                    - Missile Local Velocity
+                    - Target Local Position
+                    - Target Local Velocity
+               - Output:
+                    - Normal Command
+                    - Lateral Command
+          - Control
+               - Input:
+               - Output:
+                    - Pitching Fin Command
+                    - Yawing Fin Command
+          - Navigator
      - Make a base class for the components. Learn about "private" variables in PY.
      - Output structures for components?
+     - Make the five dof dynamics a clear engine, not just for a mock hellfire. It
+     should be plainly generic and the inputs and outputs for its components very
+     clearly labeled.
      - Turn enu to ecef into a method to put in earthTransforms.py.
      - Split dynamics and components in to seperate folders.
      - Make aerodynamics its own class within dynamics. Use the found paper to 

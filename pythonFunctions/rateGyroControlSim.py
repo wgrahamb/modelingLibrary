@@ -18,7 +18,7 @@ RAD2DEG = 57.3
 
 # INPUTS
 ALT       = 1000 # FEET
-INPUT_VEL = npa([1900.0, 100.0])
+INPUT_VEL = npa([2000.0, 100.0])
 TGT_POS   = npa([18000.0, 18000.0])
 TGT_VEL   = npa([-100.0, 0.0])
 FLAG      = 1 # 0 = set gain, 1 = gain scheduling

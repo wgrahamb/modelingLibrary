@@ -13,7 +13,6 @@ np.set_printoptions(suppress=True, precision=2)
 # UTILITY.
 from utility.loadPickle                import loadpickle as lp
 from utility.coordinateTransformations import FLIGHTPATH_TO_LOCAL_TM
-from utility.coordinateTransformations import ORIENTATION_TO_LOCAL_TM
 from utility.angles                    import returnAzAndElevation
 from utility.angles                    import projection
 from utility.ATM1976                   import ATM1976
@@ -200,7 +199,7 @@ class fiveDofInterceptor:
 		# ENU TO FLU MATRIX.
 		velAz, velEl  = returnAzAndElevation(self.velEnu) # rads
 		velFrame      = FLIGHTPATH_TO_LOCAL_TM(velAz, -velEl) # nd
-		aeroFrame     = ORIENTATION_TO_LOCAL_TM(0.0, self.alpha, self.beta) # nd
+		aeroFrame     = FLIGHTPATH_TO_LOCAL_TM(self.beta, self.alpha)
 		self.enuToFlu = aeroFrame @ velFrame # nd
 
 		# ATMOSPHERE.
@@ -214,44 +213,6 @@ class fiveDofInterceptor:
 		self.mach = self.atm.mach # nd
 		localGrav = npa([0, 0, -1.0 * self.g]) # m/s^2
 		bodyGrav  = self.enuToFlu @ localGrav # m/s^2
-
-		# KINEMATIC TRUTH SEEKER.
-		fluMslToTgt   = self.enuToFlu @ (self.targetPos - self.posEnu) # m
-		fluMslToTgtU  = unitvector(fluMslToTgt) # nd
-		fluMslToTgtM  = la.norm(fluMslToTgt) # m
-		closingVel    = self.enuToFlu @ (self.targetVel - self.velEnu) # m/s
-		closingSpeed  = la.norm(closingVel) # m/s
-		tgo           = fluMslToTgtM / closingSpeed # seconds
-
-		# PROPORTIONAL GUIDANCE.
-		if tgo < 4.0:
-			T1            = np.cross(fluMslToTgt, closingVel)
-			T2            = np.dot(fluMslToTgt, fluMslToTgt)
-			omega         = T1 / T2 # rad/s
-			T3            = -1.0 * self.proNavGain * closingSpeed * fluMslToTgtU
-			comm          = np.cross(T3, omega) # m/s^2
-			self.normComm = comm[2] # m/s^2
-			self.sideComm = comm[1] # m/s^2
-			aMag          = np.sqrt(self.normComm ** 2 + self.sideComm ** 2) # m/s^2
-			trigRatio     = np.arctan2(self.normComm, self.sideComm) # nd
-			if aMag > self.termGuideLimit:
-				aMag = self.termGuideLimit # m/s^2
-			self.normComm = aMag * np.sin(trigRatio) # m/s^2
-			self.sideComm = aMag * np.cos(trigRatio) # m/s^2
-
-		# LINE OF ATTACK GUIDANCE.
-		else:
-			losVel        = projection(fluMslToTgtU, closingVel) # m/s
-			loaVel        = projection(self.lineOfAttack, closingVel) # m/s
-			G             = 1 - np.exp(-0.001 * fluMslToTgtM) # nd
-			self.normComm = self.loaGain * (losVel[2] + G * loaVel[2]) # m/s^2
-			self.sideComm = self.loaGain * (losVel[1] + G * loaVel[1]) # m/s^2
-			aMag          = np.sqrt(self.normComm ** 2 + self.sideComm ** 2) # m/s^2
-			trigRatio     = np.arctan2(self.normComm, self.sideComm) # nd
-			if aMag > self.midGuideLimit:
-				aMag = self.midGuideLimit # m/s^2
-			self.normComm = aMag * np.sin(trigRatio) # m/s^2
-			self.sideComm = aMag * np.cos(trigRatio) # m/s^2
 
 		# AEROBALLISTIC ANGLES.
 		angleOfAttack    = np.arccos(np.cos(self.alpha) * np.cos(self.beta)) # rads
@@ -277,32 +238,70 @@ class fiveDofInterceptor:
 		CL = self.lookUps["CL"](self.mach, angleOfAttackDeg)[0] # nd
 
 		# AERODYNAMICS.
-		cosAlpha    = np.cos(self.alpha) # rads
-		sinAlpha    = np.sin(self.alpha) # rads
-		absAlphaDeg = np.abs(np.degrees(self.alpha)) # deg
-		absBetaDeg  = np.abs(np.degrees(self.beta)) # deg
-		CX          = -1 * (CD * cosAlpha - CL * sinAlpha) # nd
-		CT          = CD * sinAlpha + CL * cosAlpha # nd
-		CZ          = -1 * CT * np.cos(phiPrime) # nd
-		CY          = -1 * CT * np.sin(phiPrime) # nd
-		
-		# AERODYNAMIC DERIVATIVES.
-		# CNA and CYB are multiplied by 57.3 to make them dimensionless.
-		# (1/deg)*deg == 1
-		CNA = None # nd
-		CYB = None # nd
-		if absAlphaDeg < 10:
-			CNA = 57.3 * (0.123 + 0.013 * absAlphaDeg) # nd
-		else:
-			CNA = 57.3 * (0.06 * (absAlphaDeg ** 0.625)) # nd
-		if absBetaDeg < 10:
-			CYB = 57.3 * (0.123 + 0.013 * absBetaDeg) # nd
-		else:
-			CYB = 57.3 * (0.06 * (absBetaDeg ** 0.625)) # nd
+		cosAlpha = np.cos(self.alpha) # rads
+		sinAlpha = np.sin(self.alpha) # rads
+		CX       = -1 * (CD * cosAlpha - CL * sinAlpha) # nd
+		CT       = CD * sinAlpha + CL * cosAlpha # nd
+		CZ       = -1 * CT * np.cos(phiPrime) # nd
+		CY       = -1 * CT * np.sin(phiPrime) # nd
 
-		# AUTOPILOT.
+		# GUIDANCE AND AUTOPILOT.
 		if self.PASS == 0:
-			
+
+			# KINEMATIC TRUTH SEEKER.
+			fluMslToTgt   = self.enuToFlu @ (self.targetPos - self.posEnu) # m
+			fluMslToTgtU  = unitvector(fluMslToTgt) # nd
+			fluMslToTgtM  = la.norm(fluMslToTgt) # m
+			closingVel    = self.enuToFlu @ (self.targetVel - self.velEnu) # m/s
+			closingSpeed  = la.norm(closingVel) # m/s
+			tgo           = fluMslToTgtM / closingSpeed # seconds
+
+			# PROPORTIONAL GUIDANCE.
+			if tgo < 4.0:
+				T1            = np.cross(fluMslToTgt, closingVel)
+				T2            = np.dot(fluMslToTgt, fluMslToTgt)
+				omega         = T1 / T2 # rad/s
+				T3            = -1.0 * self.proNavGain * closingSpeed * fluMslToTgtU
+				comm          = np.cross(T3, omega) # m/s^2
+				self.normComm = comm[2] # m/s^2
+				self.sideComm = comm[1] # m/s^2
+				aMag          = np.sqrt(self.normComm ** 2 + self.sideComm ** 2) # m/s^2
+				trigRatio     = np.arctan2(self.normComm, self.sideComm) # nd
+				if aMag > self.termGuideLimit:
+					aMag = self.termGuideLimit # m/s^2
+				self.normComm = aMag * np.sin(trigRatio) # m/s^2
+				self.sideComm = aMag * np.cos(trigRatio) # m/s^2
+
+			# LINE OF ATTACK GUIDANCE.
+			else:
+				losVel        = projection(fluMslToTgtU, closingVel) # m/s
+				loaVel        = projection(self.lineOfAttack, closingVel) # m/s
+				G             = 1 - np.exp(-0.001 * fluMslToTgtM) # nd
+				self.normComm = self.loaGain * (losVel[2] + G * loaVel[2]) # m/s^2
+				self.sideComm = self.loaGain * (losVel[1] + G * loaVel[1]) # m/s^2
+				aMag          = np.sqrt(self.normComm ** 2 + self.sideComm ** 2) # m/s^2
+				trigRatio     = np.arctan2(self.normComm, self.sideComm) # nd
+				if aMag > self.midGuideLimit:
+					aMag = self.midGuideLimit # m/s^2
+				self.normComm = aMag * np.sin(trigRatio) # m/s^2
+				self.sideComm = aMag * np.cos(trigRatio) # m/s^2
+
+			# AERODYNAMIC DERIVATIVES.
+			# CNA and CYB are multiplied by 57.3 to make them dimensionless.
+			# (1/deg)*deg == 1
+			absAlphaDeg = np.abs(np.degrees(self.alpha)) # deg
+			absBetaDeg  = np.abs(np.degrees(self.beta)) # deg
+			CNA = None # nd
+			CYB = None # nd
+			if absAlphaDeg < 10:
+				CNA = 57.3 * (0.123 + 0.013 * absAlphaDeg) # nd
+			else:
+				CNA = 57.3 * (0.06 * (absAlphaDeg ** 0.625)) # nd
+			if absBetaDeg < 10:
+				CYB = 57.3 * (0.123 + 0.013 * absBetaDeg) # nd
+			else:
+				CYB = 57.3 * (0.06 * (absBetaDeg ** 0.625)) # nd
+
 			# PITCH AUTOPILOT.
 			tip         = spd * mass / (thrust + self.q * \
 				self.refArea * np.abs(CNA))
@@ -353,7 +352,7 @@ class fiveDofInterceptor:
 
 			# END CHECK.
 			self.missDistance = la.norm(fluMslToTgt) # m
-			if self.missDistance < 5.0:
+			if self.missDistance < 10.0:
 				self.lethality = endChecks.HIT
 				self.go        = False
 			elif self.posEnu[2] < 0.0:
