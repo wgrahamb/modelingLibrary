@@ -30,15 +30,19 @@ present the work I have done.
      - Start project. Reuse as much Zipfel code as possible.
      - Maybe? I'm leaning toward porting ROCKET6G instead.
 - PY_5DOF_MOCK_HELLFIRE
+     - Make a base class for the components. Learn about "private" variables in PY.
+     - Output structures for components?
      - Turn enu to ecef into a method to put in earthTransforms.py.
      - Split dynamics and components in to seperate folders.
      - Make aerodynamics its own class within dynamics. Use the found paper to 
-     estimate pitch damping.
-     - Axial Forces: (Make aerodynamics its own class within dynamics.)
+     estimate pitch damping (simple estimate at first).
+     - Axial Forces:
           - Use bookmarked article to model the drag.
           - Using final project from MAE540, design a real rocket motor. Then the
           mass and motor properties will have to be split.
      - Navigator:
+          - A perfect navigator for setting up a pass through.
+          - An analytical navigator with draws.
           - INS (ADS6) and GPS (not sure which project) from Zipfel.
           - Kalman Filter (from Zipfel) to pair with it after finished
           working through examples. See filters.py in pythonFunctions.
@@ -49,7 +53,7 @@ present the work I have done.
      - Finish working through filters.py
      - Need to derive a class from rocketPropulsionFinal.py called
      solidRocketBooster.py
-     - Port rocketPropulsionFinal.py to CPP (C?) and make it a main project.
+     - Port rocketPropulsionFinal.py to C and make it a main project.
 
 Folder Structure:
 

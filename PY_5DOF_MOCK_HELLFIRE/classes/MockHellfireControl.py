@@ -129,7 +129,7 @@ class MockHellfireControl:
         PITCH_KR      = PITCH_XK/(PITCH_XKA*PITCH_WI)
         PITCH_KDC     = (1 - PITCH_KR * PITCH_K3) / (PITCH_K1 * PITCH_KR)
 
-        # A simpler yawing control method.
+        # A simpler pitching control method.
         # PITCH_KR  = 0.15
         # PITCH_K1  = -1 * SPD * ((MA * ZD - ZA * MD) / (A_GAIN * MA))
         # PITCH_K3  = A_GAIN * PITCH_K1 / SPD

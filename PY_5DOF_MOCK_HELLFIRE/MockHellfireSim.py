@@ -41,7 +41,7 @@ if __name__ == "__main__":
 		"CONTROL": MockHellfireControl("CONTROL"),
 		"GUIDANCE": MockHellfireGuidance(
 			"GUIDANCE",
-			npa([0.4, 0.5, 0.4])
+			npa([0.4, 1, 0.4])
 		)
 	}
 

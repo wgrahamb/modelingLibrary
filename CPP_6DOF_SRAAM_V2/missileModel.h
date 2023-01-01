@@ -121,7 +121,7 @@ void    seekerOn(Missile &missile);
 void    sixDofFly(Missile &missile, string flyOutID, bool writeData, bool consoleReport, double maxTime);
 void    threeDofFly(Missile &missile, string flyOutID, bool writeData, bool consoleReport, double maxTime);
 
-/* This struct fully represents a missile. */
+/* Define the previously declared Missile type. */
 struct Missile
 {
 

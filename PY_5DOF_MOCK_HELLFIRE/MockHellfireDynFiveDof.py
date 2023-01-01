@@ -104,7 +104,7 @@ def construct_msl(
 
 	# BODY. ########################################################################
 	TOF            = 0.0 # seconds
-	SPEED          = la.norm(INITIAL_AIRSPEED * (ENU_TO_FLU[0])) # m/s
+	SPEED          = INITIAL_AIRSPEED # m/s
 	VEL_B          = ENU_TO_FLU @ (INITIAL_AIRSPEED * (ENU_TO_FLU[0])) # m/s
 	TEMP1, TEMP2   = getAlphaAndBeta(VEL_B) # rad
 	ALPHA          = -1.0 * TEMP1 # rad
