@@ -63,6 +63,8 @@ To Do For New Repository: (It is still intended for development)
           that I've bookmarked before porting the Zipfel hybrid navigator.
 - SRM_DESIGN
      - Port the python file to C using the manual I got for Christmas.
+     - Use the class report as the base for a new report.
+     - Solve the design problem that I did not have time for.
 
 To Do:
 - Might pair down the repository and find a better way of presenting it. I think
