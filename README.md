@@ -12,6 +12,59 @@ Start with numpy, pandas, and matplotlib.
 Build scripts written in python are included.
 
 To Do:
+- Create a new repository. It will contain two main modeling projects, currently
+named CPP_6DOF_SRAAM_V2 and PY_5DOF_MOCK_HELLFIRE. Their naming conventions may 
+change. My solid rocket booster design project from school will also become a main
+project, most likely called SRM_DESIGN. Each project will need a report to detail
+its design and results. There will be nothing else, as all the other projects in
+this repository are pretty much for development. This repository will become
+my private sandbox.
+
+To Do For New Repository: (It is still intended for development)
+- CPP_6DOF_SRAAM_V2
+     - Clean the configureAndRun script and add target velocity as an input.
+     - Add a target update.
+     - Re structure the code to make a plainer distinction between "truth" and
+     things that are components.
+     - Add a rotating elliptical earth. This will require the creation of an 
+     "earthTransforms.cpp" which will be a CPP mirror of "earthTransforms.py" that
+     can be found in PY_5DOF_MOCK_HELLFIRE.
+     - Add a "getState" method.
+     - The interface methods could probably use some cleaning.
+     - Create fire control and recreate guidance and control. The scope of
+     these things will contain: fire control using a three dof, guidance modes,
+     waypoint scheduling, and various control theories. Whatever guidance
+     is used will have to be applied to the three dof model as well.
+- PY_5DOF_MOCK_HELLFIRE
+     - Clean comments.
+     - Five Dof Dynamics Engine:
+          - Make a plain input dictionary.
+          - The "construct_msl" method needs to take the classes as an input
+          argument. There are a couple of options for this. One is to make the
+          four classes each an individual input: atmosphere, aerodynamics,
+          mass properties, and motor properties. The other is to make the 
+          atmosphere an integral part of the class and only have one input class,
+          called something like "mslPhysicalProperties." This class would have to
+          have very plainly documented inputs and outputs and would probably use
+          a base class of some kind. This way if it was desirable to create another
+          missile, this would be THE template. I'm leaning toward the latter option.
+          - Mock Hellfire Physical Properties:
+               - Model the drag of the missile using the paper that I found.
+               - Model the damping of the missile using the paper that I found. Try
+               a simple estimate first.
+               - Using the solid rocket booster design project, create a higher
+               fidelity rocket motor.
+     - Components.
+          - Create a component base class. Do some research and use __variables.
+          Make plain input and output dictionaries for each component.
+          - Create a perfect navigator as a pass through placeholder, an analytical
+          navigator to test performance, and finally port a hybrid navigator from
+          Zipfel code. Finish working through the filtering examples on the website
+          that I've bookmarked before porting the Zipfel hybrid navigator.
+- SRM_DESIGN
+     - Port the python file to C using the manual I got for Christmas.
+
+To Do:
 - Might pair down the repository and find a better way of presenting it. I think
 that it is bloated as is. I want CPP_6DOF_SRAAM_V2 and PY_5DOF_MOCK_HELLFIRE to 
 be the main modeling presentations and then I want to start showcasing my rocket
