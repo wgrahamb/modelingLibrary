@@ -74,11 +74,9 @@ class fiveDofInterceptor:
 		#
 		############################################################################
 
-		# INPUT.
+		# TARGET.
 		self.targetPos = targetPos # m
 		self.targetVel = targetVel # m/s
-		el             = np.radians(launchElDeg) # Convert input elevation to rads.
-		az             = np.radians(launchAzDeg) # Convert input azimuth to rads.
 
 		# SIM CONTROL.
 		self.wallClockStart = time.time() # Real time start.
@@ -110,6 +108,8 @@ class fiveDofInterceptor:
 		self.A4   = np.zeros(3)
 
 		# FRAME.
+		el            = np.radians(launchElDeg) # Convert input elevation to rads.
+		az            = np.radians(launchAzDeg) # Convert input azimuth to rads.
 		self.enuToFlu = FLIGHTPATH_TO_LOCAL_TM(az, -1.0 * el) # nd
 		self.posEnu   = npa([0.0, 0.0, launchHgt]) # m
 		self.velEnu   = self.enuToFlu[0] * launchSpeed # m/s
