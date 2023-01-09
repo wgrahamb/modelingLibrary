@@ -25,7 +25,7 @@ To Do For New Repository: (It is still intended for development)
      - Clean the configureAndRun script and add target velocity as an input.
      - Add a target update.
      - Re structure the code to make a plainer distinction between "truth" and
-     things that are components.
+     things that are components, specifically in method update order.
      - Add a rotating elliptical earth. This will require the creation of an 
      "earthTransforms.cpp" which will be a CPP mirror of "earthTransforms.py" that
      can be found in PY_5DOF_MOCK_HELLFIRE.
@@ -35,6 +35,8 @@ To Do For New Repository: (It is still intended for development)
      these things will contain: fire control using a three dof, guidance modes,
      waypoint scheduling, and various control theories. Whatever guidance
      is used will have to be applied to the three dof model as well.
+     - Once the navigator is complete in the PY_5DOF_MOCK_HELLFIRE, it can be
+     ported to CPP. Probably will just use inertial navigation over hybrid.
 - PY_5DOF_MOCK_HELLFIRE
      - Clean comments.
      - Five Dof Dynamics Engine:
@@ -51,16 +53,26 @@ To Do For New Repository: (It is still intended for development)
           - Mock Hellfire Physical Properties:
                - Model the drag of the missile using the paper that I found.
                - Model the damping of the missile using the paper that I found. Try
-               a simple estimate first.
+               a simple estimate first. I think this will solve the kludge in
+               calculating beta (normalized speed) for the aerodynamics.
                - Using the solid rocket booster design project, create a higher
                fidelity rocket motor.
      - Components.
           - Create a component base class. Do some research and use __variables.
           Make plain input and output dictionaries for each component.
-          - Create a perfect navigator as a pass through placeholder, an analytical
-          navigator to test performance, and finally port a hybrid navigator from
-          Zipfel code. Finish working through the filtering examples on the website
-          that I've bookmarked before porting the Zipfel hybrid navigator.
+          - Navigator:
+               - First, a perfect navigator as a pass through.
+               - Second, an analytical navigator to determine performance.
+               - Third, port the INS from Zipfel's ADS6 to get a model of decent
+               fidelity.
+               - Fourth, finish working through filters.py. See in pythonFunctions.
+               - Fifth, pair the INS from step 3 with an inline, inscope kalman
+               filter.
+               - Sixth, turn the simple kalman filter from step five into state
+               matrices.
+               - Seventh, port a hybrid navigator from Zipfel into python. This step
+               is kind of nebulus because I truly have little to no idea what I am
+               doing. The previous steps shouldn't be too bad.
 - SRM_DESIGN
      - Port the python file to C using the manual I got for Christmas.
      - Use the class report as the base for a new report.

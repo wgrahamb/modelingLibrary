@@ -199,7 +199,7 @@ class fiveDofInterceptor:
 		# ENU TO FLU MATRIX.
 		velAz, velEl  = returnAzAndElevation(self.velEnu) # rads
 		velFrame      = FLIGHTPATH_TO_LOCAL_TM(velAz, -velEl) # nd
-		aeroFrame     = FLIGHTPATH_TO_LOCAL_TM(self.beta, self.alpha)
+		aeroFrame     = FLIGHTPATH_TO_LOCAL_TM(self.beta, self.alpha) # nd
 		self.enuToFlu = aeroFrame @ velFrame # nd
 
 		# ATMOSPHERE.
